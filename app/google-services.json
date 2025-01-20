@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "349623661457",
+    "project_id": "bondhub-ryen",
+    "storage_bucket": "bondhub-ryen.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:349623661457:android:58b99e41c803766920e030",
+        "android_client_info": {
+          "package_name": "com.ryen.bondhub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBoW44PGWQ6l958IaITwALCvAJJhwu4tlY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
