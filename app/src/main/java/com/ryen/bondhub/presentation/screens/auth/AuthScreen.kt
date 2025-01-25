@@ -1,5 +1,6 @@
 package com.ryen.bondhub.presentation.screens.auth
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,12 +46,17 @@ import com.ryen.bondhub.presentation.theme.Secondary
 import com.ryen.bondhub.presentation.theme.Surface
 import com.ryen.bondhub.presentation.theme.Tertiary
 
-
 @Composable
-fun SignInScreen(navController: NavController) {
+fun AuthScreen(navController: NavController) {
+
     var email by remember { mutableStateOf("") }
+    var fullName by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(false) }
+    var signInState by remember { mutableStateOf(true) }
+
+
     Scaffold(modifier = Modifier
         .fillMaxSize()
         .background(Surface)) { paddingValues ->
@@ -69,17 +75,36 @@ fun SignInScreen(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(20.dp))
             Text(
-                text = "Sign In",
+                text = if(signInState)"Sign In" else "Sign Up",
                 color = Tertiary,
                 style = MaterialTheme.typography.displaySmall
             )
             Spacer(modifier = Modifier.height(10.dp))
+            AnimatedVisibility(!signInState){
+                OutlinedTextField(
+                    value = fullName,
+                    onValueChange = { fullName = it },
+                    label = { Text("Full Name") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 2.dp)
+
+                )
+            }
             OutlinedTextField(
                 value = email,
                 onValueChange = {email = it},
                 label = { Text("Email") },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 2.dp)
@@ -89,6 +114,10 @@ fun SignInScreen(navController: NavController) {
                 onValueChange = {password = it},
                 label = { Text("Password") },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next
+                ),
                 visualTransformation = if (visibility) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     if(password.isNotEmpty()){
@@ -115,6 +144,44 @@ fun SignInScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 2.dp)
             )
+            AnimatedVisibility(!signInState){
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Confirm Password") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done
+                    ),
+                    visualTransformation = if (visibility) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        if (password.isNotEmpty()) {
+                            IconButton(onClick = { visibility = !visibility }) {
+                                if (visibility) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.visibilityonn),
+                                        tint = Color.Black.copy(alpha = .6f),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                } else {
+                                    Icon(
+                                        painter = painterResource(R.drawable.visibilityoff),
+                                        tint = Color.Black.copy(alpha = .6f),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    isError = confirmPassword.isNotEmpty() && password != confirmPassword,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 2.dp)
+                )
+            }
             Spacer(modifier = Modifier.height(30.dp))
             Button(
                 onClick = {},
@@ -122,20 +189,25 @@ fun SignInScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp),
                 shape = RoundedCornerShape(8.dp),
+                enabled = signInState || (password.isNotEmpty() &&
+                        confirmPassword.isNotEmpty() &&
+                        email.isNotEmpty() && fullName.isNotEmpty() &&
+                        (password == confirmPassword)),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
-            ) { Text(text = "Login", style = MaterialTheme.typography.labelLarge) }
+            ) { Text(text = if(signInState)"Login" else "Sign Up", style = MaterialTheme.typography.labelLarge) }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ){
-                Text(text = "Don't have an account?", color = Secondary)
+                val text = if(signInState) "Don't" else "Already"
+                Text(text = "$text have an account?", color = Secondary)
                 Text(
-                    text = "Sign up",
+                    text = if(!signInState)"Sign in" else "Sign up",
                     color = Primary,
                     style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier
                         .padding(horizontal = 4.dp)
-                        .clickable { navController.navigate("signUp") }
+                        .clickable { signInState = !signInState }
                 )
             }
         }
@@ -144,6 +216,6 @@ fun SignInScreen(navController: NavController) {
 
 @Preview(showBackground = true)
 @Composable
-fun SignInScreenPreview() {
-    SignInScreen(navController = NavController(LocalContext.current))
+fun SignUpScreenPreview() {
+    AuthScreen(navController = NavController(LocalContext.current))
 }
