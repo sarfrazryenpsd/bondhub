@@ -1,6 +1,10 @@
 package com.ryen.bondhub.presentation.screens.auth
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -74,11 +79,41 @@ fun AuthScreen(navController: NavController) {
                 modifier = Modifier.size(240.dp)
             )
             Spacer(modifier = Modifier.height(20.dp))
-            Text(
-                text = if(signInState)"Sign In" else "Sign Up",
-                color = Tertiary,
-                style = MaterialTheme.typography.displaySmall
-            )
+            Row{
+                Text(
+                    text = "Sign ",
+                    color = Tertiary,
+                    style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Medium)
+                )
+                AnimatedContent(
+                    targetState = signInState,
+                    transitionSpec = {
+                        if (targetState) {
+                            // Slide in from bottom, slide out to top
+                            slideInVertically { height -> height } togetherWith
+                                    slideOutVertically { height -> -height }
+                        } else {
+                            // Slide in from bottom, slide out to top
+                            slideInVertically { height -> -height } togetherWith
+                                    slideOutVertically { height -> height }
+                        }
+                    }
+                ) { targetState ->
+                    when (targetState) {
+                        true -> Text(
+                            text = "In",
+                            style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Medium),
+                            color = Tertiary
+                        )
+
+                        false -> Text(
+                            text = "Up",
+                            style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Medium),
+                            color = Tertiary
+                        )
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(10.dp))
             AnimatedVisibility(!signInState){
                 OutlinedTextField(
@@ -122,21 +157,12 @@ fun AuthScreen(navController: NavController) {
                 trailingIcon = {
                     if(password.isNotEmpty()){
                         IconButton(onClick = { visibility = !visibility }) {
-                            if (visibility) {
-                                Icon(
-                                    painter = painterResource(R.drawable.visibilityonn),
-                                    tint = Color.Black.copy(alpha = .6f),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                            } else {
-                                Icon(
-                                    painter = painterResource(R.drawable.visibilityoff),
-                                    tint = Color.Black.copy(alpha = .6f),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                            }
+                            Icon(
+                                painter = if (visibility) painterResource(R.drawable.visibilityonn) else painterResource(R.drawable.visibilityoff),
+                                tint = Color.Black.copy(alpha = .6f),
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                            )
                         }
                     }
                 },
@@ -194,13 +220,20 @@ fun AuthScreen(navController: NavController) {
                         email.isNotEmpty() && fullName.isNotEmpty() &&
                         (password == confirmPassword)),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
-            ) { Text(text = if(signInState)"Login" else "Sign Up", style = MaterialTheme.typography.labelLarge) }
+            ) { Text(
+                text = if (signInState) "Login" else "Sign Up",
+                style = MaterialTheme.typography.labelLarge
+            ) }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ){
                 val text = if(signInState) "Don't" else "Already"
-                Text(text = "$text have an account?", color = Secondary)
+                Text(
+                    text = "$text have an account?",
+                    color = Secondary,
+                    style = MaterialTheme.typography.labelLarge
+                )
                 Text(
                     text = if(!signInState)"Sign in" else "Sign up",
                     color = Primary,
