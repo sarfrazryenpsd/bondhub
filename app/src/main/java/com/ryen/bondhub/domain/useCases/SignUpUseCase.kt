@@ -7,7 +7,9 @@ import javax.inject.Inject
 class SignUpUseCase @Inject constructor(
     private val repository: AuthRepository
 ) {
+
     suspend operator fun invoke(email: String, password: String, displayName: String): Result<User> {
         return repository.signUp(email, password, displayName)
     }
+
 }
