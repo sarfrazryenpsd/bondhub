@@ -240,7 +240,8 @@ fun AuthScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp),
                 shape = RoundedCornerShape(8.dp),
-                enabled = signInState || (password.isNotEmpty() &&
+                enabled = signInState ||
+                        (password.isNotEmpty() &&
                         confirmPassword.isNotEmpty() &&
                         email.isNotEmpty() && fullName.isNotEmpty() &&
                         (password == confirmPassword)),
@@ -281,5 +282,5 @@ fun AuthScreen(
 @Preview(showBackground = true)
 @Composable
 fun SignUpScreenPreview() {
-    AuthScreen(onNavigateToChat = {})
+    AuthScreen( onNavigateToChat = {})
 }
