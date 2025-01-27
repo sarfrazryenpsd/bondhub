@@ -16,7 +16,10 @@ fun MainApp() {
 
         NavHost(navController = navController, startDestination = "authScreen") {
             composable("authScreen"){
-                AuthScreen()
+                AuthScreen(onNavigateToChat = {})
+            }
+            composable("chatScreen"){
+
             }
         }
     }
