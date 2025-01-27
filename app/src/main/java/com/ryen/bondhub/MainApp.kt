@@ -16,7 +16,7 @@ fun MainApp() {
 
         NavHost(navController = navController, startDestination = "authScreen") {
             composable("authScreen"){
-                AuthScreen(navController = navController)
+                AuthScreen()
             }
         }
     }
