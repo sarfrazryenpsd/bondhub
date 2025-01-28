@@ -2,6 +2,7 @@ package com.ryen.bondhub.presentation.screens.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryen.bondhub.domain.useCases.GetAuthStateUseCase
 import com.ryen.bondhub.domain.useCases.SignInUseCase
 import com.ryen.bondhub.domain.useCases.SignUpUseCase
 import com.ryen.bondhub.presentation.event.AuthEvent
@@ -19,6 +20,7 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val signInUseCase: SignInUseCase,
     private val signUpUseCase: SignUpUseCase,
+    private val getAuthStateUseCase: GetAuthStateUseCase
 ): ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
