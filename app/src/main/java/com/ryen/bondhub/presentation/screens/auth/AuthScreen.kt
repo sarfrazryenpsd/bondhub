@@ -272,7 +272,7 @@ fun AuthScreen(
             when(authState){
                 is AuthState.Loading -> CircularProgressIndicator()
                 is AuthState.Error -> Text(text = (authState as AuthState.Error).message)
-                is AuthState.Authenticated -> {}
+                is AuthState.Authenticated -> { onNavigateToChat() }
                 else -> {}
             }
         }

@@ -6,6 +6,9 @@ import com.google.firebase.auth.UserProfileChangeRequest
 import com.ryen.bondhub.domain.model.User
 import com.ryen.bondhub.domain.repository.AuthRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -13,6 +16,18 @@ import javax.inject.Inject
 class AuthRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth
 ): AuthRepository {
+
+    override fun isUserAuthenticated(): Flow<Boolean> = callbackFlow {
+        val authStateListener = FirebaseAuth.AuthStateListener{ auth ->
+            trySend(auth.currentUser != null)
+        }
+        auth.addAuthStateListener(authStateListener)
+
+        awaitClose {
+            auth.removeAuthStateListener(authStateListener)
+        }
+    }
+
     override suspend fun signIn(email: String, password: String): Result<User> =
         withContext(Dispatchers.IO){
             try {
