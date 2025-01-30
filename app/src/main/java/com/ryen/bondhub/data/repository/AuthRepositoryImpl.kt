@@ -59,15 +59,6 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun signOut(): Result<Unit> =
-        withContext(Dispatchers.IO){
-            try {
-                auth.signOut()
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Result.failure(e)
-            }
-        }
 
     override fun getCurrentUser(): User? =
         auth.currentUser?.toUser()
