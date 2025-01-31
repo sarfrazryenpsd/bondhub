@@ -3,7 +3,7 @@ package com.ryen.bondhub.data.repository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
-import com.ryen.bondhub.domain.model.User
+import com.ryen.bondhub.domain.model.UserAuth
 import com.ryen.bondhub.domain.repository.AuthRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -28,7 +28,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun signIn(email: String, password: String): Result<User> =
+    override suspend fun signIn(email: String, password: String): Result<UserAuth> =
         withContext(Dispatchers.IO){
             try {
                 val result = auth.signInWithEmailAndPassword(email, password).await()
@@ -44,7 +44,7 @@ class AuthRepositoryImpl @Inject constructor(
         email: String,
         password: String,
         displayName: String
-    ): Result<User> = withContext(Dispatchers.IO){
+    ): Result<UserAuth> = withContext(Dispatchers.IO){
         try {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             result.user?.let { firebaseUser ->
@@ -60,12 +60,12 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
 
-    override fun getCurrentUser(): User? =
+    override fun getCurrentUser(): UserAuth? =
         auth.currentUser?.toUser()
 
 
 
-    private fun FirebaseUser.toUser() = User(
+    private fun FirebaseUser.toUser() = UserAuth(
         uid = uid,
         email = email ?: "",
         displayName = displayName

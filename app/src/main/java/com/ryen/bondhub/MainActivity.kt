@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.ryen.bondhub.presentation.screens.MainApp
 import com.ryen.bondhub.presentation.theme.BondHubTheme
 import dagger.hilt.android.AndroidEntryPoint
 
