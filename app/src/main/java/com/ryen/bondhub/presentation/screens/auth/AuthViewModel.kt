@@ -2,9 +2,8 @@ package com.ryen.bondhub.presentation.screens.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ryen.bondhub.domain.useCases.GetAuthStateUseCase
-import com.ryen.bondhub.domain.useCases.SignInUseCase
-import com.ryen.bondhub.domain.useCases.SignUpUseCase
+import com.ryen.bondhub.domain.useCases.auth.SignInUseCase
+import com.ryen.bondhub.domain.useCases.auth.SignUpUseCase
 import com.ryen.bondhub.presentation.event.AuthEvent
 import com.ryen.bondhub.presentation.event.UiEvent
 import com.ryen.bondhub.presentation.state.AuthState
