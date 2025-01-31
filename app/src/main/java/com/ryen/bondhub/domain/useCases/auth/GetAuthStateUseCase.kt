@@ -1,4 +1,4 @@
-package com.ryen.bondhub.domain.useCases
+package com.ryen.bondhub.domain.useCases.auth
 
 import com.ryen.bondhub.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow

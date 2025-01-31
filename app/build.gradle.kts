@@ -61,6 +61,7 @@ dependencies {
     implementation(platform(libs.firebase))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database)
+    implementation(libs.firebase.firestore.ktx)
     //implementation(libs.firebase.crashlytics)
 
 
