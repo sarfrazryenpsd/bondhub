@@ -1,4 +1,4 @@
-package com.ryen.bondhub
+package com.ryen.bondhub.presentation.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
