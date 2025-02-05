@@ -2,10 +2,14 @@ package com.ryen.bondhub.presentation.screens.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryen.bondhub.domain.model.UserProfile
+import com.ryen.bondhub.domain.model.UserStatus
 import com.ryen.bondhub.domain.useCases.auth.SignInUseCase
 import com.ryen.bondhub.domain.useCases.auth.SignUpUseCase
+import com.ryen.bondhub.domain.useCases.userProfile.CreateUserProfileUseCase
 import com.ryen.bondhub.presentation.event.AuthEvent
 import com.ryen.bondhub.presentation.event.UiEvent
+import com.ryen.bondhub.presentation.screens.Screen
 import com.ryen.bondhub.presentation.state.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,7 +23,8 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val signInUseCase: SignInUseCase,
     private val signUpUseCase: SignUpUseCase,
-): ViewModel() {
+    private val createUserProfileUseCase: CreateUserProfileUseCase
+) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
     val authState = _authState.asStateFlow()
@@ -41,11 +46,14 @@ class AuthViewModel @Inject constructor(
                 val result = signInUseCase(email, password)
                 result.onSuccess { user ->
                     _authState.value = AuthState.Authenticated(user)
+                    _uiEvent.emit(UiEvent.Navigate(Screen.ChatScreen.route))
                 }.onFailure { exception ->
                     _authState.value = AuthState.Error(exception.message ?: "Authentication failed")
+                    _uiEvent.emit(UiEvent.ShowSnackbar(exception.message ?: "Authentication failed"))
                 }
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Unknown error")
+                _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
             }
         }
     }
@@ -53,14 +61,34 @@ class AuthViewModel @Inject constructor(
     private fun signUp(email: String, password: String, displayName: String) {
         viewModelScope.launch {
             try {
-                val result = signUpUseCase(email, password, displayName)
-                result.onSuccess { user ->
+                val signUpResult = signUpUseCase(email, password, displayName)
+                signUpResult.onSuccess { user ->
                     _authState.value = AuthState.Authenticated(user)
+
+                    // Create default user profile
+                    val defaultProfile = UserProfile(
+                        uid = user.uid,
+                        displayName = user.displayName ?: email.substringBefore('@'),
+                        email = user.email,
+                        bio = null,
+                        status = UserStatus.ONLINE,
+                        createdAt = System.currentTimeMillis(),
+                        lastSeen = System.currentTimeMillis()
+                    )
+
+                    createUserProfileUseCase(defaultProfile).onSuccess {
+                        // Navigate to profile setup screen after creating default profile
+                        _uiEvent.emit(UiEvent.Navigate(Screen.UserProfileSetupScreen.route))
+                    }.onFailure { exception ->
+                        _uiEvent.emit(UiEvent.ShowSnackbar("Profile creation failed: ${exception.message}"))
+                    }
                 }.onFailure { exception ->
                     _authState.value = AuthState.Error(exception.message ?: "Registration failed")
+                    _uiEvent.emit(UiEvent.ShowSnackbar(exception.message ?: "Registration failed"))
                 }
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Unknown error")
+                _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
             }
         }
     }

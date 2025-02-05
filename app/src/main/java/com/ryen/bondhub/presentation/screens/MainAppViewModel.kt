@@ -9,11 +9,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed class Screen(val route: String) {
-    data object AuthScreen : Screen("authScreen")
-    data object ChatScreen : Screen("chatScreen")
-    data object LoadingScreen : Screen("loadingScreen")
-}
 
 @HiltViewModel
 class MainAppViewModel @Inject constructor(

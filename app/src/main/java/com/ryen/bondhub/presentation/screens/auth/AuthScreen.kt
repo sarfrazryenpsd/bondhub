@@ -51,15 +51,17 @@ import com.ryen.bondhub.R
 import com.ryen.bondhub.presentation.event.AuthEvent
 import com.ryen.bondhub.presentation.event.UiEvent
 import com.ryen.bondhub.presentation.state.AuthState
+import com.ryen.bondhub.presentation.theme.BondHubTheme
 import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
 import com.ryen.bondhub.presentation.theme.Surface
 import com.ryen.bondhub.presentation.theme.Tertiary
 
+
 @Composable
 fun AuthScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    onNavigateToChat: () -> Unit
+    onNavigate: (String) -> Unit
 ) {
 
     val authState by viewModel.authState.collectAsState()
@@ -67,7 +69,8 @@ fun AuthScreen(
     LaunchedEffect(key1 = true) {
         viewModel.uiEvent.collect{event ->
             when(event){
-                is UiEvent.NavigateToChat -> onNavigateToChat()
+                is UiEvent.Navigate -> onNavigate(event.route)
+                is UiEvent.ShowSnackbar -> TODO()
             }
         }
     }
@@ -272,7 +275,7 @@ fun AuthScreen(
             when(authState){
                 is AuthState.Loading -> CircularProgressIndicator()
                 is AuthState.Error -> Text(text = (authState as AuthState.Error).message)
-                is AuthState.Authenticated -> { onNavigateToChat() }
+                is AuthState.Authenticated -> { onNavigate() }
                 else -> {}
             }
         }
@@ -282,5 +285,7 @@ fun AuthScreen(
 @Preview(showBackground = true)
 @Composable
 fun SignUpScreenPreview() {
-    AuthScreen( onNavigateToChat = {})
+    BondHubTheme {
+        AuthScreen( onNavigate = {})
+    }
 }

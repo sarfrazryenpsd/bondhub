@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,6 +16,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,8 +41,13 @@ import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
 import com.ryen.bondhub.presentation.theme.Surface
 
+
+
 @Composable
-fun UserProfileScreen() {
+fun ProfileUpdateScreen(
+    onDone: () -> Unit = {},
+    onSkip: () -> Unit = {}
+) {
 
     var displayName by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
@@ -77,10 +85,10 @@ fun UserProfileScreen() {
                             .border(4.dp, Color.Transparent, CircleShape)
                     )
                     Box(modifier = Modifier
-                        .size(25.dp)
+                        .size(40.dp)
                         .clip(CircleShape)
                         .clickable { /*TODO*/ }
-                        .background(Surface)
+                        .background(Primary)
                         .align(Alignment.BottomEnd)
                         .border(.5.dp, Surface, CircleShape)
                     ) {
@@ -94,6 +102,12 @@ fun UserProfileScreen() {
                         )
                     }
                 }
+                Text(
+                    text = "user@mail.com",
+                    color = Secondary,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
                 OutlinedTextField(
                     value = displayName,
                     onValueChange = { displayName = it.trim() },
@@ -124,12 +138,24 @@ fun UserProfileScreen() {
                 )
             }
 
-            Button(
-                onClick = { },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Primary)
-            ) { Text("Done") }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(
+                    onClick = { },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Secondary)
+                ) { Text("Skip") }
+                Button(
+                    onClick = { },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                )
+                { Text("Done") }
+            }
         }
     }
 }
@@ -137,5 +163,5 @@ fun UserProfileScreen() {
 @Preview
 @Composable
 private fun UserProfileScreenPreview() {
-    UserProfileScreen()
+    ProfileUpdateScreen()
 }
