@@ -1,5 +1,6 @@
 package com.ryen.bondhub.presentation.screens.auth
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryen.bondhub.domain.model.UserProfile
@@ -63,6 +64,7 @@ class AuthViewModel @Inject constructor(
             try {
                 val signUpResult = signUpUseCase(email, password, displayName)
                 signUpResult.onSuccess { user ->
+                    Log.d("Auth", "User created: ${user.uid}, Email: ${user.email}")
                     _authState.value = AuthState.Authenticated(user)
 
                     // Create default user profile
@@ -77,9 +79,11 @@ class AuthViewModel @Inject constructor(
                     )
 
                     createUserProfileUseCase(defaultProfile).onSuccess {
+                        Log.d("Firestore", "User profile successfully created in Firestore!")
                         // Navigate to profile setup screen after creating default profile
                         _uiEvent.emit(UiEvent.Navigate(Screen.UserProfileSetupScreen.route))
                     }.onFailure { exception ->
+                        Log.e("Firestore", "Error writing profile: ${exception.message}", exception)
                         _uiEvent.emit(UiEvent.ShowSnackbar("Profile creation failed: ${exception.message}"))
                     }
                 }.onFailure { exception ->

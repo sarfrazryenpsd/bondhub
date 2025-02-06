@@ -1,5 +1,6 @@
 package com.ryen.bondhub.data.repository
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.UserProfileRepository
@@ -10,20 +11,25 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class UserProfileRepositoryImpl @Inject constructor(
-    private val firestore: FirebaseFirestore,
+    firestore: FirebaseFirestore,
 ): UserProfileRepository {
 
     private val usersCollection = firestore.collection("users")
 
-    override suspend fun createUserProfile(userProfile: UserProfile): Result<Unit> =
-        try {
+    override suspend fun createUserProfile(userProfile: UserProfile): Result<Unit> {
+        return try {
+            Log.d("Firestore", "Attempting to create profile for ${userProfile.uid}")
             usersCollection.document(userProfile.uid)
                 .set(userProfile)
                 .await()
+            Log.d("Firestore", "Profile created for ${userProfile.uid}")
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("Firestore", "Firestore error: ${e.message}", e)
             Result.failure(e)
         }
+    }
+
 
     override suspend fun getUserProfile(uid: String): Result<UserProfile> =
         try {
