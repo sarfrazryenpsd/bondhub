@@ -58,11 +58,9 @@ dependencies {
     implementation(libs.dagger.hilt.compose)
     implementation(libs.coil)
     implementation(libs.coil.network)
-    implementation(platform(libs.firebase))
-    implementation(libs.firebase.auth)
-    implementation(libs.firebase.database)
-    implementation(libs.firebase.firestore.ktx)
-    //implementation(libs.firebase.crashlytics)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.bundles.firebase)
+    implementation(libs.play.services.auth)
 
 
     testImplementation(libs.junit)

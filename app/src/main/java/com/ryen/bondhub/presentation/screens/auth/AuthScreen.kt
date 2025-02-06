@@ -50,6 +50,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ryen.bondhub.R
 import com.ryen.bondhub.presentation.event.AuthEvent
 import com.ryen.bondhub.presentation.event.UiEvent
+import com.ryen.bondhub.presentation.screens.Screen
 import com.ryen.bondhub.presentation.state.AuthState
 import com.ryen.bondhub.presentation.theme.BondHubTheme
 import com.ryen.bondhub.presentation.theme.Primary
@@ -272,11 +273,13 @@ fun AuthScreen(
                         .clickable { signInState = !signInState }
                 )
             }
-            when(authState){
-                is AuthState.Loading -> CircularProgressIndicator()
-                is AuthState.Error -> Text(text = (authState as AuthState.Error).message)
-                is AuthState.Authenticated -> { onNavigate() }
-                else -> {}
+            when (val state = authState) {
+                AuthState.Loading -> CircularProgressIndicator()
+                is AuthState.Error -> Text(text = state.message)
+                is AuthState.Authenticated -> LaunchedEffect(state) {
+                    onNavigate(Screen.ChatScreen.route)
+                }
+                else -> Unit
             }
         }
     }
