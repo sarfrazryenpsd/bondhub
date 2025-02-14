@@ -276,9 +276,10 @@ fun AuthScreen(
             when (val state = authState) {
                 AuthState.Loading -> CircularProgressIndicator()
                 is AuthState.Error -> Text(text = state.message)
-                is AuthState.Authenticated -> LaunchedEffect(state) {
+                is AuthState.SignInSuccess-> LaunchedEffect(state) {
                     onNavigate(Screen.ChatScreen.route)
                 }
+                is AuthState.SignUpSuccess -> { }
                 else -> Unit
             }
         }

@@ -67,7 +67,7 @@ class UserProfileRepositoryImpl @Inject constructor(
                     }
                 }
             }
-        awaitClose { subscription.remove() }
+        awaitClose { subscription.remove()  }
     }
 
 }
