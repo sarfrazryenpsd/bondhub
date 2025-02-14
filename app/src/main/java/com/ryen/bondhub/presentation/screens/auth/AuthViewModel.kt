@@ -37,20 +37,19 @@ class AuthViewModel @Inject constructor(
         when (event) {
             is AuthEvent.SignIn -> signIn(event.email, event.password)
             is AuthEvent.SignUp -> signUp(event.email, event.password, event.displayName)
-            is AuthEvent.SignOut -> signOut()
         }
     }
 
     private fun signIn(email: String, password: String) {
         viewModelScope.launch {
+            _authState.value = AuthState.Loading
             try {
-                val result = signInUseCase(email, password)
-                result.onSuccess { user ->
-                    _authState.value = AuthState.Authenticated(user)
-                    _uiEvent.emit(UiEvent.Navigate(Screen.ChatScreen.route))
+                val signInResult = signInUseCase(email, password)
+                signInResult.onSuccess { user ->
+                    _authState.value = AuthState.SignInSuccess(user)
                 }.onFailure { exception ->
-                    _authState.value = AuthState.Error(exception.message ?: "Authentication failed")
-                    _uiEvent.emit(UiEvent.ShowSnackbar(exception.message ?: "Authentication failed"))
+                    _authState.value = AuthState.Error(exception.message ?: "Sign in failed")
+                    _uiEvent.emit(UiEvent.ShowSnackbar(exception.message ?: "Sign in failed"))
                 }
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Unknown error")
@@ -61,11 +60,12 @@ class AuthViewModel @Inject constructor(
 
     private fun signUp(email: String, password: String, displayName: String) {
         viewModelScope.launch {
+            _authState.value = AuthState.Loading
             try {
                 val signUpResult = signUpUseCase(email, password, displayName)
                 signUpResult.onSuccess { user ->
                     Log.d("Auth", "User created: ${user.uid}, Email: ${user.email}")
-                    _authState.value = AuthState.Authenticated(user)
+                    _authState.value = AuthState.SignUpSuccess(user)
 
                     // Create default user profile
                     val defaultProfile = UserProfile(
@@ -80,7 +80,6 @@ class AuthViewModel @Inject constructor(
 
                     createUserProfileUseCase(defaultProfile).onSuccess {
                         Log.d("Firestore", "User profile successfully created in Firestore!")
-                        // Navigate to profile setup screen after creating default profile
                         _uiEvent.emit(UiEvent.Navigate(Screen.UserProfileSetupScreen.route))
                     }.onFailure { exception ->
                         Log.e("Firestore", "Error writing profile: ${exception.message}", exception)
@@ -95,9 +94,5 @@ class AuthViewModel @Inject constructor(
                 _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
             }
         }
-    }
-
-    private fun signOut(){
-
     }
 }

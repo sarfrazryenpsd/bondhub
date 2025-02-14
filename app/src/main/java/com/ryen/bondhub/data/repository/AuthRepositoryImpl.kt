@@ -52,7 +52,7 @@ class AuthRepositoryImpl @Inject constructor(
                     .setDisplayName(displayName)
                     .build()
                 firebaseUser.updateProfile(profileUpdate).await()
-                Result.success(firebaseUser.toUser())
+               Result.success(firebaseUser.toUser())
             } ?: Result.failure(Exception("User creation failed"))
         } catch (e: Exception){
             Result.failure(e)
