@@ -1,13 +1,9 @@
 package com.ryen.bondhub.presentation.screens.auth
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ryen.bondhub.domain.model.UserProfile
-import com.ryen.bondhub.domain.model.UserStatus
 import com.ryen.bondhub.domain.useCases.auth.SignInUseCase
 import com.ryen.bondhub.domain.useCases.auth.SignUpUseCase
-import com.ryen.bondhub.domain.useCases.userProfile.CreateUserProfileUseCase
 import com.ryen.bondhub.presentation.event.AuthEvent
 import com.ryen.bondhub.presentation.event.UiEvent
 import com.ryen.bondhub.presentation.screens.Screen
@@ -23,8 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val signInUseCase: SignInUseCase,
-    private val signUpUseCase: SignUpUseCase,
-    private val createUserProfileUseCase: CreateUserProfileUseCase
+    private val signUpUseCase: SignUpUseCase
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
@@ -44,9 +39,9 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
-                val signInResult = signInUseCase(email, password)
-                signInResult.onSuccess { user ->
-                    _authState.value = AuthState.SignInSuccess(user)
+                signInUseCase(email, password).onSuccess { user ->
+                    _authState.value = AuthState.Success(user, isNewUser = false)
+                    _uiEvent.emit(UiEvent.Navigate(Screen.ChatScreen.route))
                 }.onFailure { exception ->
                     _authState.value = AuthState.Error(exception.message ?: "Sign in failed")
                     _uiEvent.emit(UiEvent.ShowSnackbar(exception.message ?: "Sign in failed"))
@@ -62,32 +57,12 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
-                val signUpResult = signUpUseCase(email, password, displayName)
-                signUpResult.onSuccess { user ->
-                    Log.d("Auth", "User created: ${user.uid}, Email: ${user.email}")
-                    _authState.value = AuthState.SignUpSuccess(user)
-
-                    // Create default user profile
-                    val defaultProfile = UserProfile(
-                        uid = user.uid,
-                        displayName = user.displayName ?: email.substringBefore('@'),
-                        email = user.email,
-                        bio = null,
-                        status = UserStatus.ONLINE,
-                        createdAt = System.currentTimeMillis(),
-                        lastSeen = System.currentTimeMillis()
-                    )
-
-                    createUserProfileUseCase(defaultProfile).onSuccess {
-                        Log.d("Firestore", "User profile successfully created in Firestore!")
-                        _uiEvent.emit(UiEvent.Navigate(Screen.UserProfileSetupScreen.route))
-                    }.onFailure { exception ->
-                        Log.e("Firestore", "Error writing profile: ${exception.message}", exception)
-                        _uiEvent.emit(UiEvent.ShowSnackbar("Profile creation failed: ${exception.message}"))
-                    }
+                signUpUseCase(email, password, displayName).onSuccess { user ->
+                    _authState.value = AuthState.Success(user, isNewUser = true)
+                    _uiEvent.emit(UiEvent.Navigate(Screen.UserProfileSetupScreen.route))
                 }.onFailure { exception ->
-                    _authState.value = AuthState.Error(exception.message ?: "Registration failed")
-                    _uiEvent.emit(UiEvent.ShowSnackbar(exception.message ?: "Registration failed"))
+                    _authState.value = AuthState.Error(exception.message ?: "Sign up failed")
+                    _uiEvent.emit(UiEvent.ShowSnackbar(exception.message ?: "Sign up failed"))
                 }
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Unknown error")

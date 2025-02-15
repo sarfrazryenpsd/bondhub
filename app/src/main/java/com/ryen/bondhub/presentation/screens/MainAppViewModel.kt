@@ -13,7 +13,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MainAppViewModel @Inject constructor(
     private val getAuthStateUseCase: GetAuthStateUseCase
-): ViewModel() {
+) : ViewModel() {
 
     private val _startDestination = MutableStateFlow<Screen?>(null)
     val startDestination = _startDestination.asStateFlow()
@@ -25,13 +25,12 @@ class MainAppViewModel @Inject constructor(
     private fun observeAuthState() {
         viewModelScope.launch {
             getAuthStateUseCase().collect { isAuthenticated ->
-                if (isAuthenticated) {
-                    _startDestination.value = Screen.ChatScreen
+                _startDestination.value = if (isAuthenticated) {
+                    Screen.ChatScreen
                 } else {
-                    _startDestination.value = Screen.AuthScreen
+                    Screen.AuthScreen
                 }
             }
         }
     }
-
 }
