@@ -50,7 +50,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ryen.bondhub.R
 import com.ryen.bondhub.presentation.event.AuthEvent
 import com.ryen.bondhub.presentation.event.UiEvent
-import com.ryen.bondhub.presentation.screens.Screen
 import com.ryen.bondhub.presentation.state.AuthState
 import com.ryen.bondhub.presentation.theme.BondHubTheme
 import com.ryen.bondhub.presentation.theme.Primary
@@ -68,7 +67,7 @@ fun AuthScreen(
     val authState by viewModel.authState.collectAsState()
 
     LaunchedEffect(key1 = true) {
-        viewModel.uiEvent.collect{event ->
+        viewModel.uiEvent.collect{ event ->
             when(event){
                 is UiEvent.Navigate -> onNavigate(event.route)
                 is UiEvent.ShowSnackbar -> TODO()
@@ -273,14 +272,13 @@ fun AuthScreen(
                         .clickable { signInState = !signInState }
                 )
             }
-            when (val state = authState) {
-                AuthState.Loading -> CircularProgressIndicator()
-                is AuthState.Error -> Text(text = state.message)
-                is AuthState.SignInSuccess-> LaunchedEffect(state) {
-                    onNavigate(Screen.ChatScreen.route)
+            when (authState) {
+                is AuthState.Loading -> CircularProgressIndicator()
+                is AuthState.Error -> Text(text = (authState as AuthState.Error).message)
+                is AuthState.Success -> {
+                    // Navigation is handled by UiEvents
                 }
-                is AuthState.SignUpSuccess -> { }
-                else -> Unit
+                AuthState.Initial -> Unit
             }
         }
     }

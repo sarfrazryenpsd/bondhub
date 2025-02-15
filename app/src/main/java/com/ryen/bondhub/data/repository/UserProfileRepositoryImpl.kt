@@ -16,21 +16,6 @@ class UserProfileRepositoryImpl @Inject constructor(
 
     private val usersCollection = firestore.collection("users")
 
-    override suspend fun createUserProfile(userProfile: UserProfile): Result<Unit> {
-        return try {
-            Log.d("Firestore", "Attempting to create profile for ${userProfile.uid}")
-            usersCollection.document(userProfile.uid)
-                .set(userProfile)
-                .await()
-            Log.d("Firestore", "Profile created for ${userProfile.uid}")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e("Firestore", "Firestore error: ${e.message}", e)
-            Result.failure(e)
-        }
-    }
-
-
     override suspend fun getUserProfile(uid: String): Result<UserProfile> =
         try {
             val snapshot = usersCollection.document(uid).get().await()

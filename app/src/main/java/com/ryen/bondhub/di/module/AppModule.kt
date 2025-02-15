@@ -9,7 +9,6 @@ import com.ryen.bondhub.domain.repository.UserProfileRepository
 import com.ryen.bondhub.domain.useCases.auth.GetAuthStateUseCase
 import com.ryen.bondhub.domain.useCases.auth.SignInUseCase
 import com.ryen.bondhub.domain.useCases.auth.SignUpUseCase
-import com.ryen.bondhub.domain.useCases.userProfile.CreateUserProfileUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.UpdateUserProfileUseCase
 import dagger.Module
@@ -32,7 +31,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAuthRepository(auth: FirebaseAuth): AuthRepository = AuthRepositoryImpl(auth)
+    fun provideAuthRepository(auth: FirebaseAuth, firestore: FirebaseFirestore): AuthRepository = AuthRepositoryImpl(auth, firestore)
 
     @Provides
     @Singleton
@@ -50,9 +49,6 @@ object AppModule {
     @Singleton
     fun provideUserProfileRepository(firestore: FirebaseFirestore): UserProfileRepository = UserProfileRepositoryImpl(firestore)
 
-    @Provides
-    @Singleton
-    fun provideCreateUserProfileUseCase(repository: UserProfileRepository): CreateUserProfileUseCase = CreateUserProfileUseCase(repository)
 
     @Provides
     @Singleton
