@@ -8,9 +8,6 @@ import com.ryen.bondhub.domain.model.UserAuth
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.AuthRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -51,7 +48,7 @@ class AuthRepositoryImpl @Inject constructor(
             // 3. Create default profile in Firestore
             val defaultProfile = UserProfile(
                 uid = firebaseUser.uid,
-                displayName = displayName,
+                displayName = displayName.ifEmpty { email.substringBefore('@') },
                 email = email
             )
 
@@ -62,20 +59,27 @@ class AuthRepositoryImpl @Inject constructor(
 
             Result.success(firebaseUser.toUserAuth())
         } catch (e: Exception) {
+            // If anything fails, attempt to delete the user and return failure
+            auth.currentUser?.delete()
             Result.failure(e)
         }
     }
 
-    override fun getCurrentUser(): UserAuth? =
-        auth.currentUser?.toUserAuth()
+    override suspend fun isProfileSetupComplete(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val currentUser = auth.currentUser ?: return@withContext false
+            val snapshot = firestore.collection("users")
+                .document(currentUser.uid)
+                .get()
+                .await()
 
-    override fun isUserAuthenticated(): Flow<Boolean> = callbackFlow {
-        val listener = FirebaseAuth.AuthStateListener { auth ->
-            trySend(auth.currentUser != null)
+            return@withContext snapshot.exists() &&
+                    snapshot.getBoolean("isProfileSetupComplete") == true
+        } catch (e: Exception) {
+            return@withContext false
         }
-        auth.addAuthStateListener(listener)
-        awaitClose { auth.removeAuthStateListener(listener) }
     }
+
 
     private fun FirebaseUser.toUserAuth() = UserAuth(
         uid = uid,

@@ -19,7 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val signInUseCase: SignInUseCase,
-    private val signUpUseCase: SignUpUseCase
+    private val signUpUseCase: SignUpUseCase,
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
@@ -32,6 +32,7 @@ class AuthViewModel @Inject constructor(
         when (event) {
             is AuthEvent.SignIn -> signIn(event.email, event.password)
             is AuthEvent.SignUp -> signUp(event.email, event.password, event.displayName)
+
         }
     }
 
@@ -70,4 +71,7 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
+
 }
+

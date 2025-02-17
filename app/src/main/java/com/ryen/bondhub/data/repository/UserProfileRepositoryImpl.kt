@@ -1,6 +1,5 @@
 package com.ryen.bondhub.data.repository
 
-import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.UserProfileRepository

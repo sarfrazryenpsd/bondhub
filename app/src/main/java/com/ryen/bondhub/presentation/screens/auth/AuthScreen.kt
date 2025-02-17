@@ -44,14 +44,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ryen.bondhub.R
 import com.ryen.bondhub.presentation.event.AuthEvent
 import com.ryen.bondhub.presentation.event.UiEvent
 import com.ryen.bondhub.presentation.state.AuthState
-import com.ryen.bondhub.presentation.theme.BondHubTheme
 import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
 import com.ryen.bondhub.presentation.theme.Surface
@@ -63,14 +61,15 @@ fun AuthScreen(
     viewModel: AuthViewModel = hiltViewModel(),
     onNavigate: (String) -> Unit
 ) {
-
     val authState by viewModel.authState.collectAsState()
 
     LaunchedEffect(key1 = true) {
-        viewModel.uiEvent.collect{ event ->
-            when(event){
+        viewModel.uiEvent.collect { event ->
+            when (event) {
                 is UiEvent.Navigate -> onNavigate(event.route)
-                is UiEvent.ShowSnackbar -> TODO()
+                is UiEvent.ShowSnackbar -> {
+                    // Handle snackbar
+                }
             }
         }
     }
@@ -284,10 +283,11 @@ fun AuthScreen(
     }
 }
 
+/*
 @Preview(showBackground = true)
 @Composable
 fun SignUpScreenPreview() {
     BondHubTheme {
-        AuthScreen( onNavigate = {})
+        AuthScreen()
     }
-}
+}*/
