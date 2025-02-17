@@ -6,7 +6,6 @@ import com.ryen.bondhub.data.repository.AuthRepositoryImpl
 import com.ryen.bondhub.data.repository.UserProfileRepositoryImpl
 import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.repository.UserProfileRepository
-import com.ryen.bondhub.domain.useCases.auth.GetAuthStateUseCase
 import com.ryen.bondhub.domain.useCases.auth.SignInUseCase
 import com.ryen.bondhub.domain.useCases.auth.SignUpUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
@@ -41,9 +40,6 @@ object AppModule {
     @Singleton
     fun provideSignUpUseCase(repository: AuthRepository): SignUpUseCase = SignUpUseCase(repository)
 
-    @Provides
-    @Singleton
-    fun provideGetAuthStateUseCase(repository: AuthRepository): GetAuthStateUseCase = GetAuthStateUseCase(repository)
 
     @Provides
     @Singleton
