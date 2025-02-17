@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -17,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.ryen.bondhub.presentation.screens.auth.AuthScreen
 import com.ryen.bondhub.presentation.screens.chat.ChatScreen
 import com.ryen.bondhub.presentation.screens.chat.ProfileUpdateScreen
+import com.ryen.bondhub.presentation.theme.BondHubTheme
 
 
 @Composable
@@ -75,3 +77,4 @@ fun MainApp(
         }
     }
 }
+
