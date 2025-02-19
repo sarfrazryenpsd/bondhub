@@ -7,12 +7,14 @@ import com.ryen.bondhub.domain.useCases.auth.SignUpUseCase
 import com.ryen.bondhub.presentation.event.AuthEvent
 import com.ryen.bondhub.presentation.event.UiEvent
 import com.ryen.bondhub.presentation.screens.Screen
-import com.ryen.bondhub.presentation.state.AuthState
+import com.ryen.bondhub.presentation.state.AuthScreenState
+import com.ryen.bondhub.presentation.state.AuthUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,8 +24,11 @@ class AuthViewModel @Inject constructor(
     private val signUpUseCase: SignUpUseCase,
 ) : ViewModel() {
 
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
-    val authState = _authState.asStateFlow()
+    private val _authScreenState = MutableStateFlow<AuthScreenState>(AuthScreenState.Initial)
+    val authState = _authScreenState.asStateFlow()
+
+    private val _authUiState = MutableStateFlow(AuthUiState())
+    val authUiState = _authUiState.asStateFlow()
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
@@ -36,19 +41,45 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun onEmailChange(email: String) {
+        _authUiState.update { it.copy(email = email) }
+    }
+
+    fun onFullNameChange(fullName: String) {
+        _authUiState.update { it.copy(fullName = fullName) }
+    }
+
+    fun onPasswordChange(password: String) {
+        _authUiState.update { it.copy(password = password) }
+    }
+
+    fun onConfirmPasswordChange(confirmPassword: String) {
+        _authUiState.update { it.copy(confirmPassword = confirmPassword) }
+    }
+
+    fun onVisibilityChange(visibility: Boolean) {
+        _authUiState.update { it.copy(passwordVisibility = visibility) }
+    }
+
+    fun onSignInStateChange(signInState: Boolean) {
+        _authUiState.update { it.copy(signInState = signInState) }
+    }
+
+
+
     private fun signIn(email: String, password: String) {
         viewModelScope.launch {
-            _authState.value = AuthState.Loading
+            _authScreenState.value = AuthScreenState.Loading
             try {
                 signInUseCase(email, password).onSuccess { user ->
-                    _authState.value = AuthState.Success(user, isNewUser = false)
+                    _authScreenState.value = AuthScreenState.Success(user, isNewUser = false)
                     _uiEvent.emit(UiEvent.Navigate(Screen.ChatScreen.route))
                 }.onFailure { exception ->
-                    _authState.value = AuthState.Error(exception.message ?: "Sign in failed")
+                    _authScreenState.value = AuthScreenState.Error(exception.message ?: "Sign in failed")
                     _uiEvent.emit(UiEvent.ShowSnackbar(exception.message ?: "Sign in failed"))
                 }
             } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Unknown error")
+                _authScreenState.value = AuthScreenState.Error(e.message ?: "Unknown error")
                 _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
             }
         }
@@ -56,17 +87,17 @@ class AuthViewModel @Inject constructor(
 
     private fun signUp(email: String, password: String, displayName: String) {
         viewModelScope.launch {
-            _authState.value = AuthState.Loading
+            _authScreenState.value = AuthScreenState.Loading
             try {
                 signUpUseCase(email, password, displayName).onSuccess { user ->
-                    _authState.value = AuthState.Success(user, isNewUser = true)
+                    _authScreenState.value = AuthScreenState.Success(user, isNewUser = true)
                     _uiEvent.emit(UiEvent.Navigate(Screen.UserProfileSetupScreen.route))
                 }.onFailure { exception ->
-                    _authState.value = AuthState.Error(exception.message ?: "Sign up failed")
+                    _authScreenState.value = AuthScreenState.Error(exception.message ?: "Sign up failed")
                     _uiEvent.emit(UiEvent.ShowSnackbar(exception.message ?: "Sign up failed"))
                 }
             } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Unknown error")
+                _authScreenState.value = AuthScreenState.Error(e.message ?: "Unknown error")
                 _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
             }
         }

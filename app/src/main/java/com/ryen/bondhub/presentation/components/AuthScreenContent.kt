@@ -54,7 +54,7 @@ fun AuthScreenContent(
     fullName: String,
     password: String,
     confirmPassword: String,
-    visibility: Boolean,
+    passwordVisibility: Boolean,
     signInState: Boolean,
     onEmailChange: (String) -> Unit,
     onFullNameChange: (String) -> Unit,
@@ -65,7 +65,7 @@ fun AuthScreenContent(
     onSignInClick: () -> Unit,
     onSignUpClick: () -> Unit,
 
-) {
+    ) {
     Scaffold(modifier = Modifier
         .fillMaxSize()
         .background(Surface)
@@ -151,6 +151,7 @@ fun AuthScreenContent(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Next
                 ),
+                supportingText = { Text("*Required") },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Rounded.MailOutline,
@@ -179,12 +180,12 @@ fun AuthScreenContent(
                         modifier = Modifier.size(24.dp)
                     )
                 },
-                visualTransformation = if (visibility) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     if (password.isNotEmpty()) {
-                        IconButton(onClick = { onVisibilityChange(!visibility) }) {
+                        IconButton(onClick = { onVisibilityChange(!passwordVisibility) }) {
                             Icon(
-                                painter = if (visibility) painterResource(R.drawable.visibilityonn) else painterResource(
+                                painter = if (passwordVisibility) painterResource(R.drawable.visibilityonn) else painterResource(
                                     R.drawable.visibilityoff
                                 ),
                                 tint = Color.Black.copy(alpha = .6f),
@@ -208,11 +209,11 @@ fun AuthScreenContent(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Done
                     ),
-                    visualTransformation = if (visibility) VisualTransformation.None else PasswordVisualTransformation(),
+                    visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         if (password.isNotEmpty()) {
-                            IconButton(onClick = { onVisibilityChange(!visibility) }) {
-                                if (visibility) {
+                            IconButton(onClick = { onVisibilityChange(!passwordVisibility) }) {
+                                if (passwordVisibility) {
                                     Icon(
                                         painter = painterResource(R.drawable.visibilityonn),
                                         tint = Color.Black.copy(alpha = .6f),
@@ -292,7 +293,7 @@ private fun AuthScreenSignInPrev() {
         fullName = "",
         password = "password123",
         confirmPassword = "password123",
-        visibility = false,
+        passwordVisibility = false,
         signInState = true,
         onEmailChange = {},
         onFullNameChange = {},
@@ -312,7 +313,7 @@ private fun AuthScreenSignUpPrev() {
         fullName = "John Doe",
         password = "password123",
         confirmPassword = "password123",
-        visibility = false,
+        passwordVisibility = false,
         signInState = false,
         onEmailChange = {},
         onFullNameChange = {},
