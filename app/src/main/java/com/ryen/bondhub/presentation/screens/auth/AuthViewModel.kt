@@ -9,6 +9,8 @@ import com.ryen.bondhub.presentation.event.UiEvent
 import com.ryen.bondhub.presentation.screens.Screen
 import com.ryen.bondhub.presentation.state.AuthScreenState
 import com.ryen.bondhub.presentation.state.AuthUiState
+import com.ryen.bondhub.util.AuthValidation
+import com.ryen.bondhub.util.ValidationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,19 +44,19 @@ class AuthViewModel @Inject constructor(
     }
 
     fun onEmailChange(email: String) {
-        _authUiState.update { it.copy(email = email) }
+        _authUiState.update { it.copy(email = email.trim()) }
     }
 
     fun onFullNameChange(fullName: String) {
-        _authUiState.update { it.copy(fullName = fullName) }
+        _authUiState.update { it.copy(fullName = fullName.trim()) }
     }
 
     fun onPasswordChange(password: String) {
-        _authUiState.update { it.copy(password = password) }
+        _authUiState.update { it.copy(password = password.trim()) }
     }
 
     fun onConfirmPasswordChange(confirmPassword: String) {
-        _authUiState.update { it.copy(confirmPassword = confirmPassword) }
+        _authUiState.update { it.copy(confirmPassword = confirmPassword.trim()) }
     }
 
     fun onVisibilityChange(visibility: Boolean) {
@@ -69,36 +71,67 @@ class AuthViewModel @Inject constructor(
 
     private fun signIn(email: String, password: String) {
         viewModelScope.launch {
-            _authScreenState.value = AuthScreenState.Loading
-            try {
-                signInUseCase(email, password).onSuccess { user ->
-                    _authScreenState.value = AuthScreenState.Success(user, isNewUser = false)
-                    _uiEvent.emit(UiEvent.Navigate(Screen.ChatScreen.route))
-                }.onFailure { exception ->
-                    _authScreenState.value = AuthScreenState.Error(exception.message ?: "Sign in failed")
-                    _uiEvent.emit(UiEvent.ShowSnackbar(exception.message ?: "Sign in failed"))
+            // First validate the input fields
+            when (val validationResult = AuthValidation.validateSignInFields(email, password)) {
+                is ValidationResult.Error -> {
+                    _uiEvent.emit(UiEvent.ShowSnackbar(validationResult.message))
+                    return@launch
                 }
-            } catch (e: Exception) {
-                _authScreenState.value = AuthScreenState.Error(e.message ?: "Unknown error")
-                _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
+                is ValidationResult.Success -> {
+                    // Proceed with sign in
+                    _authScreenState.value = AuthScreenState.Loading
+                    try {
+                        signInUseCase(email, password)
+                            .onSuccess { user ->
+                                _authScreenState.value = AuthScreenState.Success(user, isNewUser = false)
+                                _uiEvent.emit(UiEvent.Navigate(Screen.ChatScreen.route))
+                            }
+                            .onFailure { exception ->
+                                val errorMessage = AuthValidation.handleFirebaseAuthError(exception)
+                                _authScreenState.value = AuthScreenState.Error(errorMessage)
+                                _uiEvent.emit(UiEvent.ShowSnackbar(errorMessage))
+                            }
+                    } catch (e: Exception) {
+                        val errorMessage = "Unable to connect. Please check your internet connection."
+                        _authScreenState.value = AuthScreenState.Error(errorMessage)
+                        _uiEvent.emit(UiEvent.ShowSnackbar(errorMessage))
+                    }
+                }
             }
         }
     }
 
     private fun signUp(email: String, password: String, displayName: String) {
         viewModelScope.launch {
-            _authScreenState.value = AuthScreenState.Loading
-            try {
-                signUpUseCase(email, password, displayName).onSuccess { user ->
-                    _authScreenState.value = AuthScreenState.Success(user, isNewUser = true)
-                    _uiEvent.emit(UiEvent.Navigate(Screen.UserProfileSetupScreen.route))
-                }.onFailure { exception ->
-                    _authScreenState.value = AuthScreenState.Error(exception.message ?: "Sign up failed")
-                    _uiEvent.emit(UiEvent.ShowSnackbar(exception.message ?: "Sign up failed"))
+            // First validate all fields
+            when (val validationResult = AuthValidation.validateSignUpFields(
+                fullName = displayName,
+                email = email,
+                password = password,
+            )) {
+                is ValidationResult.Error -> {
+                    _uiEvent.emit(UiEvent.ShowSnackbar(validationResult.message))
+                    return@launch
                 }
-            } catch (e: Exception) {
-                _authScreenState.value = AuthScreenState.Error(e.message ?: "Unknown error")
-                _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
+                is ValidationResult.Success -> {
+                    _authScreenState.value = AuthScreenState.Loading
+                    try {
+                        signUpUseCase(email, password, displayName)
+                            .onSuccess { user ->
+                                _authScreenState.value = AuthScreenState.Success(user, isNewUser = true)
+                                _uiEvent.emit(UiEvent.Navigate(Screen.UserProfileSetupScreen.route))
+                            }
+                            .onFailure { exception ->
+                                val errorMessage = AuthValidation.handleFirebaseAuthError(exception)
+                                _authScreenState.value = AuthScreenState.Error(errorMessage)
+                                _uiEvent.emit(UiEvent.ShowSnackbar(errorMessage))
+                            }
+                    } catch (e: Exception) {
+                        val errorMessage = "Unable to connect. Please check your internet connection."
+                        _authScreenState.value = AuthScreenState.Error(errorMessage)
+                        _uiEvent.emit(UiEvent.ShowSnackbar(errorMessage))
+                    }
+                }
             }
         }
     }

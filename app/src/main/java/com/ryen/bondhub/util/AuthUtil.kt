@@ -59,18 +59,18 @@ object AuthValidation {
         }
     }
 
-    fun handleFirebaseAuthError(exception: Exception): String {
-        return when (exception) {
+    fun handleFirebaseAuthError(throwable: Throwable): String {
+        return when (throwable) {
             is FirebaseAuthWeakPasswordException -> "Password is too weak"
             is FirebaseAuthInvalidCredentialsException -> {
-                when (exception.errorCode) {
+                when (throwable.errorCode) {
                     "ERROR_INVALID_EMAIL" -> "Invalid email format"
                     "ERROR_WRONG_PASSWORD" -> "Incorrect password"
                     else -> "Invalid credentials"
                 }
             }
             is FirebaseAuthInvalidUserException -> {
-                when (exception.errorCode) {
+                when (throwable.errorCode) {
                     "ERROR_USER_NOT_FOUND" -> "No account found with this email"
                     "ERROR_USER_DISABLED" -> "This account has been disabled"
                     else -> "Account error"
@@ -88,12 +88,10 @@ object AuthValidation {
         fullName: String,
         email: String,
         password: String,
-        confirmPassword: String
     ): ValidationResult {
         validateFullName(fullName).let { if (it is ValidationResult.Error) return it }
         validateEmail(email).let { if (it is ValidationResult.Error) return it }
         validatePassword(password).let { if (it is ValidationResult.Error) return it }
-        validatePasswordMatch(password, confirmPassword).let { if (it is ValidationResult.Error) return it }
         return ValidationResult.Success
     }
 

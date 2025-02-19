@@ -64,7 +64,6 @@ fun AuthScreenContent(
     onSignInStateChange: (Boolean) -> Unit,
     onSignInClick: () -> Unit,
     onSignUpClick: () -> Unit,
-
     ) {
     Scaffold(modifier = Modifier
         .fillMaxSize()
