@@ -79,12 +79,21 @@ fun AuthScreenContent(
                 .background(color = Surface),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(R.drawable.logotype),
-                contentDescription = null,
-                modifier = Modifier.size(240.dp)
-            )
-            Spacer(modifier = Modifier.height(20.dp))
+            AnimatedVisibility(signInState){
+                Image(
+                    painter = painterResource(R.drawable.logofull),
+                    contentDescription = null,
+                    modifier = Modifier.padding(top = 40.dp).size(240.dp)
+                )
+            }
+            AnimatedVisibility(!signInState) {
+                Image(
+                    painter = painterResource(R.drawable.logotype),
+                    contentDescription = null,
+                    modifier = Modifier.size(240.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(if (signInState) 20.dp else 0.dp))
             Row {
                 Text(
                     text = "Sign ",
