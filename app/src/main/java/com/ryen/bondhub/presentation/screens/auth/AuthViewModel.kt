@@ -64,7 +64,14 @@ class AuthViewModel @Inject constructor(
     }
 
     fun onSignInStateChange(signInState: Boolean) {
-        _authUiState.update { it.copy(signInState = signInState) }
+        _authUiState.update { it.copy(
+            signInState = signInState,
+            passwordVisibility = false,
+            fullName = "",
+            email = "",
+            password = "",
+            confirmPassword = ""
+        ) }
     }
 
 
