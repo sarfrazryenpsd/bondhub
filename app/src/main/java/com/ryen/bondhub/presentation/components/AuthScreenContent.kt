@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,7 +29,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -47,6 +47,7 @@ import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
 import com.ryen.bondhub.presentation.theme.Surface
 import com.ryen.bondhub.presentation.theme.Tertiary
+import com.ryen.bondhub.util.ValidationResult
 
 @Composable
 fun AuthScreenContent(
@@ -64,11 +65,12 @@ fun AuthScreenContent(
     onSignInStateChange: (Boolean) -> Unit,
     onSignInClick: () -> Unit,
     onSignUpClick: () -> Unit,
+    onEmailCheck: (String) -> ValidationResult,
+    onFullNameCheck: (String) -> ValidationResult,
+    onPasswordCheck: (String) -> ValidationResult,
+    onConfirmPasswordCheck: (String, String) -> ValidationResult,
+    paddingValues: PaddingValues
     ) {
-    Scaffold(modifier = Modifier
-        .fillMaxSize()
-        .background(Surface)
-    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -129,6 +131,15 @@ fun AuthScreenContent(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Next
                     ),
+                    supportingText = {
+                        if(fullName.isNotEmpty() && !signInState){
+                            when(val result = onFullNameCheck(fullName)){
+                                is ValidationResult.Error -> Text(text = result.message, color = Color.Red)
+                                else -> {}
+
+                            }
+                        }
+                    },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Rounded.Face,
@@ -150,7 +161,15 @@ fun AuthScreenContent(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Next
                 ),
-                supportingText = { Text("*Required") },
+                supportingText = {
+                    if(email.isNotEmpty() && !signInState){
+                        when(val result = onEmailCheck(email)){
+                            is ValidationResult.Error -> Text(text = result.message, color = Color.Red)
+                            else -> {}
+
+                        }
+                    }
+                },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Rounded.MailOutline,
@@ -171,6 +190,15 @@ fun AuthScreenContent(
                     keyboardType = KeyboardType.Text,
                     imeAction = if (signInState) ImeAction.Done else ImeAction.Next
                 ),
+                supportingText = {
+                        if(password.isNotEmpty() && !signInState){
+                        when(val result = onPasswordCheck(password)){
+                            is ValidationResult.Error -> Text(text = result.message, color = Color.Red)
+                            else -> {}
+
+                        }
+                    }
+                },
                 leadingIcon = {
                     Icon(
                         painter = painterResource(R.drawable.password),
@@ -208,6 +236,15 @@ fun AuthScreenContent(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Done
                     ),
+                    supportingText = {
+                        if(confirmPassword.isNotEmpty() && password.isNotEmpty() && !signInState){
+                            when(val result = onConfirmPasswordCheck(password, confirmPassword)){
+                                is ValidationResult.Error -> Text(text = result.message, color = Color.Red)
+                                else -> {}
+
+                            }
+                        }
+                    },
                     visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         if (password.isNotEmpty()) {
@@ -281,7 +318,7 @@ fun AuthScreenContent(
                 )
             }
         }
-    }
+
 }
 
 @Preview
@@ -301,7 +338,12 @@ private fun AuthScreenSignInPrev() {
         onVisibilityChange = {},
         onSignInStateChange = {},
         onSignInClick = {},
-        onSignUpClick = {}
+        onSignUpClick = {},
+        paddingValues = PaddingValues(),
+        onEmailCheck = { ValidationResult.Error("Invalid email format") },
+        onFullNameCheck = { ValidationResult.Error("Name cannot be empty") },
+        onPasswordCheck = { ValidationResult.Error("Password cannot be empty") },
+        onConfirmPasswordCheck = { _, _ ->ValidationResult.Error("Passwords do not match")}
     )
 }
 @Preview
@@ -321,6 +363,11 @@ private fun AuthScreenSignUpPrev() {
         onVisibilityChange = {},
         onSignInStateChange = {},
         onSignInClick = {},
-        onSignUpClick = {}
+        onSignUpClick = {},
+        paddingValues = PaddingValues(),
+        onEmailCheck = { ValidationResult.Error("Invalid email format") },
+        onFullNameCheck = { ValidationResult.Error("Name cannot be empty") },
+        onPasswordCheck = { ValidationResult.Error("Password cannot be empty") },
+        onConfirmPasswordCheck = { _, _ -> ValidationResult.Error("Passwords do not match")}
     )
 }

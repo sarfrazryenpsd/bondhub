@@ -27,62 +27,64 @@ fun MainApp(
 ) {
     ProvideAuthRepository {
         Surface(modifier = Modifier.fillMaxSize()) {
-            var startDestination by remember { mutableStateOf(Screen.LoadingScreen.route) }
+            var startDestination by remember { mutableStateOf<String?>(null) }
             val authRepository = LocalAuthRepository.current
 
             LaunchedEffect(Unit) {
                 val currentUser = FirebaseAuth.getInstance().currentUser
-                if (currentUser != null) {
-                    startDestination = if (authRepository.isProfileSetupComplete()) {
+                startDestination = if (currentUser != null) {
+                    if (authRepository.isProfileSetupComplete()) {
                         Screen.ChatScreen.route
                     } else {
                         Screen.UserProfileSetupScreen.route
                     }
+                } else {
+                    Screen.AuthScreen.route
                 }
             }
 
-
-
-            NavHost(
-                navController = navController,
-                startDestination = startDestination
-            ) {
-                composable(Screen.LoadingScreen.route) {
-                    LoadingScreen()
-                }
-                composable(Screen.AuthScreen.route) {
-                    AuthScreen(
-                        onNavigate = { route ->
-                            navController.navigate(route) {
-                                popUpTo(Screen.AuthScreen.route) { inclusive = true }
+            // Show loading screen while determining start destination
+            if (startDestination == null) {
+                LoadingScreen()
+            } else {
+                NavHost(
+                    navController = navController,
+                    startDestination = startDestination!!
+                ) {
+                    composable(Screen.AuthScreen.route) {
+                        AuthScreen(
+                            onNavigate = { route ->
+                                navController.navigate(route) {
+                                    popUpTo(Screen.AuthScreen.route) { inclusive = true }
+                                }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                composable(Screen.UserProfileSetupScreen.route) {
-                    ProfileUpdateScreen(
-                        onDone = {
-                            navController.navigate(Screen.ChatScreen.route) {
-                                popUpTo(Screen.UserProfileSetupScreen.route) { inclusive = true }
+                    composable(Screen.UserProfileSetupScreen.route) {
+                        ProfileUpdateScreen(
+                            onDone = {
+                                navController.navigate(Screen.ChatScreen.route) {
+                                    popUpTo(Screen.UserProfileSetupScreen.route) { inclusive = true }
+                                }
+                            },
+                            onSkip = {
+                                navController.navigate(Screen.ChatScreen.route) {
+                                    popUpTo(Screen.UserProfileSetupScreen.route) { inclusive = true }
+                                }
                             }
-                        },
-                        onSkip = {
-                            navController.navigate(Screen.ChatScreen.route) {
-                                popUpTo(Screen.UserProfileSetupScreen.route) { inclusive = true }
-                            }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                composable(Screen.ChatScreen.route) {
-                    ChatScreen(
-                        onNavigateToAuth = {
-                            navController.navigate(Screen.AuthScreen.route) {
-                                popUpTo(Screen.ChatScreen.route) { inclusive = false }
+                    composable(Screen.ChatScreen.route) {
+                        ChatScreen(
+                            onNavigateToAuth = {
+                                navController.navigate(Screen.AuthScreen.route) {
+                                    popUpTo(Screen.ChatScreen.route) { inclusive = false }
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
