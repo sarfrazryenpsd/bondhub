@@ -16,6 +16,7 @@ import com.ryen.bondhub.presentation.components.AuthScreenContent
 import com.ryen.bondhub.presentation.components.CustomSnackbar
 import com.ryen.bondhub.presentation.event.AuthEvent
 import com.ryen.bondhub.presentation.event.UiEvent
+import com.ryen.bondhub.presentation.screens.LoadingScreen
 import com.ryen.bondhub.presentation.state.AuthScreenState
 import com.ryen.bondhub.util.AuthValidation
 
@@ -44,7 +45,7 @@ fun AuthScreen(
 
 
     Scaffold (
-        modifier = Modifier.fillMaxSize(),
+        //modifier = Modifier.fillMaxSize(),
         snackbarHost = { CustomSnackbar(snackbarHostState) },
         content = { paddingValue ->
             AuthScreenContent(
@@ -83,18 +84,19 @@ fun AuthScreen(
                 onConfirmPasswordCheck = { password, confirmPassword ->
                     AuthValidation.validatePasswordMatch(password, confirmPassword)
                 },
+                authState = authState,
                 paddingValues = paddingValue
             )
     }
     )
-    when (authState) {
-        is AuthScreenState.Loading -> CircularProgressIndicator()
-        is AuthScreenState.Error -> Text(text = (authState as AuthScreenState.Error).message)
+    /*when (authState) {
+        is AuthScreenState.Loading -> LoadingScreen()
+        is AuthScreenState.Error -> { }
         is AuthScreenState.Success -> {
             // Navigation is handled by UiEvents
         }
         AuthScreenState.Initial -> Unit
-    }
+    }*/
 
 }
 

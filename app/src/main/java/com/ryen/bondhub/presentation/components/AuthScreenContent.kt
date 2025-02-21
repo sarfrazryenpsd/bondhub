@@ -25,6 +25,7 @@ import androidx.compose.material.icons.rounded.Face
 import androidx.compose.material.icons.rounded.MailOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ryen.bondhub.R
+import com.ryen.bondhub.presentation.state.AuthScreenState
 import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
 import com.ryen.bondhub.presentation.theme.Surface
@@ -69,6 +71,7 @@ fun AuthScreenContent(
     onFullNameCheck: (String) -> ValidationResult,
     onPasswordCheck: (String) -> ValidationResult,
     onConfirmPasswordCheck: (String, String) -> ValidationResult,
+    authState: AuthScreenState,
     paddingValues: PaddingValues
     ) {
         Column(
@@ -83,7 +86,9 @@ fun AuthScreenContent(
                 Image(
                     painter = painterResource(R.drawable.logofull),
                     contentDescription = null,
-                    modifier = Modifier.padding(top = 40.dp).size(240.dp)
+                    modifier = Modifier
+                        .padding(top = 40.dp)
+                        .size(240.dp)
                 )
             }
             AnimatedVisibility(!signInState) {
@@ -291,22 +296,29 @@ fun AuthScreenContent(
                 )
             }
             Spacer(modifier = Modifier.height(30.dp))
-            Button(
-                onClick = if (signInState) onSignInClick else onSignUpClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                shape = RoundedCornerShape(8.dp),
-                enabled = signInState ||
-                        (password.isNotEmpty() &&
-                                confirmPassword.isNotEmpty() &&
-                                email.isNotEmpty() && fullName.isNotEmpty() &&
-                                (password == confirmPassword)),
-                colors = ButtonDefaults.buttonColors(containerColor = Primary)
-            ) { Text(
-                text = if (signInState) "Login" else "Sign Up",
-                style = MaterialTheme.typography.labelLarge
-            ) }
+            if(authState == AuthScreenState.Loading){
+                CircularProgressIndicator(color = Primary)
+            }
+            else{
+                Button(
+                    onClick = if (signInState) onSignInClick else onSignUpClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    enabled = signInState ||
+                            (password.isNotEmpty() &&
+                                    confirmPassword.isNotEmpty() &&
+                                    email.isNotEmpty() && fullName.isNotEmpty() &&
+                                    (password == confirmPassword)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                ) {
+                    Text(
+                        text = if (signInState) "Login" else "Sign Up",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
@@ -352,7 +364,8 @@ private fun AuthScreenSignInPrev() {
         onEmailCheck = { ValidationResult.Error("Invalid email format") },
         onFullNameCheck = { ValidationResult.Error("Name cannot be empty") },
         onPasswordCheck = { ValidationResult.Error("Password cannot be empty") },
-        onConfirmPasswordCheck = { _, _ ->ValidationResult.Error("Passwords do not match")}
+        onConfirmPasswordCheck = { _, _ ->ValidationResult.Error("Passwords do not match")},
+        authState = AuthScreenState.Initial
     )
 }
 @Preview
@@ -377,6 +390,7 @@ private fun AuthScreenSignUpPrev() {
         onEmailCheck = { ValidationResult.Error("Invalid email format") },
         onFullNameCheck = { ValidationResult.Error("Name cannot be empty") },
         onPasswordCheck = { ValidationResult.Error("Password cannot be empty") },
-        onConfirmPasswordCheck = { _, _ -> ValidationResult.Error("Passwords do not match")}
+        onConfirmPasswordCheck = { _, _ -> ValidationResult.Error("Passwords do not match")},
+        authState = AuthScreenState.Loading
     )
 }
