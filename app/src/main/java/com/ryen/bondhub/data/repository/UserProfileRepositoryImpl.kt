@@ -1,57 +1,79 @@
 package com.ryen.bondhub.data.repository
 
+import android.content.Context
+import android.net.Uri
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.ryen.bondhub.domain.model.ProfilePicUrls
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.UserProfileRepository
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import com.ryen.bondhub.util.ImageProcessingUtils
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class UserProfileRepositoryImpl @Inject constructor(
     firestore: FirebaseFirestore,
+    storage: FirebaseStorage,
+    @ApplicationContext private val context: Context
+
 ): UserProfileRepository {
 
     private val usersCollection = firestore.collection("users")
+    private val profilePicsRef = storage.reference.child("profile_pictures")
+    private val thumbnailsRef = storage.reference.child("profile_pictures_thumbnails")
 
-    override suspend fun getUserProfile(uid: String): Result<UserProfile> =
+    override suspend fun uploadProfileImage(userId: String, imageUri: Uri): Result<ProfilePicUrls> = withContext(
+        Dispatchers.IO) {
         try {
-            val snapshot = usersCollection.document(uid).get().await()
-            if(snapshot.exists()){
-                Result.success(snapshot.toObject(UserProfile::class.java)!!)
-            } else {
-                Result.failure(Exception("User profile not found"))
+            val processedImages = ImageProcessingUtils.processProfileImage(context, imageUri)
+                .getOrThrow()
+
+            // Upload main image and thumbnail concurrently
+            val uploads = coroutineScope {
+                val mainUpload = async {
+                    profilePicsRef.child("$userId.jpg")
+                        .putBytes(processedImages.mainImage)
+                        .await()
+                }
+                val thumbUpload = async {
+                    thumbnailsRef.child("$userId.jpg")
+                        .putBytes(processedImages.thumbnail)
+                        .await()
+                }
+                mainUpload.await() to thumbUpload.await()
             }
-        } catch (e: Exception){
-            Result.failure(e)
-        }
 
-    override suspend fun updateUserProfile(updates: Map<String, Any>): Result<Unit> =
-        try {
-            usersCollection.document(updates["uid"] as String)
-                .update(updates)
-                .await()
-            Result.success(Unit)
+            // Get download URLs
+            val mainUrl = uploads.first.storage.downloadUrl.await().toString()
+            val thumbUrl = uploads.second.storage.downloadUrl.await().toString()
+
+            Result.success(ProfilePicUrls(mainUrl, thumbUrl))
         } catch (e: Exception) {
             Result.failure(e)
         }
-
-    override fun observeUserProfile(uid: String): Flow<Result<UserProfile>> = callbackFlow {
-        val subscription = usersCollection.document(uid)
-            .addSnapshotListener { snapshot, error ->
-                if(error != null){
-                    close(error)
-                    return@addSnapshotListener
-                }
-
-                if(snapshot != null && snapshot.exists()){
-                    snapshot.toObject(UserProfile::class.java)?.let {
-                        trySend(Result.success(it))
-                    }
-                }
-            }
-        awaitClose { subscription.remove()  }
     }
+
+
+
+
+    override suspend fun updateUserProfile(userProfile: UserProfile): Result<Unit> = try {
+        val update = mapOf(
+            "displayName" to userProfile.displayName,
+            "bio" to userProfile.bio,
+        )
+        usersCollection.document(userProfile.uid)
+            .update(update)
+            .await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+
 
 }

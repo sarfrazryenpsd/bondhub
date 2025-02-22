@@ -73,7 +73,7 @@ fun ProfileUpdateScreen(
                             .clip(CircleShape)
                             .background(Color.Transparent)
                             .size(120.dp)
-                            .border(3.dp, Primary, CircleShape)
+                            .border(2.2.dp, Secondary, CircleShape)
                     )
                     Image(
                         painter = painterResource(R.drawable.userplaceholder),
@@ -90,7 +90,7 @@ fun ProfileUpdateScreen(
                         .clickable { /*TODO*/ }
                         .background(Primary)
                         .align(Alignment.BottomEnd)
-                        .border(.5.dp, Surface, CircleShape)
+                        //.border(.3.dp, Surface, CircleShape)
                     ) {
                         Image(
                             painter = painterResource(R.drawable.edit_icon),
@@ -154,7 +154,7 @@ fun ProfileUpdateScreen(
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Primary)
                 )
-                { Text("Done") }
+                { Text("Save") }
             }
         }
     }
