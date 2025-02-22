@@ -1,18 +1,20 @@
 package com.ryen.bondhub.di.module
 
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.ryen.bondhub.data.repository.AuthRepositoryImpl
 import com.ryen.bondhub.data.repository.UserProfileRepositoryImpl
 import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.repository.UserProfileRepository
 import com.ryen.bondhub.domain.useCases.auth.SignInUseCase
 import com.ryen.bondhub.domain.useCases.auth.SignUpUseCase
-import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.UpdateUserProfileUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -30,6 +32,16 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideFirebaseStorage(): FirebaseStorage = FirebaseStorage.getInstance()
+
+    @Provides
+    @ApplicationContext
+    fun provideContext(@ApplicationContext context: Context): Context {
+        return context
+    }
+
+    @Provides
+    @Singleton
     fun provideAuthRepository(auth: FirebaseAuth, firestore: FirebaseFirestore): AuthRepository = AuthRepositoryImpl(auth, firestore)
 
     @Provides
@@ -43,12 +55,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideUserProfileRepository(firestore: FirebaseFirestore): UserProfileRepository = UserProfileRepositoryImpl(firestore)
+    fun provideUserProfileRepository(firestore: FirebaseFirestore, firebaseStorage: FirebaseStorage, @ApplicationContext context: Context): UserProfileRepository = UserProfileRepositoryImpl(firestore, firebaseStorage, context)
 
-
-    @Provides
-    @Singleton
-    fun provideGetUserProfileUseCase(repository: UserProfileRepository): GetUserProfileUseCase = GetUserProfileUseCase(repository)
 
     @Provides
     @Singleton
