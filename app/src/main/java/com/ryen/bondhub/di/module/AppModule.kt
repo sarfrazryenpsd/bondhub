@@ -65,5 +65,9 @@ object AppModule {
     @Singleton
     fun provideUpdateProfileImageUseCase(repository: UserProfileRepository): UpdateProfileImageUseCase = UpdateProfileImageUseCase(repository)
 
+    @Provides
+    @Singleton
+    fun provideCompleteProfileImageUseCase(repository: UserProfileRepository): UpdateProfileImageUseCase = UpdateProfileImageUseCase(repository)
+
 
 }

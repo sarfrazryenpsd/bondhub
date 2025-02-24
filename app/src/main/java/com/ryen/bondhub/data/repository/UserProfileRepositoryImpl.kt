@@ -74,6 +74,19 @@ class UserProfileRepositoryImpl @Inject constructor(
         Result.failure(e)
     }
 
+    override suspend fun completeProfile(userProfile: UserProfile): Result<Unit> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            if (!userProfile.isProfileSetupComplete) {
+                val update = mapOf("isProfileSetupComplete" to true)
+                usersCollection.document(userProfile.uid)
+                    .update(update)
+                    .await()
+            }
+            Result.success(Unit) // Ensure a Result is always returned
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
 
 }
