@@ -1,6 +1,6 @@
 package com.ryen.bondhub.domain.model
 
-data class ProfilePicUrls(
+data class ProfileImageUrls(
     val mainUrl: String,
     val thumbnailUrl: String
 )

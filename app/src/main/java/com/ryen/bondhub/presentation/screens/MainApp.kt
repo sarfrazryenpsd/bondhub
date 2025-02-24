@@ -18,7 +18,7 @@ import com.ryen.bondhub.di.module.LocalAuthRepository
 import com.ryen.bondhub.di.module.ProvideAuthRepository
 import com.ryen.bondhub.presentation.screens.auth.AuthScreen
 import com.ryen.bondhub.presentation.screens.chat.ChatScreen
-import com.ryen.bondhub.presentation.screens.chat.ProfileUpdateScreen
+import com.ryen.bondhub.presentation.screens.userProfile.ProfileUpdateScreen
 
 
 @Composable
