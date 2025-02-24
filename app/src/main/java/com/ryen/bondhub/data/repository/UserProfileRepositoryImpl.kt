@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import com.ryen.bondhub.domain.model.ProfilePicUrls
+import com.ryen.bondhub.domain.model.ProfileImageUrls
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.UserProfileRepository
 import com.ryen.bondhub.util.ImageProcessingUtils
@@ -27,7 +27,7 @@ class UserProfileRepositoryImpl @Inject constructor(
     private val profilePicsRef = storage.reference.child("profile_pictures")
     private val thumbnailsRef = storage.reference.child("profile_pictures_thumbnails")
 
-    override suspend fun uploadProfileImage(userId: String, imageUri: Uri): Result<ProfilePicUrls> = withContext(
+    override suspend fun updateProfileImage(userId: String, imageUri: Uri): Result<ProfileImageUrls> = withContext(
         Dispatchers.IO) {
         try {
             val processedImages = ImageProcessingUtils.processProfileImage(context, imageUri)
@@ -52,7 +52,7 @@ class UserProfileRepositoryImpl @Inject constructor(
             val mainUrl = uploads.first.storage.downloadUrl.await().toString()
             val thumbUrl = uploads.second.storage.downloadUrl.await().toString()
 
-            Result.success(ProfilePicUrls(mainUrl, thumbUrl))
+            Result.success(ProfileImageUrls(mainUrl, thumbUrl))
         } catch (e: Exception) {
             Result.failure(e)
         }

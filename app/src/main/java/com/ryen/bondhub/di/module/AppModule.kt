@@ -10,6 +10,7 @@ import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.repository.UserProfileRepository
 import com.ryen.bondhub.domain.useCases.auth.SignInUseCase
 import com.ryen.bondhub.domain.useCases.auth.SignUpUseCase
+import com.ryen.bondhub.domain.useCases.userProfile.UpdateProfileImageUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.UpdateUserProfileUseCase
 import dagger.Module
 import dagger.Provides
@@ -36,9 +37,7 @@ object AppModule {
 
     @Provides
     @ApplicationContext
-    fun provideContext(@ApplicationContext context: Context): Context {
-        return context
-    }
+    fun provideContext(@ApplicationContext context: Context): Context = context
 
     @Provides
     @Singleton
@@ -61,6 +60,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideUpdateUserProfileUseCase(repository: UserProfileRepository): UpdateUserProfileUseCase = UpdateUserProfileUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun provideUpdateProfileImageUseCase(repository: UserProfileRepository): UpdateProfileImageUseCase = UpdateProfileImageUseCase(repository)
 
 
 }

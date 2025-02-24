@@ -1,4 +1,4 @@
-package com.ryen.bondhub.presentation.screens.chat
+package com.ryen.bondhub.presentation.screens.userProfile
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
