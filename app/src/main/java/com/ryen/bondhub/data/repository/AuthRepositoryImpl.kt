@@ -80,6 +80,10 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getCurrentUser(): UserAuth? {
+        return auth.currentUser?.toUserAuth()
+    }
+
 
     private fun FirebaseUser.toUserAuth() = UserAuth(
         uid = uid,

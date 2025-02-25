@@ -4,7 +4,7 @@ import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.UserProfileRepository
 import javax.inject.Inject
 
-class CompleteProfileImageUseCase @Inject constructor(
+class CompleteProfileUseCase @Inject constructor(
     private val repository: UserProfileRepository
 ) {
     suspend operator fun invoke(userProfile: UserProfile) = repository.completeProfile(userProfile)
