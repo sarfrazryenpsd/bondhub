@@ -2,6 +2,7 @@ package com.ryen.bondhub.presentation.screens.userProfile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.useCases.userProfile.CompleteProfileUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
@@ -21,7 +22,7 @@ class UserProfileViewModel @Inject constructor(
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
     private val updateProfileImageUseCase: UpdateProfileImageUseCase,
     private val completeProfileUseCase: CompleteProfileUseCase,
-    private val getProfileImageUseCase: GetUserProfileUseCase,
+    private val getUserProfileUseCase: GetUserProfileUseCase,
     private val authRepository: AuthRepository,
 ): ViewModel() {
 
@@ -37,10 +38,16 @@ class UserProfileViewModel @Inject constructor(
         // Initialize the UI state with the user's profile data
         // Update isProfileSetupComplete to true once user sign up
 
-        viewModelScope.launch(Dispatchers.IO) {
+        loadUserProfile()
+    }
+
+    private fun loadUserProfile(){
+        viewModelScope.launch {
+            _userProfileScreenState.value = UserProfileScreenState.Loading
+
             try{
                 authRepository.getCurrentUser()!!.let { user ->
-                    val userProfileResult = getProfileImageUseCase(user.uid)
+                    val userProfileResult = getUserProfileUseCase(user.uid)
                     userProfileResult.onSuccess { userProfile ->
 
                         _userProfileUiState.value = _userProfileUiState.value.copy(
@@ -60,6 +67,13 @@ class UserProfileViewModel @Inject constructor(
                 _userProfileScreenState.value = UserProfileScreenState.Error(e.message ?: "Unknown error")
             }
         }
+    }
+
+    fun updateUserProfile(userProfile: UserProfile){
+        viewModelScope.launch(Dispatchers.IO) {
+
+        }
+
     }
 
 }
