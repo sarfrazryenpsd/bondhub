@@ -10,6 +10,8 @@ import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.repository.UserProfileRepository
 import com.ryen.bondhub.domain.useCases.auth.SignInUseCase
 import com.ryen.bondhub.domain.useCases.auth.SignUpUseCase
+import com.ryen.bondhub.domain.useCases.userProfile.CompleteProfileUseCase
+import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.UpdateProfileImageUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.UpdateUserProfileUseCase
 import dagger.Module
@@ -67,7 +69,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideCompleteProfileImageUseCase(repository: UserProfileRepository): UpdateProfileImageUseCase = UpdateProfileImageUseCase(repository)
+    fun provideGetProfileImageUseCase(repository: UserProfileRepository): GetUserProfileUseCase = GetUserProfileUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun provideCompleteProfileImageUseCase(repository: UserProfileRepository): CompleteProfileUseCase = CompleteProfileUseCase(repository)
 
 
 }

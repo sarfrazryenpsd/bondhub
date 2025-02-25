@@ -88,5 +88,20 @@ class UserProfileRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getUserProfile(userId: String): Result<UserProfile> = withContext(Dispatchers.IO){
+        try {
+            val snapshot = usersCollection.document(userId).get().await()
+            val userProfile = snapshot.toObject(UserProfile::class.java)
+            if (userProfile != null) {
+                Result.success(userProfile)
+            }
+            else {
+                Result.failure(Exception("User profile not found"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 
 }

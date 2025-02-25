@@ -8,4 +8,5 @@ interface UserProfileRepository {
     suspend fun updateProfileImage(userId: String, imageUri: Uri): Result<ProfileImageUrls>
     suspend fun updateUserProfile(userProfile: UserProfile): Result<Unit>
     suspend fun completeProfile(userProfile: UserProfile): Result<Unit>
+    suspend fun getUserProfile(userId: String): Result<UserProfile>
 }

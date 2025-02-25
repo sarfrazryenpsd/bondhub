@@ -10,4 +10,6 @@ interface AuthRepository {
         displayName: String
     ): Result<UserAuth>
     suspend fun isProfileSetupComplete(): Boolean
+
+    suspend fun getCurrentUser(): UserAuth?
 }
