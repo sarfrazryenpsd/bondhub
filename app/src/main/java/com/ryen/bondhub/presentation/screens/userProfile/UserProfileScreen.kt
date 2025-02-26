@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.ryen.bondhub.R
 import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
@@ -45,9 +47,12 @@ import com.ryen.bondhub.presentation.theme.Surface
 
 @Composable
 fun ProfileUpdateScreen(
+    viewModel: UserProfileViewModel = hiltViewModel(),
     onDone: () -> Unit = {},
     onSkip: () -> Unit = {}
 ) {
+    val screenState by viewModel.screenState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
     var displayName by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
@@ -76,8 +81,8 @@ fun ProfileUpdateScreen(
                             .border(2.2.dp, Secondary, CircleShape)
                     )
                     Image(
-                        painter = painterResource(R.drawable.userplaceholder),
-                        contentDescription = "Profile Picture",
+                        painter = if (uiState.profilePictureUrl == null) painterResource(R.drawable.userplaceholder) else painterResource(R.drawable.logo),
+                        contentDescription = uiState.profilePictureUrl,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .clip(CircleShape)
@@ -103,7 +108,7 @@ fun ProfileUpdateScreen(
                     }
                 }
                 Text(
-                    text = "user@mail.com",
+                    text = uiState.email,
                     color = Secondary,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -122,7 +127,7 @@ fun ProfileUpdateScreen(
                     )
                 )
                 OutlinedTextField(
-                    value = displayName,
+                    value = uiState.displayName,
                     onValueChange = { bio = it.trim() },
                     label = { Text("Bio", color = Secondary.copy(alpha = .5f)) },
                     singleLine = true,
