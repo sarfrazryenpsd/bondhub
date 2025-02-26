@@ -1,9 +1,9 @@
 package com.ryen.bondhub.domain.model
 
 data class UserProfile(
-    val uid: String,
-    val displayName: String,
-    val email: String,
+    val uid: String = "",
+    val displayName: String = "",
+    val email: String = "",
     val profilePictureUrl: String? = null,
     val bio: String? = null,
     val status: UserStatus = UserStatus.OFFLINE,

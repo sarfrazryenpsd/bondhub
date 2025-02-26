@@ -11,7 +11,6 @@ import com.ryen.bondhub.domain.useCases.userProfile.UpdateUserProfileUseCase
 import com.ryen.bondhub.presentation.state.UserProfileScreenState
 import com.ryen.bondhub.presentation.state.UserProfileUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -26,11 +25,11 @@ class UserProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
 ): ViewModel() {
 
-    private val _userProfileScreenState = MutableStateFlow<UserProfileScreenState>(UserProfileScreenState.Initial)
-    val userProfileState = _userProfileScreenState.asStateFlow()
+    private val _screenState = MutableStateFlow<UserProfileScreenState>(UserProfileScreenState.Initial)
+    val screenState = _screenState.asStateFlow()
 
-    private val _userProfileUiState = MutableStateFlow(UserProfileUiState())
-    val userProfile = _userProfileUiState.asStateFlow()
+    private val _uiState = MutableStateFlow(UserProfileUiState())
+    val uiState = _uiState.asStateFlow()
 
     init {
         // Fetch the user's profile data from the repository
@@ -43,14 +42,14 @@ class UserProfileViewModel @Inject constructor(
 
     private fun loadUserProfile(){
         viewModelScope.launch {
-            _userProfileScreenState.value = UserProfileScreenState.Loading
+            _screenState.value = UserProfileScreenState.Loading
 
             try{
                 authRepository.getCurrentUser()!!.let { user ->
                     val userProfileResult = getUserProfileUseCase(user.uid)
                     userProfileResult.onSuccess { userProfile ->
 
-                        _userProfileUiState.value = _userProfileUiState.value.copy(
+                        _uiState.value = _uiState.value.copy(
                             email = userProfile.email,
                             displayName = userProfile.displayName,
                         )
@@ -58,19 +57,19 @@ class UserProfileViewModel @Inject constructor(
                         if (!userProfile.isProfileSetupComplete) {
                             completeProfileUseCase(userProfile)
                         }
-                        _userProfileScreenState.value = UserProfileScreenState.Success(userProfile)
+                        _screenState.value = UserProfileScreenState.Success(userProfile)
                     }.onFailure {
-                        _userProfileScreenState.value = UserProfileScreenState.Error(it.message ?: "Failed To Fetch Profile")
+                        _screenState.value = UserProfileScreenState.Error(it.message ?: "Failed To Fetch Profile")
                     }
                 }
             } catch (e: Exception) {
-                _userProfileScreenState.value = UserProfileScreenState.Error(e.message ?: "Unknown error")
+                _screenState.value = UserProfileScreenState.Error(e.message ?: "Unknown error")
             }
         }
     }
 
     fun updateUserProfile(userProfile: UserProfile){
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
 
         }
 

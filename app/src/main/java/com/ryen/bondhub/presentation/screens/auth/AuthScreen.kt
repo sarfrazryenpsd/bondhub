@@ -1,23 +1,17 @@
 package com.ryen.bondhub.presentation.screens.auth
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ryen.bondhub.presentation.components.AuthScreenContent
 import com.ryen.bondhub.presentation.components.CustomSnackbar
 import com.ryen.bondhub.presentation.event.AuthEvent
 import com.ryen.bondhub.presentation.event.UiEvent
-import com.ryen.bondhub.presentation.screens.LoadingScreen
-import com.ryen.bondhub.presentation.state.AuthScreenState
 import com.ryen.bondhub.util.AuthValidation
 
 
@@ -45,7 +39,6 @@ fun AuthScreen(
 
 
     Scaffold (
-        //modifier = Modifier.fillMaxSize(),
         snackbarHost = { CustomSnackbar(snackbarHostState) },
         content = { paddingValue ->
             AuthScreenContent(
@@ -87,16 +80,9 @@ fun AuthScreen(
                 authState = authState,
                 paddingValues = paddingValue
             )
-    }
-    )
-    /*when (authState) {
-        is AuthScreenState.Loading -> LoadingScreen()
-        is AuthScreenState.Error -> { }
-        is AuthScreenState.Success -> {
-            // Navigation is handled by UiEvents
         }
-        AuthScreenState.Initial -> Unit
-    }*/
+    )
+
 
 }
 
