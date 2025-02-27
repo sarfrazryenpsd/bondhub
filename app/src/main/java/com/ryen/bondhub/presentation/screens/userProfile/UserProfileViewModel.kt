@@ -1,5 +1,6 @@
 package com.ryen.bondhub.presentation.screens.userProfile
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryen.bondhub.domain.model.UserProfile
@@ -44,8 +45,8 @@ class UserProfileViewModel @Inject constructor(
         _uiState.update { it.copy( bio = bio.trim()) }
     }
 
-    fun onImageSelected(uri: String?) {
-        _uiState.update { it.copy( profilePictureUrl = uri) }
+    fun onImageSelected(uri: Uri?) {
+        _uiState.update { it.copy( profilePictureUrl = uri.toString()) }
     }
 
     private fun loadUserProfile(){

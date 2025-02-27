@@ -1,5 +1,6 @@
 package com.ryen.bondhub.presentation.components
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,9 +30,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.ryen.bondhub.R
 import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
@@ -48,7 +53,8 @@ fun ProfileUpdateScreenContent(
     onBioChange: (String) -> Unit,
     onEditProfilePictureClick: () -> Unit,
     onSkip: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    context: Context,
 ) {
     Scaffold { padding ->
         Column(
@@ -74,14 +80,19 @@ fun ProfileUpdateScreenContent(
                             .size(120.dp)
                             .border(2.2.dp, Secondary, CircleShape)
                     )
-                    Image(
-                        painter = if (profilePictureUrl == null) painterResource(R.drawable.userplaceholder) else painterResource(R.drawable.logo),
-                        contentDescription = profilePictureUrl,
-                        contentScale = ContentScale.Crop,
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(profilePictureUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Profile Picture",
                         modifier = Modifier
                             .clip(CircleShape)
                             .size(110.dp)
-                            .border(4.dp, Color.Transparent, CircleShape)
+                            .border(4.dp, Color.Transparent, CircleShape),
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(R.drawable.userplaceholder),
+                        error = painterResource(R.drawable.userplaceholder)
                     )
                     Box(
                         modifier = Modifier
@@ -172,6 +183,7 @@ private fun ProfileUpdateScreenContentPreview() {
         onBioChange = {},
         onEditProfilePictureClick = {},
         onSkip = {},
-        onSave = {}
+        onSave = {},
+        context = LocalContext.current,
     )
 }
