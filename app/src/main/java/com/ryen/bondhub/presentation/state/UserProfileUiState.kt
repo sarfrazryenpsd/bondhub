@@ -4,5 +4,5 @@ data class UserProfileUiState(
     val email: String = "",
     val displayName: String = "",
     val profilePictureUrl: String? = null,
-    val bio: String? = null,
+    val bio: String = "",
 )
