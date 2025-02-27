@@ -13,6 +13,7 @@ import com.ryen.bondhub.presentation.state.UserProfileUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -32,12 +33,19 @@ class UserProfileViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        // Fetch the user's profile data from the repository
-        // You can use the authRepository to get the user's UID
-        // Initialize the UI state with the user's profile data
-        // Update isProfileSetupComplete to true once user sign up
-
         loadUserProfile()
+    }
+
+    fun onDisplayNameChanged(name: String) {
+        _uiState.update { it.copy( displayName = name.trim()) }
+    }
+
+    fun onBioChanged(bio: String) {
+        _uiState.update { it.copy( bio = bio.trim()) }
+    }
+
+    fun onImageSelected(uri: String?) {
+        _uiState.update { it.copy( profilePictureUrl = uri) }
     }
 
     private fun loadUserProfile(){
