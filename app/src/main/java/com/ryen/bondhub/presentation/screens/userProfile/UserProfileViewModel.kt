@@ -33,9 +33,12 @@ class UserProfileViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(UserProfileUiState())
     val uiState = _uiState.asStateFlow()
 
+
     init {
         loadUserProfile()
     }
+
+
 
     fun onDisplayNameChanged(name: String) {
         _uiState.update { it.copy( displayName = name.trim()) }
@@ -46,7 +49,7 @@ class UserProfileViewModel @Inject constructor(
     }
 
     fun onImageSelected(uri: Uri?) {
-        _uiState.update { it.copy( profilePictureUrl = uri.toString()) }
+        _uiState.update { it.copy(profilePictureUrl = uri.toString()) }
     }
 
     private fun loadUserProfile(){
@@ -61,6 +64,8 @@ class UserProfileViewModel @Inject constructor(
                         _uiState.value = _uiState.value.copy(
                             email = userProfile.email,
                             displayName = userProfile.displayName,
+                            profilePictureUrl = userProfile.profilePictureUrl,
+                            uid = userProfile.uid,
                         )
 
                         if (!userProfile.isProfileSetupComplete) {
@@ -77,11 +82,51 @@ class UserProfileViewModel @Inject constructor(
         }
     }
 
-    fun updateUserProfile(userProfile: UserProfile){
+    fun updateUserProfile() {
         viewModelScope.launch {
+            _screenState.value = UserProfileScreenState.Loading
 
+            try {
+                // Get current user ID
+                val userId = _uiState.value.uid
+
+                // Handle image upload if there's a new image URI
+                _uiState.value.profilePictureUrl?.let { uri ->
+                    val imageResult = updateProfileImageUseCase(userId, Uri.parse(uri))
+                    if (imageResult.isSuccess) {
+                        // Update the profile picture URL in UI state if upload succeeded
+                        val urls = imageResult.getOrThrow()
+                        _uiState.update { it.copy(profilePictureUrl = urls.mainUrl) }
+                    } else {
+                        // Handle image upload failure
+                        throw imageResult.exceptionOrNull() ?: Exception("Failed to upload image")
+                    }
+                }
+
+                // Create user profile with only the fields needed for update
+                val userProfile = UserProfile(
+                    uid = userId,
+                    displayName = _uiState.value.displayName,
+                    bio = _uiState.value.bio,
+                    email = _uiState.value.email // Needed for UserProfile constructor
+                )
+
+                // Update profile in database
+                val updateResult = updateUserProfileUseCase(userProfile)
+
+                if (updateResult.isSuccess) {
+                    // Refresh the user profile after update
+                    val updatedProfile = getUserProfileUseCase(userId).getOrNull()
+                    _screenState.value = UserProfileScreenState.Success(updatedProfile ?: userProfile)
+                } else {
+                    _screenState.value = UserProfileScreenState.Error(
+                        updateResult.exceptionOrNull()?.message ?: "Failed to update profile"
+                    )
+                }
+            } catch (e: Exception) {
+                _screenState.value = UserProfileScreenState.Error(e.message ?: "Unknown error")
+            }
         }
-
     }
 
 }
