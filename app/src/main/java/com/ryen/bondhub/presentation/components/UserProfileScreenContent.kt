@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,119 +56,119 @@ fun ProfileUpdateScreenContent(
     onSkip: () -> Unit,
     onSave: () -> Unit,
     context: Context,
+    padding: PaddingValues
 ) {
-    Scaffold { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Surface)
-                .padding(padding)
-                .padding(horizontal = 32.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Surface)
+            .padding(padding)
+            .padding(horizontal = 32.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(
+                modifier = Modifier
+                    .padding(top = 65.dp, bottom = 20.dp)
+                    .size(120.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Box(
                     modifier = Modifier
-                        .padding(top = 65.dp, bottom = 20.dp)
-                        .size(120.dp),
-                    contentAlignment = Alignment.Center
+                        .clip(CircleShape)
+                        .background(Color.Transparent)
+                        .size(120.dp)
+                        .border(2.2.dp, Secondary, CircleShape)
+                )
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(profilePictureUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .size(110.dp)
+                        .border(4.dp, Color.Transparent, CircleShape),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.userplaceholder),
+                    error = painterResource(R.drawable.userplaceholder)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable { onEditProfilePictureClick() }
+                        .background(Primary)
+                        .align(Alignment.BottomEnd)
                 ) {
-                    Box(
+                    Image(
+                        painter = painterResource(R.drawable.edit_icon),
+                        contentDescription = "Edit Profile Picture",
+                        colorFilter = ColorFilter.tint(Secondary),
                         modifier = Modifier
-                            .clip(CircleShape)
-                            .background(Color.Transparent)
-                            .size(120.dp)
-                            .border(2.2.dp, Secondary, CircleShape)
+                            .size(21.dp)
+                            .align(Alignment.Center)
                     )
-                    AsyncImage(
-                        model = ImageRequest.Builder(context)
-                            .data(profilePictureUrl)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .size(110.dp)
-                            .border(4.dp, Color.Transparent, CircleShape),
-                        contentScale = ContentScale.Crop,
-                        placeholder = painterResource(R.drawable.userplaceholder),
-                        error = painterResource(R.drawable.userplaceholder)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .clickable { onEditProfilePictureClick() }
-                            .background(Primary)
-                            .align(Alignment.BottomEnd)
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.edit_icon),
-                            contentDescription = "Edit Profile Picture",
-                            colorFilter = ColorFilter.tint(Secondary),
-                            modifier = Modifier
-                                .size(21.dp)
-                                .align(Alignment.Center)
-                        )
-                    }
                 }
-                Text(
-                    text = email,
-                    color = Secondary,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-                OutlinedTextField(
-                    value = displayName,
-                    onValueChange = { onDisplayNameChange(it.trim()) },
-                    label = { Text("Name", color = Secondary.copy(alpha = .5f)) },
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Secondary,
-                        unfocusedTextColor = Secondary,
-                        focusedContainerColor = Primary.copy(alpha = .4f),
-                        unfocusedContainerColor = Primary.copy(alpha = .2f),
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    )
-                )
-                OutlinedTextField(
-                    value = bio,
-                    onValueChange = { onBioChange(it.trim()) },
-                    label = { Text("Bio", color = Secondary.copy(alpha = .5f)) },
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Secondary,
-                        unfocusedTextColor = Secondary,
-                        focusedContainerColor = Primary.copy(alpha = .4f),
-                        unfocusedContainerColor = Primary.copy(alpha = .2f),
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        unfocusedLabelColor = Secondary,
-                        focusedLabelColor = Secondary
-                    )
-                )
             }
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                OutlinedButton(
-                    onClick = { onSkip() },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Secondary)
-                ) { Text("Skip") }
-                Button(
-                    onClick = { onSave() },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Primary)
-                ) { Text("Save") }
-            }
+            Text(
+                text = email,
+                color = Secondary,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            OutlinedTextField(
+                value = displayName,
+                onValueChange = { onDisplayNameChange(it.trim()) },
+                label = { Text("Name", color = Secondary.copy(alpha = .5f)) },
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedTextColor = Secondary,
+                    unfocusedTextColor = Secondary,
+                    focusedContainerColor = Primary.copy(alpha = .4f),
+                    unfocusedContainerColor = Primary.copy(alpha = .2f),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                )
+            )
+            OutlinedTextField(
+                value = bio,
+                onValueChange = { onBioChange(it.trim()) },
+                label = { Text("Bio", color = Secondary.copy(alpha = .5f)) },
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedTextColor = Secondary,
+                    unfocusedTextColor = Secondary,
+                    focusedContainerColor = Primary.copy(alpha = .4f),
+                    unfocusedContainerColor = Primary.copy(alpha = .2f),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    unfocusedLabelColor = Secondary,
+                    focusedLabelColor = Secondary
+                )
+            )
         }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedButton(
+                onClick = { onSkip() },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Secondary)
+            ) { Text("Skip") }
+            Button(
+                onClick = { onSave() },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Primary)
+            ) { Text("Save") }
+        }
+
     }
 }
 
@@ -185,5 +186,6 @@ private fun ProfileUpdateScreenContentPreview() {
         onSkip = {},
         onSave = {},
         context = LocalContext.current,
+        padding = PaddingValues()
     )
 }

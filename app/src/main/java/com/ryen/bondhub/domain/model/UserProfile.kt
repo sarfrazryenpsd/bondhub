@@ -5,6 +5,7 @@ data class UserProfile(
     val displayName: String = "",
     val email: String = "",
     val profilePictureUrl: String? = null,
+    val profilePictureThumbnailUrl: String? = null,
     val bio: String = "",
     val status: UserStatus = UserStatus.OFFLINE,
     val createdAt: Long = System.currentTimeMillis(),

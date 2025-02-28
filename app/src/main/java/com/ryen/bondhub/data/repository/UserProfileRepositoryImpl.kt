@@ -65,6 +65,8 @@ class UserProfileRepositoryImpl @Inject constructor(
         val update = mapOf(
             "displayName" to userProfile.displayName,
             "bio" to userProfile.bio,
+            "profilePictureUrl" to userProfile.profilePictureUrl,
+            "profilePictureThumbnailUrl" to userProfile.profilePictureThumbnailUrl,
         )
         usersCollection.document(userProfile.uid)
             .update(update)

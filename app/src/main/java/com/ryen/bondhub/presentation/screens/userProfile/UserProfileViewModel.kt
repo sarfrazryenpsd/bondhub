@@ -9,10 +9,13 @@ import com.ryen.bondhub.domain.useCases.userProfile.CompleteProfileUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.UpdateProfileImageUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.UpdateUserProfileUseCase
+import com.ryen.bondhub.presentation.event.UiEvent
 import com.ryen.bondhub.presentation.state.UserProfileScreenState
 import com.ryen.bondhub.presentation.state.UserProfileUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -32,6 +35,9 @@ class UserProfileViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(UserProfileUiState())
     val uiState = _uiState.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
 
     init {
@@ -74,10 +80,12 @@ class UserProfileViewModel @Inject constructor(
                         _screenState.value = UserProfileScreenState.Success(userProfile)
                     }.onFailure {
                         _screenState.value = UserProfileScreenState.Error(it.message ?: "Failed To Fetch Profile")
+                        _uiEvent.emit(UiEvent.ShowSnackbar(it.message ?: "Failed To Fetch Profile"))
                     }
                 }
             } catch (e: Exception) {
                 _screenState.value = UserProfileScreenState.Error(e.message ?: "Unknown error")
+                _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
             }
         }
     }
@@ -89,6 +97,8 @@ class UserProfileViewModel @Inject constructor(
             try {
                 // Get current user ID
                 val userId = _uiState.value.uid
+                var pfp: String? = null
+                var pfpThumbnail: String? = null
 
                 // Handle image upload if there's a new image URI
                 _uiState.value.profilePictureUrl?.let { uri ->
@@ -96,7 +106,9 @@ class UserProfileViewModel @Inject constructor(
                     if (imageResult.isSuccess) {
                         // Update the profile picture URL in UI state if upload succeeded
                         val urls = imageResult.getOrThrow()
-                        _uiState.update { it.copy(profilePictureUrl = urls.mainUrl) }
+                        pfp = urls.mainUrl
+                        pfpThumbnail = urls.thumbnailUrl
+                        _uiState.update { it.copy(profilePictureUrl = pfp) }
                     } else {
                         // Handle image upload failure
                         throw imageResult.exceptionOrNull() ?: Exception("Failed to upload image")
@@ -106,6 +118,8 @@ class UserProfileViewModel @Inject constructor(
                 // Create user profile with only the fields needed for update
                 val userProfile = UserProfile(
                     uid = userId,
+                    profilePictureUrl = pfp,
+                    profilePictureThumbnailUrl = pfpThumbnail,
                     displayName = _uiState.value.displayName,
                     bio = _uiState.value.bio,
                     email = _uiState.value.email // Needed for UserProfile constructor
@@ -118,13 +132,16 @@ class UserProfileViewModel @Inject constructor(
                     // Refresh the user profile after update
                     val updatedProfile = getUserProfileUseCase(userId).getOrNull()
                     _screenState.value = UserProfileScreenState.Success(updatedProfile ?: userProfile)
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Profile updated successfully"))
                 } else {
                     _screenState.value = UserProfileScreenState.Error(
                         updateResult.exceptionOrNull()?.message ?: "Failed to update profile"
                     )
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Failed to update profile"))
                 }
             } catch (e: Exception) {
                 _screenState.value = UserProfileScreenState.Error(e.message ?: "Unknown error")
+                _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
             }
         }
     }

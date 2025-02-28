@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.rounded.Face
 import androidx.compose.material.icons.rounded.MailOutline
 import androidx.compose.material3.Button
@@ -215,7 +216,7 @@ fun AuthScreenContent(
                 },
                 leadingIcon = {
                     Icon(
-                        painter = painterResource(R.drawable.password),
+                        imageVector = Icons.Default.Lock,
                         contentDescription = "email",
                         tint = Secondary.copy(alpha = .7f),
                         modifier = Modifier.size(24.dp)
