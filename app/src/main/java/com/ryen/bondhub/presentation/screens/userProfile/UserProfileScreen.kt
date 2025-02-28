@@ -58,7 +58,7 @@ fun ProfileUpdateScreen(
                 onSkip = onSkip,
                 onSave = {
                     viewModel.updateUserProfile()
-                    onDone()
+
                 },
                 context = context,
                 padding = padding
