@@ -18,7 +18,7 @@ import com.ryen.bondhub.util.AuthValidation
 @Composable
 fun AuthScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
 ) {
     val authState by viewModel.authState.collectAsState()
     val authUiState by viewModel.authUiState.collectAsState()
@@ -28,6 +28,7 @@ fun AuthScreen(
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.Navigate -> onNavigate(event.route)
+                is UiEvent.ProfileUpdateCompleted -> {}
                 is UiEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(
                         message = event.message
