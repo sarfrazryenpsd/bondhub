@@ -28,7 +28,6 @@ fun AuthScreen(
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.Navigate -> onNavigate(event.route)
-                is UiEvent.ProfileUpdateCompleted -> {}
                 is UiEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(
                         message = event.message
