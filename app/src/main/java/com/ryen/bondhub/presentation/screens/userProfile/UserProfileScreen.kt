@@ -9,9 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ryen.bondhub.presentation.components.CustomSnackbar
@@ -24,28 +22,21 @@ fun ProfileUpdateScreen(
     viewModel: UserProfileViewModel = hiltViewModel(),
     onDone: () -> Unit = {},
     onSkip: () -> Unit = {},
-    isInitialSetup: Boolean = true
 ) {
     val context = LocalContext.current
     val screenState by viewModel.screenState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val uiStateChange by viewModel.uiStateChange.collectAsState()
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { viewModel.onImageSelected(it) }
     }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val initialValues = remember {
-        mutableStateOf(uiState)
+    LaunchedEffect(uiStateChange.isUpdateCompleted) {
+        if (uiStateChange.isUpdateCompleted && uiStateChange.isInitialSetup) {
+            onDone()
+        }
     }
-
-    // Determine if any changes have been made
-    val hasChanges = remember(uiState, initialValues.value) {
-        uiState.displayName != initialValues.value.displayName ||
-                uiState.bio != initialValues.value.bio ||
-                uiState.profilePictureUrl != initialValues.value.profilePictureUrl
-    }
-
-    var isUpdateCompleted by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = true) {
         viewModel.uiEvent.collect { event ->
@@ -55,12 +46,6 @@ fun ProfileUpdateScreen(
                     snackbarHostState.showSnackbar(
                         message = event.message
                     )
-                }
-                is UiEvent.ProfileUpdateCompleted -> {
-                    isUpdateCompleted = true
-                    if (isInitialSetup) {
-                        onDone()
-                    }
                 }
             }
         }
@@ -82,8 +67,8 @@ fun ProfileUpdateScreen(
                     viewModel.updateUserProfile()
                 },
                 context = context,
-                isInitialSetup = isInitialSetup,
-                hasChanges = hasChanges,
+                isInitialSetup = uiStateChange.isInitialSetup,
+                hasChanges = uiStateChange.hasChanges,
                 screenState = screenState,
                 padding = padding
             )

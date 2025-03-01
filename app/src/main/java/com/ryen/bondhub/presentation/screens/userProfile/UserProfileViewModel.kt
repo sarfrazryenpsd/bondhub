@@ -12,6 +12,7 @@ import com.ryen.bondhub.domain.useCases.userProfile.UpdateUserProfileUseCase
 import com.ryen.bondhub.presentation.event.UiEvent
 import com.ryen.bondhub.presentation.state.UserProfileScreenState
 import com.ryen.bondhub.presentation.state.UserProfileUiState
+import com.ryen.bondhub.presentation.state.UserProfileUiStateChange
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +40,26 @@ class UserProfileViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
+    private val _uiStateChange = MutableStateFlow(UserProfileUiStateChange())
+    val uiStateChange = _uiStateChange.asStateFlow()
+
+
+
+    fun setInitialSetupMode(isInitialSetup: Boolean) {
+        _uiStateChange.update { it.copy(isInitialSetup = isInitialSetup) }
+    }
+
+    // After profile is loaded, store initial values
+    private fun storeInitialValues() {
+        _uiStateChange.update {
+            it.copy(
+                initialDisplayName = _uiState.value.displayName,
+                initialBio = _uiState.value.bio,
+                initialProfilePictureUrl = _uiState.value.profilePictureUrl
+            )
+        }
+    }
+
 
     init {
         loadUserProfile()
@@ -48,14 +69,28 @@ class UserProfileViewModel @Inject constructor(
 
     fun onDisplayNameChanged(name: String) {
         _uiState.update { it.copy( displayName = name.trim()) }
+        checkForChanges()
     }
 
     fun onBioChanged(bio: String) {
         _uiState.update { it.copy( bio = bio.trim()) }
+        checkForChanges()
     }
 
     fun onImageSelected(uri: Uri?) {
         _uiState.update { it.copy(profilePictureUrl = uri.toString()) }
+        checkForChanges()
+    }
+
+    private fun checkForChanges() {
+        val current = _uiState.value
+        val initial = _uiStateChange.value
+
+        val hasChanges = current.displayName != initial.initialDisplayName ||
+                current.bio != initial.initialBio ||
+                current.profilePictureUrl != initial.initialProfilePictureUrl
+
+        _uiStateChange.update { it.copy(hasChanges = hasChanges) }
     }
 
     private fun loadUserProfile(){
@@ -79,6 +114,7 @@ class UserProfileViewModel @Inject constructor(
                             completeProfileUseCase(userProfile)
                         }
                         _screenState.value = UserProfileScreenState.Success(userProfile)
+                        storeInitialValues()
                     }.onFailure {
                         _screenState.value = UserProfileScreenState.Error(it.message ?: "Failed To Fetch Profile")
                         _uiEvent.emit(UiEvent.ShowSnackbar(it.message ?: "Failed To Fetch Profile"))
@@ -89,6 +125,10 @@ class UserProfileViewModel @Inject constructor(
                 _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
             }
         }
+    }
+
+    private fun setUpdateCompleted(completed: Boolean) {
+        _uiStateChange.update { it.copy(isUpdateCompleted = completed) }
     }
 
     fun updateUserProfile() {
@@ -134,7 +174,8 @@ class UserProfileViewModel @Inject constructor(
                     val updatedProfile = getUserProfileUseCase(userId).getOrNull()
                     _screenState.value = UserProfileScreenState.Success(updatedProfile ?: userProfile)
                     _uiEvent.emit(UiEvent.ShowSnackbar("Profile updated successfully"))
-                    _uiEvent.emit(UiEvent.ProfileUpdateCompleted)
+                    storeInitialValues()
+                    setUpdateCompleted(true)
                 } else {
                     _screenState.value = UserProfileScreenState.Error(
                         updateResult.exceptionOrNull()?.message ?: "Failed to update profile"

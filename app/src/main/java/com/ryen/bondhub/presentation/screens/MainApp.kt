@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,6 +20,7 @@ import com.ryen.bondhub.di.module.ProvideAuthRepository
 import com.ryen.bondhub.presentation.screens.auth.AuthScreen
 import com.ryen.bondhub.presentation.screens.chat.ChatScreen
 import com.ryen.bondhub.presentation.screens.userProfile.ProfileUpdateScreen
+import com.ryen.bondhub.presentation.screens.userProfile.UserProfileViewModel
 
 
 @Composable
@@ -72,8 +74,7 @@ fun MainApp(
                                 navController.navigate(Screen.ChatScreen.route) {
                                     popUpTo(Screen.UserProfileSetupScreen.route) { inclusive = true }
                                 }
-                            },
-                            isInitialSetup = true
+                            }
                         )
                     }
 
@@ -86,9 +87,18 @@ fun MainApp(
                             }
                         )
                     }
-                    composable(Screen.UserProfileEditScreen.route){
+                    composable(Screen.UserProfileEditScreen.route) {
+                        val viewModel: UserProfileViewModel = hiltViewModel()
+                        LaunchedEffect(Unit) {
+                            viewModel.setInitialSetupMode(false)
+                        }
+
                         ProfileUpdateScreen(
-                            isInitialSetup = false
+                            onDone = {
+                                // Will only be called if we explicitly trigger it
+                                navController.navigateUp()
+                            },
+                            onSkip = { /* This won't be shown anyway */ }
                         )
                     }
                 }
