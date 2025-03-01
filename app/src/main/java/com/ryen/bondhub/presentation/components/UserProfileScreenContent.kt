@@ -12,16 +12,17 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -39,6 +40,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.ryen.bondhub.R
+import com.ryen.bondhub.presentation.state.UserProfileScreenState
 import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
 import com.ryen.bondhub.presentation.theme.Surface
@@ -56,10 +58,21 @@ fun ProfileUpdateScreenContent(
     onSkip: () -> Unit,
     onSave: () -> Unit,
     context: Context,
+    isInitialSetup: Boolean,
+    hasChanges: Boolean,
+    screenState: UserProfileScreenState,
     padding: PaddingValues
 ) {
+    if(screenState == UserProfileScreenState.Loading){
+        LinearProgressIndicator(
+            color = Primary,
+            trackColor = Primary.copy(alpha = .4f),
+            modifier = Modifier.height(5.dp).fillMaxWidth()
+        )
+    }
     Column(
         modifier = Modifier
+            .padding(top = if (screenState == UserProfileScreenState.Loading) 5.dp else 0.dp)
             .fillMaxSize()
             .background(Surface)
             .padding(padding)
@@ -67,6 +80,7 @@ fun ProfileUpdateScreenContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
                 modifier = Modifier
@@ -155,16 +169,19 @@ fun ProfileUpdateScreenContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            OutlinedButton(
-                onClick = { onSkip() },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Secondary)
-            ) { Text("Skip") }
+            if (isInitialSetup) {
+                OutlinedButton(
+                    onClick = { onSkip() },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Secondary)
+                ) { Text("Skip") }
+            }
             Button(
                 onClick = { onSave() },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(8.dp),
+                enabled = hasChanges,
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) { Text("Save") }
         }
@@ -173,7 +190,7 @@ fun ProfileUpdateScreenContent(
 }
 
 @Composable
-@Preview(showBackground = true)
+@Preview(showBackground = false)
 private fun ProfileUpdateScreenContentPreview() {
     ProfileUpdateScreenContent(
         email = "user@example.com",
@@ -186,6 +203,9 @@ private fun ProfileUpdateScreenContentPreview() {
         onSkip = {},
         onSave = {},
         context = LocalContext.current,
+        isInitialSetup = true,
+        hasChanges = false,
+        screenState = UserProfileScreenState.Loading,
         padding = PaddingValues()
     )
 }

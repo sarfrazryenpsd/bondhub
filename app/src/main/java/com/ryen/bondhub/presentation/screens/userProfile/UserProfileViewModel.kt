@@ -60,6 +60,7 @@ class UserProfileViewModel @Inject constructor(
 
     private fun loadUserProfile(){
         viewModelScope.launch {
+
             _screenState.value = UserProfileScreenState.Loading
 
             try{
@@ -133,6 +134,7 @@ class UserProfileViewModel @Inject constructor(
                     val updatedProfile = getUserProfileUseCase(userId).getOrNull()
                     _screenState.value = UserProfileScreenState.Success(updatedProfile ?: userProfile)
                     _uiEvent.emit(UiEvent.ShowSnackbar("Profile updated successfully"))
+                    _uiEvent.emit(UiEvent.ProfileUpdateCompleted)
                 } else {
                     _screenState.value = UserProfileScreenState.Error(
                         updateResult.exceptionOrNull()?.message ?: "Failed to update profile"

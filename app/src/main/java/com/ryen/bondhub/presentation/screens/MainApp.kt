@@ -72,7 +72,8 @@ fun MainApp(
                                 navController.navigate(Screen.ChatScreen.route) {
                                     popUpTo(Screen.UserProfileSetupScreen.route) { inclusive = true }
                                 }
-                            }
+                            },
+                            isInitialSetup = true
                         )
                     }
 
@@ -83,6 +84,11 @@ fun MainApp(
                                     popUpTo(Screen.ChatScreen.route) { inclusive = false }
                                 }
                             }
+                        )
+                    }
+                    composable(Screen.UserProfileEditScreen.route){
+                        ProfileUpdateScreen(
+                            isInitialSetup = false
                         )
                     }
                 }
