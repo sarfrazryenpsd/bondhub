@@ -1,9 +1,12 @@
 package com.ryen.bondhub.di.module
 
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.ryen.bondhub.data.dao.UserProfileDao
 import com.ryen.bondhub.data.repository.AuthRepositoryImpl
+import com.ryen.bondhub.data.repository.UserProfileRepositoryImpl
 import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.repository.UserProfileRepository
 import com.ryen.bondhub.domain.useCases.auth.SignInUseCase
@@ -15,6 +18,7 @@ import com.ryen.bondhub.domain.useCases.userProfile.UpdateUserProfileUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -64,5 +68,19 @@ object AppModule {
     @Singleton
     fun provideCompleteProfileUseCase(repository: UserProfileRepository): CompleteProfileUseCase = CompleteProfileUseCase(repository)
 
-
+    @Provides
+    @Singleton
+    fun provideUserProfileRepositoryImpl(
+        firestore: FirebaseFirestore,
+        storage: FirebaseStorage,
+        @ApplicationContext context: Context,
+        userProfileDao: UserProfileDao
+    ): UserProfileRepositoryImpl {
+        return UserProfileRepositoryImpl(
+            firestore,
+            storage,
+            context,
+            userProfileDao
+        )
+    }
 }

@@ -26,7 +26,7 @@ fun ProfileUpdateScreen(
     val context = LocalContext.current
     val screenState by viewModel.screenState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
-    val uiStateChange by viewModel.uiStateChange.collectAsState()
+    val uiStateChange by viewModel.uiChangeState.collectAsState()
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { viewModel.onImageSelected(it) }
     }
