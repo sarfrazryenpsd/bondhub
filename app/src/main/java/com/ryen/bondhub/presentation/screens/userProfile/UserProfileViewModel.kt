@@ -40,21 +40,21 @@ class UserProfileViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private val _uiStateChange = MutableStateFlow(UserProfileUiChangeState())
-    val uiStateChange = _uiStateChange.asStateFlow()
+    private val _uiChangeState = MutableStateFlow(UserProfileUiChangeState())
+    val uiChangeState = _uiChangeState.asStateFlow()
 
-    private val _dataSource = MutableStateFlow<DataSource>(DataSource.UNKNOWN)
+    private val _dataSource = MutableStateFlow(DataSource.UNKNOWN)
     val dataSource = _dataSource.asStateFlow()
 
 
 
     fun setInitialSetupMode(isInitialSetup: Boolean) {
-        _uiStateChange.update { it.copy(isInitialSetup = isInitialSetup) }
+        _uiChangeState.update { it.copy(isInitialSetup = isInitialSetup) }
     }
 
     // After profile is loaded, store initial values
     private fun storeInitialValues() {
-        _uiStateChange.update {
+        _uiChangeState.update {
             it.copy(
                 initialDisplayName = _uiState.value.displayName,
                 initialBio = _uiState.value.bio,
@@ -87,13 +87,13 @@ class UserProfileViewModel @Inject constructor(
 
     private fun checkForChanges() {
         val current = _uiState.value
-        val initial = _uiStateChange.value
+        val initial = _uiChangeState.value
 
         val hasChanges = current.displayName != initial.initialDisplayName ||
                 current.bio != initial.initialBio ||
                 current.profilePictureUrl != initial.initialProfilePictureUrl
 
-        _uiStateChange.update { it.copy(hasChanges = hasChanges) }
+        _uiChangeState.update { it.copy(hasChanges = hasChanges) }
     }
 
     private fun loadUserProfile(forceRefresh: Boolean = false){
@@ -138,7 +138,7 @@ class UserProfileViewModel @Inject constructor(
     }
 
     private fun setUpdateCompleted(completed: Boolean) {
-        _uiStateChange.update { it.copy(isUpdateCompleted = completed) }
+        _uiChangeState.update { it.copy(isUpdateCompleted = completed) }
     }
 
     fun updateUserProfile() {
