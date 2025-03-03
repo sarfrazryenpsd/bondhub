@@ -12,7 +12,7 @@ import com.ryen.bondhub.domain.useCases.userProfile.UpdateUserProfileUseCase
 import com.ryen.bondhub.presentation.event.UiEvent
 import com.ryen.bondhub.presentation.state.UserProfileScreenState
 import com.ryen.bondhub.presentation.state.UserProfileUiState
-import com.ryen.bondhub.presentation.state.UserProfileUiStateChange
+import com.ryen.bondhub.presentation.state.UserProfileUiChangeState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,8 +40,11 @@ class UserProfileViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private val _uiStateChange = MutableStateFlow(UserProfileUiStateChange())
+    private val _uiStateChange = MutableStateFlow(UserProfileUiChangeState())
     val uiStateChange = _uiStateChange.asStateFlow()
+
+    private val _dataSource = MutableStateFlow<DataSource>(DataSource.UNKNOWN)
+    val dataSource = _dataSource.asStateFlow()
 
 
 
@@ -93,7 +96,7 @@ class UserProfileViewModel @Inject constructor(
         _uiStateChange.update { it.copy(hasChanges = hasChanges) }
     }
 
-    private fun loadUserProfile(){
+    private fun loadUserProfile(forceRefresh: Boolean = false){
         viewModelScope.launch {
 
             _screenState.value = UserProfileScreenState.Loading
@@ -108,7 +111,10 @@ class UserProfileViewModel @Inject constructor(
                             displayName = userProfile.displayName,
                             profilePictureUrl = userProfile.profilePictureUrl,
                             uid = userProfile.uid,
+                            bio = userProfile.bio
                         )
+
+                        _dataSource.value = if (forceRefresh) DataSource.NETWORK else DataSource.CACHE
 
                         if (!userProfile.isProfileSetupComplete) {
                             completeProfileUseCase(userProfile)
@@ -125,6 +131,10 @@ class UserProfileViewModel @Inject constructor(
                 _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
             }
         }
+    }
+
+    fun refreshProfile() {
+        loadUserProfile(forceRefresh = true)
     }
 
     private fun setUpdateCompleted(completed: Boolean) {
@@ -189,4 +199,8 @@ class UserProfileViewModel @Inject constructor(
         }
     }
 
+}
+
+enum class DataSource {
+    CACHE, NETWORK, UNKNOWN
 }
