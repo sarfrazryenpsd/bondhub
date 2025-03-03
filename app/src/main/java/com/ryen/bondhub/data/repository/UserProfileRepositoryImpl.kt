@@ -4,6 +4,9 @@ import android.content.Context
 import android.net.Uri
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.ryen.bondhub.data.dao.UserProfileDao
+import com.ryen.bondhub.data.entity.toDomain
+import com.ryen.bondhub.data.entity.toEntity
 import com.ryen.bondhub.domain.model.ProfileImageUrls
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.UserProfileRepository
@@ -19,16 +22,18 @@ import javax.inject.Inject
 class UserProfileRepositoryImpl @Inject constructor(
     firestore: FirebaseFirestore,
     storage: FirebaseStorage,
-    @ApplicationContext private val context: Context
-
+    @ApplicationContext private val context: Context,
+    private val userProfileDao: UserProfileDao
 ): UserProfileRepository {
 
     private val usersCollection = firestore.collection("users")
     private val profilePicsRef = storage.reference.child("profile_pictures")
     private val thumbnailsRef = storage.reference.child("profile_pictures_thumbnails")
 
-    override suspend fun updateProfileImage(userId: String, imageUri: Uri): Result<ProfileImageUrls> = withContext(
-        Dispatchers.IO) {
+    private val CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000L
+
+    override suspend fun updateProfileImage(userId: String, imageUri: Uri): Result<ProfileImageUrls> =
+        withContext(Dispatchers.IO) {
         try {
             val processedImages = ImageProcessingUtils.processProfileImage(context, imageUri)
                 .getOrThrow()
@@ -52,6 +57,7 @@ class UserProfileRepositoryImpl @Inject constructor(
             val mainUrl = uploads.first.storage.downloadUrl.await().toString()
             val thumbUrl = uploads.second.storage.downloadUrl.await().toString()
 
+
             Result.success(ProfileImageUrls(mainUrl, thumbUrl))
         } catch (e: Exception) {
             Result.failure(e)
@@ -71,6 +77,13 @@ class UserProfileRepositoryImpl @Inject constructor(
         usersCollection.document(userProfile.uid)
             .update(update)
             .await()
+        val updatedUserProfile = userProfile.copy(
+            displayName = userProfile.displayName,
+            bio = userProfile.bio,
+            profilePictureUrl = userProfile.profilePictureUrl,
+            profilePictureThumbnailUrl = userProfile.profilePictureThumbnailUrl,
+        )
+        userProfileDao.insertUserProfile(updatedUserProfile.toEntity())
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
@@ -90,16 +103,49 @@ class UserProfileRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getUserProfile(userId: String): Result<UserProfile> = withContext(Dispatchers.IO){
+    override suspend fun getUserProfile(userId: String): Result<UserProfile> = withContext(Dispatchers.IO) {
         try {
-            val snapshot = usersCollection.document(userId).get().await()
-            val userProfile = snapshot.toObject(UserProfile::class.java)
-            if (userProfile != null) {
-                Result.success(userProfile)
+            // Check for fresh cached data first
+            val timestamp = System.currentTimeMillis() - CACHE_EXPIRY_MS
+            val cachedUserProfile = userProfileDao.getUserProfileIfFresh(userId, timestamp)
+
+            if (cachedUserProfile != null) {
+                // Return cached data if fresh
+                return@withContext Result.success(cachedUserProfile.toDomain())
             }
-            else {
-                Result.failure(Exception("User profile not found"))
+
+            // If no fresh cache, fetch from network
+            val documentSnapshot = usersCollection.document(userId).get().await()
+            val userProfile = documentSnapshot.toObject(UserProfile::class.java)
+                ?: return@withContext Result.failure(Exception("User profile not found"))
+
+            // Cache the fetched profile
+            userProfileDao.insertUserProfile(userProfile.toEntity())
+
+            Result.success(userProfile)
+        } catch (e: Exception) {
+            // If network fetch fails, try to get any cached data regardless of freshness
+            val cachedUserProfile = userProfileDao.getUserProfileById(userId)
+            if (cachedUserProfile != null) {
+                // Return cached data with stale warning
+                val profile = cachedUserProfile.toDomain()
+                Result.success(profile)
+            } else {
+                Result.failure(e)
             }
+        }
+    }
+
+    override suspend fun refreshUserProfile(userId: String): Result<UserProfile> = withContext(Dispatchers.IO) {
+        try {
+            val documentSnapshot = usersCollection.document(userId).get().await()
+            val userProfile = documentSnapshot.toObject(UserProfile::class.java)
+                ?: return@withContext Result.failure(Exception("User profile not found"))
+
+            // Update cache
+            userProfileDao.insertUserProfile(userProfile.toEntity())
+
+            Result.success(userProfile)
         } catch (e: Exception) {
             Result.failure(e)
         }

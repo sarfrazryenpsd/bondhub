@@ -9,4 +9,5 @@ interface UserProfileRepository {
     suspend fun updateUserProfile(userProfile: UserProfile): Result<Unit>
     suspend fun completeProfile(userProfile: UserProfile): Result<Unit>
     suspend fun getUserProfile(userId: String): Result<UserProfile>
+    suspend fun refreshUserProfile(userId: String): Result<UserProfile>
 }
