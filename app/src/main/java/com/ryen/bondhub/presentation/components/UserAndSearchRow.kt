@@ -3,6 +3,7 @@ package com.ryen.bondhub.presentation.components
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,20 +39,22 @@ import com.ryen.bondhub.presentation.theme.Secondary
 
 
 @Composable
-fun ChatScreenUserAndSearchRow(
+fun UserSearchAndMessageRow(
     context: Context,
     profilePictureUrl: String,
     displayName: String,
-    messageMode: Boolean,
+    messageMode: Boolean = false,
     lastMessage: String,
-    lastMessageTime: String,
-    unreadMessageCount: Int
+    lastMessageTime: String? = null,
+    unreadMessageCount: Int? = null,
+    onProfileClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {}
 ) {
     Row (
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
-            .height(64.dp),
+            //.padding(16.dp)
+            .height(48.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ){
@@ -63,13 +66,13 @@ fun ChatScreenUserAndSearchRow(
             contentDescription = "Profile Picture",
             modifier = Modifier
                 .clip(CircleShape)
-                .size(64.dp)
-                .border(4.dp, Color.Transparent, CircleShape),
+                .size(48.dp)
+                .clickable(onClick = onProfileClick),
             contentScale = ContentScale.Crop,
             placeholder = painterResource(R.drawable.userplaceholder),
             error = painterResource(R.drawable.userplaceholder)
         )
-        Column(verticalArrangement = Arrangement.Center) {
+        Column(verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.clickable { onProfileClick() }) {
             Text(
                 text = displayName,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
@@ -78,11 +81,7 @@ fun ChatScreenUserAndSearchRow(
                 text = if(!messageMode) {
                     "Account info"
                 } else {
-                    if(lastMessage.length > 26){
-                        lastMessage.take(26) + "..."
-                    } else{
-                        lastMessage
-                    }
+                        if(lastMessage.length > 26) lastMessage.take(26) + "..." else lastMessage
                 },
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 color = Secondary.copy(alpha = 0.7f)
@@ -90,7 +89,7 @@ fun ChatScreenUserAndSearchRow(
         }
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
             if(!messageMode){
-                IconButton(onClick = {}) {
+                IconButton(onClick = onSearchClick) {
                     Icon(
                         imageVector = Icons.Rounded.Search,
                         contentDescription = "Search",
@@ -98,14 +97,20 @@ fun ChatScreenUserAndSearchRow(
                         modifier = Modifier.size(36.dp)
                     )
                 }
-            } else{
-                Column(modifier = Modifier.height(48.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = lastMessageTime,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Secondary.copy(alpha = 0.7f)
-                    )
-                    if (unreadMessageCount > 0) {
+            } else {
+                Column(
+                    modifier = Modifier.height(48.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.End
+                ) {
+                    lastMessageTime?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Secondary.copy(alpha = 0.7f)
+                        )
+                    }
+                    unreadMessageCount?.takeIf { it > 0 }?.let { count ->
                         Box(
                             modifier = Modifier
                                 .size(20.dp)
@@ -114,7 +119,7 @@ fun ChatScreenUserAndSearchRow(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = unreadMessageCount.toString(),
+                                text = count.toString(),
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal),
                                 color = Color.White
                             )
@@ -128,27 +133,30 @@ fun ChatScreenUserAndSearchRow(
 
 @Preview(showBackground = true)
 @Composable
-private fun ChatScreenUserAndSearchRowPrev() {
-    ChatScreenUserAndSearchRow(
-        context = LocalContext.current,
-        profilePictureUrl = "",
-        displayName = "Sarfraz Ryen",
-        messageMode = true,
-        lastMessage = "Hello,ahowaareayou?hsadhlpdasdsad",
-        lastMessageTime = "10:00 AM",
-        unreadMessageCount = 5
-    )
+private fun MessageRowPrev() {
+    MaterialTheme {  // Or your custom theme
+        UserSearchAndMessageRow(
+            context = LocalContext.current,
+            profilePictureUrl = "",
+            displayName = "Sarfraz Ryen",
+            messageMode = true,
+            lastMessage = "Hello, how are you?",
+            lastMessageTime = "10:00 AM",
+            unreadMessageCount = 5
+        )
+    }
 }
+
 @Preview(showBackground = true)
 @Composable
-private fun ChatScreenUserAndSearchRowPrev2() {
-    ChatScreenUserAndSearchRow(
-        context = LocalContext.current,
-        profilePictureUrl = "",
-        displayName = "Sarfraz Ryen",
-        messageMode = false,
-        lastMessage = "",
-        lastMessageTime = "10:00 AM",
-        unreadMessageCount = 0
-    )
+private fun UserAndSearchRowPrev() {
+    MaterialTheme {  // Or your custom theme
+        UserSearchAndMessageRow(
+            context = LocalContext.current,
+            profilePictureUrl = "",
+            displayName = "Sarfraz Ryen",
+            messageMode = false,
+            lastMessage = ""
+        )
+    }
 }
