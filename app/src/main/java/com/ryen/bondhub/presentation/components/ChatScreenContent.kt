@@ -37,7 +37,7 @@ fun ChatScreenContent(
     var isSearchActive by remember { mutableStateOf(searchMode) }
     Column(
         modifier = Modifier
-            .background(color = Color.LightGray.copy(alpha = 0.9f))
+            .background(color = Color.LightGray)
             .padding(6.dp)
             .fillMaxSize()
             .clip(RoundedCornerShape(16.dp))
