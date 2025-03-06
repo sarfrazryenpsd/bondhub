@@ -1,7 +1,7 @@
 package com.ryen.bondhub.data.repository
 
-import com.ryen.bondhub.data.dao.ChatConnectionDao
-import com.ryen.bondhub.data.entity.ChatConnectionEntity
+import com.ryen.bondhub.data.local.dao.ChatConnectionDao
+import com.ryen.bondhub.data.local.entity.ChatConnectionEntity
 import com.ryen.bondhub.data.remote.dataSource.ChatConnectionRemoteDataSource
 import com.ryen.bondhub.domain.model.ChatConnection
 import com.ryen.bondhub.domain.model.ConnectionStatus

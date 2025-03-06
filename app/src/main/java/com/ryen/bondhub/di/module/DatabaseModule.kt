@@ -2,7 +2,7 @@ package com.ryen.bondhub.di.module
 
 import android.content.Context
 import com.ryen.bondhub.data.AppDatabase
-import com.ryen.bondhub.data.dao.UserProfileDao
+import com.ryen.bondhub.data.local.dao.UserProfileDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

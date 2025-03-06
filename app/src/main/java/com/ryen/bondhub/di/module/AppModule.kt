@@ -4,7 +4,7 @@ import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import com.ryen.bondhub.data.dao.UserProfileDao
+import com.ryen.bondhub.data.local.dao.UserProfileDao
 import com.ryen.bondhub.data.repository.AuthRepositoryImpl
 import com.ryen.bondhub.data.repository.UserProfileRepositoryImpl
 import com.ryen.bondhub.domain.repository.AuthRepository

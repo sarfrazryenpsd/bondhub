@@ -1,11 +1,11 @@
-package com.ryen.bondhub.data.dao
+package com.ryen.bondhub.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.ryen.bondhub.data.entity.ChatConnectionEntity
+import com.ryen.bondhub.data.local.entity.ChatConnectionEntity
 import com.ryen.bondhub.domain.model.ConnectionStatus
 import kotlinx.coroutines.flow.Flow
 
