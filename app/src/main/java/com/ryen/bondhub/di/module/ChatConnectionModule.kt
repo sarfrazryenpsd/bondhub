@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.google.firebase.firestore.FirebaseFirestore
 import com.ryen.bondhub.data.AppDatabase
-import com.ryen.bondhub.data.dao.ChatConnectionDao
+import com.ryen.bondhub.data.local.dao.ChatConnectionDao
 import com.ryen.bondhub.data.remote.dataSource.ChatConnectionRemoteDataSource
 import com.ryen.bondhub.data.repository.ChatConnectionRepositoryImpl
 import com.ryen.bondhub.domain.repository.ChatConnectionRepository

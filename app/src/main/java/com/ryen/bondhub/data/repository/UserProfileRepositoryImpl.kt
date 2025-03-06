@@ -4,9 +4,9 @@ import android.content.Context
 import android.net.Uri
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import com.ryen.bondhub.data.dao.UserProfileDao
-import com.ryen.bondhub.data.entity.toDomain
-import com.ryen.bondhub.data.entity.toEntity
+import com.ryen.bondhub.data.local.dao.UserProfileDao
+import com.ryen.bondhub.data.local.entity.toDomain
+import com.ryen.bondhub.data.local.entity.toEntity
 import com.ryen.bondhub.domain.model.ProfileImageUrls
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.UserProfileRepository

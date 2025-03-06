@@ -4,10 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.ryen.bondhub.data.dao.ChatConnectionDao
-import com.ryen.bondhub.data.dao.UserProfileDao
-import com.ryen.bondhub.data.entity.ChatConnectionEntity
-import com.ryen.bondhub.data.entity.UserProfileEntity
+import com.ryen.bondhub.data.local.dao.ChatConnectionDao
+import com.ryen.bondhub.data.local.dao.UserProfileDao
+import com.ryen.bondhub.data.local.entity.ChatConnectionEntity
+import com.ryen.bondhub.data.local.entity.UserProfileEntity
 
 @Database(
     entities = [

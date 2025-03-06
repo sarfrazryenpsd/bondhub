@@ -93,7 +93,7 @@ fun ProfileUpdateScreenContent(
                         .clip(CircleShape)
                         .background(Color.Transparent)
                         .size(120.dp)
-                        .border(2.2.dp, Secondary, CircleShape)
+                        //.border(2.2.dp, Secondary, CircleShape)
                 )
                 AsyncImage(
                     model = ImageRequest.Builder(context)
