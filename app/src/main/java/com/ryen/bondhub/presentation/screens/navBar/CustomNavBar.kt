@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.ryen.bondhub.presentation.theme.NavBarSurface
 
 @Composable
 fun CustomNavBar(
@@ -24,7 +25,11 @@ fun CustomNavBar(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 24.dp, vertical = 32.dp)
+        ,
+        colors = CardDefaults.cardColors(
+            containerColor = NavBarSurface
+        ),
         shape = RoundedCornerShape(100),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
@@ -65,6 +70,6 @@ fun CustomNavBar(
 private fun CustomNavBarPrev() {
     CustomNavBar(
         navController = rememberNavController(),
-        currentRoute = BottomNavItems.Messages.route
+        currentRoute = BottomNavItems.FriendRequests.route
     )
 }

@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,6 +48,7 @@ fun BottomNavItem(
 
     Box(
         modifier = Modifier
+            //.scale(animatedWeight)
             .wrapContentWidth()
             .clip(RoundedCornerShape(32.dp))
             .background(
@@ -67,7 +69,7 @@ fun BottomNavItem(
                 contentDescription = item.title,
                 tint = if (isSelected) Primary
                 else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(if(item == BottomNavItems.Messages) 24.dp else 20.dp)
             )
 
             // Only show text if selected
@@ -98,7 +100,7 @@ private fun NavItemPrev() {
         onClick = {}
     )
 }
-@Preview(showBackground = true)
+@Preview
 @Composable
 private fun NavItemPrev1() {
     BottomNavItem(

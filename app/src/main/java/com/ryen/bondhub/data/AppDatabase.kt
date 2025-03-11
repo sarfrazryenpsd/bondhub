@@ -5,14 +5,17 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.ryen.bondhub.data.local.dao.ChatConnectionDao
+import com.ryen.bondhub.data.local.dao.ChatMessageDao
 import com.ryen.bondhub.data.local.dao.UserProfileDao
 import com.ryen.bondhub.data.local.entity.ChatConnectionEntity
+import com.ryen.bondhub.data.local.entity.ChatMessageEntity
 import com.ryen.bondhub.data.local.entity.UserProfileEntity
 
 @Database(
     entities = [
         UserProfileEntity::class,
-        ChatConnectionEntity::class
+        ChatConnectionEntity::class,
+        ChatMessageEntity::class
     ],
     version = 1,
     exportSchema = false
@@ -20,6 +23,7 @@ import com.ryen.bondhub.data.local.entity.UserProfileEntity
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userProfileDao(): UserProfileDao
     abstract fun chatConnectionDao(): ChatConnectionDao
+    abstract fun chatMessageDao(): ChatMessageDao
 
     companion object {
         @Volatile
