@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -28,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Surface
 
@@ -58,13 +60,14 @@ fun BottomNavItem(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Icon(
                 painter = painterResource(id = item.icon),
                 contentDescription = item.title,
                 tint = if (isSelected) Primary
-                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                modifier = Modifier.size(24.dp)
             )
 
             // Only show text if selected
@@ -75,7 +78,7 @@ fun BottomNavItem(
             ) {
                 Text(
                     text = item.title,
-                    style = MaterialTheme.typography.displayLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = Primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -91,6 +94,15 @@ fun BottomNavItem(
 private fun NavItemPrev() {
     BottomNavItem(
         item = BottomNavItems.Messages,
+        isSelected = true,
+        onClick = {}
+    )
+}
+@Preview(showBackground = true)
+@Composable
+private fun NavItemPrev1() {
+    BottomNavItem(
+        item = BottomNavItems.FindFriends,
         isSelected = true,
         onClick = {}
     )
