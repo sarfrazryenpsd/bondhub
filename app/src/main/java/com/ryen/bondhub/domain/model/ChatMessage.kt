@@ -2,12 +2,14 @@ package com.ryen.bondhub.domain.model
 
 data class ChatMessage(
     val messageId: String = "",
-    val connectionId: String = "",
+    val chatId: String = "",
     val senderId: String = "",
+    val receiverId: String = "",
     val content: String = "",
-    val timestamp: Long = 0,
+    val timestamp: Long = System.currentTimeMillis(),
     val messageType: MessageType = MessageType.TEXT,
-    val status: MessageStatus = MessageStatus.SENT
+    val status: MessageStatus = MessageStatus.SENDING,
+    val attachmentUrl: String? = null
 )
 
 enum class MessageType {
@@ -15,5 +17,5 @@ enum class MessageType {
 }
 
 enum class MessageStatus {
-    SENT, DELIVERED, READ
+    SENDING, SENT, DELIVERED, READ, FAILED
 }

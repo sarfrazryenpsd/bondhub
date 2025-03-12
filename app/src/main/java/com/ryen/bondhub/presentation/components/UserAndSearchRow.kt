@@ -140,7 +140,7 @@ private fun MessageRowPrev() {
             profilePictureUrl = "",
             displayName = "Sarfraz Ryen",
             messageMode = true,
-            lastMessage = "Hello, how are you?",
+            lastMessage = "Hello, how are you? I'm under the water",
             lastMessageTime = "10:00 AM",
             unreadMessageCount = 5
         )
