@@ -22,8 +22,9 @@ class ChatMessageRemoteDataSource @Inject constructor(
         try {
             val messageMap = mapOf(
                 "messageId" to message.messageId,
-                "connectionId" to message.connectionId,
+                "chatId" to message.chatId,
                 "senderId" to message.senderId,
+                "receiverId" to message.receiverId,
                 "content" to message.content,
                 "timestamp" to message.timestamp,
                 "messageType" to message.messageType.name,
@@ -51,8 +52,9 @@ class ChatMessageRemoteDataSource @Inject constructor(
                     try {
                         ChatMessage(
                             messageId = document.getString("messageId") ?: "",
-                            connectionId = document.getString("connectionId") ?: "",
+                            chatId = document.getString("chatId") ?: "",
                             senderId = document.getString("senderId") ?: "",
+                            receiverId = document.getString("receiverId") ?: "",
                             content = document.getString("content") ?: "",
                             timestamp = document.getLong("timestamp") ?: 0L,
                             messageType = MessageType.valueOf(document.getString("messageType") ?: MessageType.TEXT.name),

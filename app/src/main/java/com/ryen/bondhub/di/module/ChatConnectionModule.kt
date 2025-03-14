@@ -5,10 +5,12 @@ import com.ryen.bondhub.data.local.dao.ChatConnectionDao
 import com.ryen.bondhub.data.remote.dataSource.ChatConnectionRemoteDataSource
 import com.ryen.bondhub.data.repository.ChatConnectionRepositoryImpl
 import com.ryen.bondhub.domain.repository.ChatConnectionRepository
+import com.ryen.bondhub.domain.useCases.chatConnection.GetConnectionBetweenUsersUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Singleton
 
 @Module
@@ -32,7 +34,16 @@ object ChatConnectionModule {
     ): ChatConnectionRepository {
         return ChatConnectionRepositoryImpl(
             remoteDataSource,
-            chatConnectionDao
+            chatConnectionDao,
+            dispatcher = Dispatchers.IO
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetConnectionBetweenUsersUseCase(
+        repository: ChatConnectionRepository
+    ): GetConnectionBetweenUsersUseCase {
+        return GetConnectionBetweenUsersUseCase(repository)
     }
 }

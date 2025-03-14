@@ -4,6 +4,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.ryen.bondhub.domain.model.ChatConnection
 import com.ryen.bondhub.domain.model.ConnectionStatus
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -48,5 +51,38 @@ class ChatConnectionRemoteDataSource @Inject constructor(
             .await()
             .toObjects(ChatConnection::class.java)
             .firstOrNull()
+    }
+
+    suspend fun getConnectionBetweenUsers(user1Id: String, user2Id: String): Flow<ChatConnection?> = callbackFlow {
+        // We need to check for connection in both directions since user1 or user2 could be the initiator
+        val query1 = connectionsCollection
+            .whereEqualTo("user1Id", user1Id)
+            .whereEqualTo("user2Id", user2Id)
+
+        val query2 = connectionsCollection
+            .whereEqualTo("user1Id", user2Id)
+            .whereEqualTo("user2Id", user1Id)
+
+        val registration1 = query1.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(null)
+                return@addSnapshotListener
+            }
+
+            val connection = snapshot?.documents?.firstOrNull()?.toObject(ChatConnection::class.java)
+            if (connection != null) {
+                trySend(connection)
+            } else {
+                // Only check the second query if the first returned no results
+                query2.get().addOnSuccessListener { snapshot2 ->
+                    val connection2 = snapshot2.documents.firstOrNull()?.toObject(ChatConnection::class.java)
+                    trySend(connection2)
+                }.addOnFailureListener {
+                    trySend(null)
+                }
+            }
+        }
+
+        awaitClose { registration1.remove() }
     }
 }

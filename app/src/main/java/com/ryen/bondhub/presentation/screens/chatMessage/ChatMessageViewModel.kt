@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryen.bondhub.domain.model.MessageStatus
 import com.ryen.bondhub.domain.model.MessageType
+import com.ryen.bondhub.domain.useCases.chatConnection.GetConnectionBetweenUsersUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.DeleteMessageUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.GetMessagesUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.GetUnreadMessagesCountUseCase
@@ -29,7 +30,8 @@ class ChatMessageViewModel @Inject constructor(
     private val updateMessageStatusUseCase: UpdateMessageStatusUseCase,
     private val deleteMessageUseCase: DeleteMessageUseCase,
     private val markMessagesAsReadUseCase: MarkMessagesAsReadUseCase,
-    private val getUnreadMessagesCountUseCase: GetUnreadMessagesCountUseCase
+    private val getUnreadMessagesCountUseCase: GetUnreadMessagesCountUseCase,
+    private val getConnectionBetweenUsersUseCase: GetConnectionBetweenUsersUseCase,
 ) : ViewModel() {
 
     private val _messageState = MutableStateFlow<ChatMessageState>(ChatMessageState.Initial)

@@ -15,18 +15,15 @@ interface ChatMessageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessages(messages: List<ChatMessageEntity>)
 
-    @Query("SELECT * FROM chat_messages WHERE connectionId = :connectionId ORDER BY timestamp ASC")
-    fun getMessagesByConnectionId(connectionId: String): Flow<List<ChatMessageEntity>>
-
-    @Query("UPDATE chat_messages SET status = :status WHERE messageId = :messageId")
-    suspend fun updateMessageStatus(messageId: String, status: String)
+    @Query("SELECT * FROM chat_messages WHERE chatId = :chatId ORDER BY timestamp ASC")
+    fun getChatMessages(chatId: String): Flow<List<ChatMessageEntity>>
 
     @Query("DELETE FROM chat_messages WHERE messageId = :messageId")
     suspend fun deleteMessage(messageId: String)
 
-    @Query("SELECT COUNT(*) FROM chat_messages WHERE connectionId = :connectionId AND senderId != :userId AND status != 'READ'")
-    fun getUnreadMessagesCount(connectionId: String, userId: String): Flow<Int>
+    @Query("UPDATE chat_messages SET status = :status WHERE messageId = :messageId")
+    suspend fun updateMessageStatus(messageId: String, status: String)
 
-    @Query("UPDATE chat_messages SET status = 'READ' WHERE connectionId = :connectionId AND senderId != :receiverId AND status != 'READ'")
-    suspend fun markMessagesAsRead(connectionId: String, receiverId: String)
+    @Query("UPDATE chat_messages SET status = :status WHERE chatId = :chatId AND receiverId = :receiverId AND status != :status")
+    suspend fun updateAllMessageStatus(chatId: String, receiverId: String, status: String)
 }

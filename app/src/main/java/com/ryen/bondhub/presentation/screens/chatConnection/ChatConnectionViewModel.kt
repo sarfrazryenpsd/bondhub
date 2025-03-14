@@ -22,7 +22,7 @@ class ChatConnectionViewModel @Inject constructor(
     private val sendConnectionRequestUseCase: SendConnectionRequestUseCase,
     private val acceptConnectionRequestUseCase: AcceptConnectionRequestUseCase,
     private val getConnectionsUseCase: GetConnectionsUseCase,
-    private val findExistingConnectionUseCase: FindExistingConnectionUseCase
+    private val findExistingConnectionUseCase: FindExistingConnectionUseCase,
 ) : ViewModel() {
 
     private val _connectionState = MutableStateFlow<ChatConnectionScreenState>(ChatConnectionScreenState.Initial)

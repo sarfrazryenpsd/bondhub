@@ -31,4 +31,7 @@ interface ChatConnectionDao {
 
     @Query("SELECT * FROM chat_connections WHERE status = :status AND (user1Id = :userId OR user2Id = :userId)")
     fun getConnectionsByStatus(userId: String, status: ConnectionStatus): Flow<List<ChatConnectionEntity>>
+
+    @Query("SELECT * FROM chat_connections WHERE (user1Id = :user1Id AND user2Id = :user2Id) OR (user1Id = :user2Id AND user2Id = :user1Id) LIMIT 1")
+    fun getConnectionBetweenUsers(user1Id: String, user2Id: String): Flow<ChatConnectionEntity?>
 }

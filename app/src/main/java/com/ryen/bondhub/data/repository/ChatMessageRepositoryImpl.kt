@@ -1,104 +1,155 @@
 package com.ryen.bondhub.data.repository
 
+import com.google.firebase.auth.FirebaseAuth
+import com.ryen.bondhub.data.local.dao.ChatDao
 import com.ryen.bondhub.data.local.dao.ChatMessageDao
 import com.ryen.bondhub.data.local.entity.toDomain
 import com.ryen.bondhub.data.local.entity.toEntity
+import com.ryen.bondhub.data.mappers.ChatMessageMapper
 import com.ryen.bondhub.data.remote.dataSource.ChatMessageRemoteDataSource
 import com.ryen.bondhub.domain.model.ChatMessage
 import com.ryen.bondhub.domain.model.MessageStatus
 import com.ryen.bondhub.domain.repository.ChatMessageRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import java.util.UUID
 import javax.inject.Inject
 
+@ExperimentalCoroutinesApi
 class ChatMessageRepositoryImpl @Inject constructor(
     private val remoteDataSource: ChatMessageRemoteDataSource,
-    private val localDataSource: ChatMessageDao
+    private val localDataSource: ChatMessageDao,
+    private val chatDao: ChatDao,
+    private val mapper: ChatMessageMapper,
+    private val auth: FirebaseAuth
 ) : ChatMessageRepository {
-
     override suspend fun sendMessage(message: ChatMessage): Result<ChatMessage> {
         return try {
-            // First send to remote
-            val remoteResult = remoteDataSource.sendMessage(message)
-
-            // If successful, cache locally
-            if (remoteResult.isSuccess) {
-                localDataSource.insertMessage(message.toEntity())
+            // Create a new message with unique ID if not provided
+            val finalMessage = if (message.messageId.isEmpty()) {
+                message.copy(
+                    messageId = UUID.randomUUID().toString(),
+                    timestamp = System.currentTimeMillis(),
+                    senderId = auth.currentUser?.uid ?: message.senderId,
+                    status = MessageStatus.SENDING,
+                )
+            } else {
+                message
             }
 
-            remoteResult
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+            // Save to local DB immediately for UI responsiveness
+            localDataSource.insertMessage(mapper.mapDomainToEntity(finalMessage))
 
-    override suspend fun getMessages(connectionId: String): Flow<List<ChatMessage>> {
-        return localDataSource.getMessagesByConnectionId(connectionId)
-            .map { entities -> entities.map { it.toDomain() } }
-            .onStart {
-                // Fetch latest messages from remote and cache them
-                try {
-                    remoteDataSource.getMessages(connectionId)
-                        .first()
-                        .let { messages ->
-                            localDataSource.insertMessages(messages.map { it.toEntity() })
-                        }
-                } catch (e: Exception) {
-                    // If remote fetch fails, we'll still emit cached messages
+            // Update chat with last message info
+            chatDao.updateChatWithNewMessage(
+                finalMessage.chatId,
+                finalMessage.content,
+                finalMessage.timestamp
+            )
+
+            // Send to remote
+            val remoteMessage = mapper.mapDomainToRemote(finalMessage)
+
+            remoteDataSource.sendMessage(remoteMessage).fold(
+                onSuccess = {
+                    // Update status to SENT
+                    val sentMessage = finalMessage.copy(status = MessageStatus.SENT)
+                    localDataSource.updateMessageStatus(sentMessage.messageId, MessageStatus.SENT.name)
+                    Result.success(sentMessage)
+                },
+                onFailure = {
+                    // Update status to FAILED
+                    val failedMessage = finalMessage.copy(status = MessageStatus.FAILED)
+                    localDataSource.updateMessageStatus(failedMessage.messageId, MessageStatus.FAILED.name)
+                    Result.failure(it)
                 }
-            }
-    }
-
-    override suspend fun updateMessageStatus(messageId: String, status: MessageStatus): Result<Unit> {
-        return try {
-            // Update remote first
-            val remoteResult = remoteDataSource.updateMessageStatus(messageId, status)
-
-            // If successful, update local cache
-            if (remoteResult.isSuccess) {
-                localDataSource.updateMessageStatus(messageId, status.name)
-            }
-
-            remoteResult
+            )
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    override suspend fun deleteMessage(messageId: String): Result<Unit> {
+    override suspend fun getChatMessages(chatId: String): Flow<List<ChatMessage>> {
         return try {
-            // Delete from remote first
-            val remoteResult = remoteDataSource.deleteMessage(messageId)
+            val remoteMessages = remoteDataSource.getMessages(chatId)
 
-            // If successful, delete from local cache
-            if (remoteResult.isSuccess) {
-                localDataSource.deleteMessage(messageId)
-            }
+            remoteMessages
+                .map { messageList ->
+                    val messages = messageList.map { mapper.mapRemoteToDomain(it) }
 
-            remoteResult
+                    // Update local cache
+                    localDataSource.insertMessages(messages.map { mapper.mapDomainToEntity(it) })
+
+                    messages
+                }
+                .flowOn(Dispatchers.IO)
+                .catch {
+                    // Fallback to local data source on error
+                    emit(emptyList())
+                    localDataSource.getChatMessages(chatId)
+                        .map { entities -> entities.map { mapper.mapEntityToDomain(it) } }
+                }
+                .flatMapConcat { remoteResult ->
+                    if (remoteResult.isEmpty()) {
+                        localDataSource.getChatMessages(chatId)
+                            .map { entities -> entities.map { mapper.mapEntityToDomain(it) } }
+                    } else {
+                        flow { emit(remoteResult) }
+                    }
+                }
+        } catch (e: Exception) {
+            flow { emit(emptyList()) }
+        }
+    }
+
+    override suspend fun updateMessageStatus(
+        messageId: String,
+        status: MessageStatus
+    ): Result<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteChatMessage(messageId: String): Result<Unit> {
+        return try {
+            remoteDataSource.deleteMessage(messageId).fold(
+                onSuccess = {
+                    // Also delete from local database
+                    localDataSource.deleteMessage(messageId)
+                    Result.success(Unit)
+                },
+                onFailure = { Result.failure(it) }
+            )
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     override suspend fun getUnreadMessagesCount(connectionId: String, userId: String): Flow<Int> {
-        return localDataSource.getUnreadMessagesCount(connectionId, userId)
+        TODO("Not yet implemented")
     }
 
-    override suspend fun markMessagesAsRead(connectionId: String, receiverId: String): Result<Unit> {
+    override suspend fun markAllMessagesAsRead(chatId: String, receiverId: String): Result<Unit> {
         return try {
-            // We'll need to get all unread messages and update them one by one in Firestore
-            // For simplicity, let's assume we have a batch update function in remote data source
-            // First update local
-            localDataSource.markMessagesAsRead(connectionId, receiverId)
-
-            // Then attempt to update remote (this is simplified - you'd need to implement the remote part)
-            // This would require fetching unread messages and updating them one by one or in a batch
-            Result.success(Unit)
+            remoteDataSource.updateAllMessageStatus(chatId, receiverId, MessageStatus.READ.name).fold(
+                onSuccess = {
+                    // Also update in local database
+                    localDataSource.updateAllMessageStatus(chatId, receiverId, MessageStatus.READ.name)
+                    chatDao.markChatAsRead(chatId)
+                    Result.success(Unit)
+                },
+                onFailure = { Result.failure(it) }
+            )
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
 }

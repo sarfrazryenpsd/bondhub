@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.Flow
 interface ChatConnectionRepository {
     suspend fun sendConnectionRequest(currentUserId: String, targetUserId: String): Result<ChatConnection>
     suspend fun acceptConnectionRequest(connectionId: String): Result<Unit>
-    fun getConnectionsForUser(userId: String): Flow<List<ChatConnection>>
+    suspend fun getConnectionsForUser(userId: String): Flow<List<ChatConnection>>
     suspend fun findExistingConnection(user1Id: String, user2Id: String): ChatConnection?
+    suspend fun getConnectionBetweenUsers(user1Id: String, user2Id: String): Flow<ChatConnection?>
+
 }

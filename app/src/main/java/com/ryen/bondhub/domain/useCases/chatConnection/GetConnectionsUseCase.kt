@@ -6,5 +6,5 @@ import javax.inject.Inject
 class GetConnectionsUseCase @Inject constructor(
     private val repository: ChatConnectionRepository
 ) {
-    operator fun invoke(userId: String) = repository.getConnectionsForUser(userId)
+    suspend operator fun invoke(userId: String) = repository.getConnectionsForUser(userId)
 }

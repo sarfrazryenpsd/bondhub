@@ -6,13 +6,18 @@ import com.ryen.bondhub.data.remote.dataSource.ChatConnectionRemoteDataSource
 import com.ryen.bondhub.domain.model.ChatConnection
 import com.ryen.bondhub.domain.model.ConnectionStatus
 import com.ryen.bondhub.domain.repository.ChatConnectionRepository
+import com.ryen.bondhub.util.networkBoundResource
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class ChatConnectionRepositoryImpl @Inject constructor(
     private val remoteDataSource: ChatConnectionRemoteDataSource,
-    private val localDao: ChatConnectionDao
+    private val localDao: ChatConnectionDao,
+    private val dispatcher: CoroutineDispatcher
 ) : ChatConnectionRepository {
 
     override suspend fun sendConnectionRequest(
@@ -58,7 +63,7 @@ class ChatConnectionRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getConnectionsForUser(userId: String): Flow<List<ChatConnection>> {
+    override suspend fun getConnectionsForUser(userId: String): Flow<List<ChatConnection>> {
         return localDao.getConnectionsForUser(userId)
             .map { entities ->
                 entities.map { it.toDomain() }
@@ -74,6 +79,34 @@ class ChatConnectionRepositoryImpl @Inject constructor(
 
         return localConnection?.toDomain()
             ?: remoteDataSource.findExistingConnection(user1Id, user2Id)
+    }
+
+    override suspend fun getConnectionBetweenUsers(user1Id: String, user2Id: String): Flow<ChatConnection?> {
+        return networkBoundResource(
+            query = {
+                localDao.getConnectionBetweenUsers(user1Id, user2Id)
+                    .map { entity -> entity?.toDomain() }
+            },
+            fetch = {
+                remoteDataSource.getConnectionBetweenUsers(user1Id, user2Id).first()
+            },
+            saveFetchResult = { connection ->
+                if (connection != null) {
+                    localDao.insertConnection(connection.toEntity())
+                }
+            },
+            shouldFetch = { cachedConnection ->
+                // Decide based on your app's cache policy
+                cachedConnection == null || shouldRefreshCache(cachedConnection.lastInteractedAt)
+            },
+            dispatcher = dispatcher
+        )
+    }
+
+    private fun shouldRefreshCache(lastUpdatedTimestamp: Long): Boolean {
+        val currentTime = System.currentTimeMillis()
+        val cacheLifetime = TimeUnit.MINUTES.toMillis(15) // Cache for 15 minutes
+        return currentTime - lastUpdatedTimestamp > cacheLifetime
     }
 
     // Extension functions for mapping
