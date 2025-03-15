@@ -3,8 +3,6 @@ package com.ryen.bondhub.data.repository
 import com.google.firebase.auth.FirebaseAuth
 import com.ryen.bondhub.data.local.dao.ChatDao
 import com.ryen.bondhub.data.local.dao.ChatMessageDao
-import com.ryen.bondhub.data.local.entity.toDomain
-import com.ryen.bondhub.data.local.entity.toEntity
 import com.ryen.bondhub.data.mappers.ChatMessageMapper
 import com.ryen.bondhub.data.remote.dataSource.ChatMessageRemoteDataSource
 import com.ryen.bondhub.domain.model.ChatMessage
@@ -14,12 +12,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.onEach
 import java.util.UUID
 import javax.inject.Inject
 
@@ -114,7 +111,20 @@ class ChatMessageRepositoryImpl @Inject constructor(
         messageId: String,
         status: MessageStatus
     ): Result<Unit> {
-        TODO("Not yet implemented")
+        return try {
+            remoteDataSource.updateMessageStatus(messageId, status).fold(
+                onSuccess = {
+                    // Update local database to reflect the status change
+                    localDataSource.updateMessageStatus(messageId, status.name)
+                    Result.success(Unit)
+                },
+                onFailure = {
+                    Result.failure(it)
+                }
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun deleteChatMessage(messageId: String): Result<Unit> {
@@ -133,7 +143,21 @@ class ChatMessageRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getUnreadMessagesCount(connectionId: String, userId: String): Flow<Int> {
-        TODO("Not yet implemented")
+        return try {
+            // First try to get from remote
+            remoteDataSource.getUnreadMessagesCount(connectionId, userId)
+                .catch {
+                    // On error, fall back to local data
+                    localDataSource.getUnreadMessagesCount(connectionId, userId)
+                }
+                .onEach { count ->
+                    // Update chat unread count in local DB
+                    chatDao.updateUnreadMessageCount(connectionId, count)
+                }
+        } catch (e: Exception) {
+            // If everything fails, return zero
+            flow { emit(0) }
+        }
     }
 
     override suspend fun markAllMessagesAsRead(chatId: String, receiverId: String): Result<Unit> {

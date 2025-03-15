@@ -26,4 +26,7 @@ interface ChatMessageDao {
 
     @Query("UPDATE chat_messages SET status = :status WHERE chatId = :chatId AND receiverId = :receiverId AND status != :status")
     suspend fun updateAllMessageStatus(chatId: String, receiverId: String, status: String)
+
+    @Query("SELECT COUNT(*) FROM chat_messages WHERE chatId = :connectionId AND receiverId = :userId AND status != 'READ'")
+    fun getUnreadMessagesCount(connectionId: String, userId: String): Flow<Int>
 }

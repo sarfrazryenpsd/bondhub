@@ -29,4 +29,7 @@ interface ChatDao {
 
     @Query("UPDATE chats SET unreadMessageCount = 0 WHERE chatId = :chatId")
     suspend fun markChatAsRead(chatId: String)
+
+    @Query("UPDATE chats SET unreadMessageCount = :count WHERE connectionId = :connectionId")
+    suspend fun updateUnreadMessageCount(connectionId: String, count: Int)
 }

@@ -18,20 +18,24 @@ class ChatMessageRemoteDataSource @Inject constructor(
 ) {
     private val messagesCollection = firestore.collection("messages")
 
-    suspend fun sendMessage(message: ChatMessage): Result<ChatMessage> = withContext(Dispatchers.IO) {
+    suspend fun sendMessage(messageMap: Map<String, Any?>): Result<ChatMessage> = withContext(Dispatchers.IO) {
         try {
-            val messageMap = mapOf(
-                "messageId" to message.messageId,
-                "chatId" to message.chatId,
-                "senderId" to message.senderId,
-                "receiverId" to message.receiverId,
-                "content" to message.content,
-                "timestamp" to message.timestamp,
-                "messageType" to message.messageType.name,
-                "status" to message.status.name
+            val messageId = messageMap["messageId"] as String
+            messagesCollection.document(messageId).set(messageMap).await()
+
+            // Convert back to ChatMessage for return
+            val message = ChatMessage(
+                messageId = messageId,
+                chatId = messageMap["chatId"] as String,
+                senderId = messageMap["senderId"] as String,
+                receiverId = messageMap["receiverId"] as String,
+                content = messageMap["content"] as String,
+                timestamp = messageMap["timestamp"] as Long,
+                messageType = MessageType.valueOf(messageMap["messageType"] as String),
+                status = MessageStatus.valueOf(messageMap["status"] as String),
+                attachmentUrl = messageMap["attachmentUrl"] as String?
             )
 
-            messagesCollection.document(message.messageId).set(messageMap).await()
             Result.success(message)
         } catch (e: Exception) {
             Result.failure(e)
@@ -89,5 +93,50 @@ class ChatMessageRemoteDataSource @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun updateAllMessageStatus(chatId: String, receiverId: String, status: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // Create a batch to update multiple messages efficiently
+            val batch = firestore.batch()
+
+            // Query for all messages in the chat that are for the receiver and not yet read
+            val messagesToUpdate = messagesCollection
+                .whereEqualTo("chatId", chatId)
+                .whereEqualTo("receiverId", receiverId)
+                .whereNotEqualTo("status", status)
+                .get()
+                .await()
+
+            // Add each document to the batch update
+            for (document in messagesToUpdate.documents) {
+                val messageRef = messagesCollection.document(document.id)
+                batch.update(messageRef, "status", status)
+            }
+
+            // Commit the batch
+            batch.commit().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun getUnreadMessagesCount(connectionId: String, userId: String): Flow<Int> = callbackFlow {
+        val subscription = messagesCollection
+            .whereEqualTo("chatId", connectionId)
+            .whereEqualTo("receiverId", userId)
+            .whereNotEqualTo("status", MessageStatus.READ.name)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val count = snapshot?.documents?.size ?: 0
+                trySend(count)
+            }
+
+        awaitClose { subscription.remove() }
     }
 }
