@@ -15,16 +15,16 @@ interface ChatDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChats(chats: List<ChatEntity>)
 
-    @Query("SELECT * FROM chats WHERE participants LIKE '%' || :userId || '%' ORDER BY lastMessageTime DESC")
+    @Query("SELECT * FROM chats WHERE chatId = :chatId")
+    suspend fun getChatById(chatId: String): ChatEntity?
+
+    @Query("SELECT * FROM chats WHERE :userId IN (participants)")
     fun getUserChats(userId: String): Flow<List<ChatEntity>>
 
     @Query("DELETE FROM chats WHERE chatId = :chatId")
     suspend fun deleteChat(chatId: String)
 
-    @Query("SELECT * FROM chats WHERE chatId = :chatId")
-    suspend fun getChatById(chatId: String): ChatEntity?
-
-    @Query("UPDATE chats SET unreadMessageCount = unreadMessageCount + 1, lastMessage = :lastMessage, lastMessageTime = :lastMessageTime WHERE chatId = :chatId")
+    @Query("UPDATE chats SET lastMessage = :lastMessage, lastMessageTime = :lastMessageTime WHERE chatId = :chatId")
     suspend fun updateChatWithNewMessage(chatId: String, lastMessage: String, lastMessageTime: Long)
 
     @Query("UPDATE chats SET unreadMessageCount = 0 WHERE chatId = :chatId")

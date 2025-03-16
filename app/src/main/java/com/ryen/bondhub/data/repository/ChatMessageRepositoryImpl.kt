@@ -79,30 +79,28 @@ class ChatMessageRepositoryImpl @Inject constructor(
             val remoteMessages = remoteDataSource.getMessages(chatId)
 
             remoteMessages
-                .map { messageList ->
-                    val messages = messageList.map { mapper.mapRemoteToDomain(it) }
-
-                    // Update local cache
-                    localDataSource.insertMessages(messages.map { mapper.mapDomainToEntity(it) })
-
-                    messages
+                .onEach { messageList ->
+                    // Store the remote messages in local database
+                    val entities = messageList.map { mapper.mapDomainToEntity(it) }
+                    localDataSource.insertMessages(entities)
                 }
                 .flowOn(Dispatchers.IO)
                 .catch {
                     // Fallback to local data source on error
                     emit(emptyList())
-                    localDataSource.getChatMessages(chatId)
-                        .map { entities -> entities.map { mapper.mapEntityToDomain(it) } }
                 }
                 .flatMapConcat { remoteResult ->
                     if (remoteResult.isEmpty()) {
+                        // If remote returns empty, use local data
                         localDataSource.getChatMessages(chatId)
                             .map { entities -> entities.map { mapper.mapEntityToDomain(it) } }
                     } else {
+                        // Otherwise use the remote result
                         flow { emit(remoteResult) }
                     }
                 }
         } catch (e: Exception) {
+            // In case of any exception, return empty list
             flow { emit(emptyList()) }
         }
     }

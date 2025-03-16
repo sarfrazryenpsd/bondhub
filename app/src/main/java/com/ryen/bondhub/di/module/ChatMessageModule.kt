@@ -1,12 +1,14 @@
 package com.ryen.bondhub.di.module
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.ryen.bondhub.data.mappers.ChatMapper
+import com.ryen.bondhub.data.mappers.ChatMessageMapper
 import com.ryen.bondhub.data.remote.dataSource.ChatMessageRemoteDataSource
 import com.ryen.bondhub.domain.repository.ChatMessageRepository
-import com.ryen.bondhub.domain.useCases.chatMessage.DeleteMessageUseCase
-import com.ryen.bondhub.domain.useCases.chatMessage.GetMessagesUseCase
+import com.ryen.bondhub.domain.useCases.chatMessage.DeleteChatMessageUseCase
+import com.ryen.bondhub.domain.useCases.chatMessage.GetChatMessagesUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.GetUnreadMessagesCountUseCase
-import com.ryen.bondhub.domain.useCases.chatMessage.MarkMessagesAsReadUseCase
+import com.ryen.bondhub.domain.useCases.chatMessage.MarkAllMessagesAsReadUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.SendMessageUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.UpdateMessageStatusUseCase
 import dagger.Module
@@ -33,8 +35,8 @@ object ChatMessageModule {
     }
 
     @Provides
-    fun provideGetMessagesUseCase(repository: ChatMessageRepository): GetMessagesUseCase {
-        return GetMessagesUseCase(repository)
+    fun provideGetMessagesUseCase(repository: ChatMessageRepository): GetChatMessagesUseCase {
+        return GetChatMessagesUseCase(repository)
     }
 
     @Provides
@@ -43,8 +45,8 @@ object ChatMessageModule {
     }
 
     @Provides
-    fun provideDeleteMessageUseCase(repository: ChatMessageRepository): DeleteMessageUseCase {
-        return DeleteMessageUseCase(repository)
+    fun provideDeleteMessageUseCase(repository: ChatMessageRepository): DeleteChatMessageUseCase {
+        return DeleteChatMessageUseCase(repository)
     }
 
     @Provides
@@ -53,7 +55,13 @@ object ChatMessageModule {
     }
 
     @Provides
-    fun provideMarkMessagesAsReadUseCase(repository: ChatMessageRepository): MarkMessagesAsReadUseCase {
-        return MarkMessagesAsReadUseCase(repository)
+    fun provideMarkMessagesAsReadUseCase(repository: ChatMessageRepository): MarkAllMessagesAsReadUseCase {
+        return MarkAllMessagesAsReadUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideChatMessageMapper(): ChatMessageMapper {
+        return ChatMessageMapper()
     }
 }

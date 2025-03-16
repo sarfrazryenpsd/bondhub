@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.ryen.bondhub.data.AppDatabase
 import com.ryen.bondhub.data.local.dao.ChatConnectionDao
+import com.ryen.bondhub.data.local.dao.ChatDao
 import com.ryen.bondhub.data.local.dao.ChatMessageDao
 import com.ryen.bondhub.data.local.dao.UserProfileDao
 import dagger.Module
@@ -42,5 +43,11 @@ object DatabaseModule {
     @Singleton
     fun provideChatMessageDao(database: AppDatabase): ChatMessageDao {
         return database.chatMessageDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideChatDao(database: AppDatabase): ChatDao {
+        return database.chatDao()
     }
 }
