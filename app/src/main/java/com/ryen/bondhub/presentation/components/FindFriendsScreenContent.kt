@@ -9,12 +9,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -62,6 +66,7 @@ fun FindFriendsScreenContent(
             onSearchClick = onSearch,
             searchChat = false
         )
+        Spacer(modifier = Modifier.height(8.dp))
         AnimatedVisibility(
             visible = query.isNotBlank(),
             enter = slideInVertically { height -> height },
@@ -86,12 +91,25 @@ fun FindFriendsScreenContent(
                 } else {
                     when (uiState){
                         is FindFriendsState.Loading -> {
-                            CircularProgressIndicator(
-                                modifier = Modifier.width(56.dp),
-                                color = Primary,
-                                trackColor = Primary.copy(alpha = .4f),
-                                strokeWidth = 5.dp,
-                            )
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
+                                    //.align(Alignment.Center),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.White,
+                                )
+                            ){
+                                Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(16.dp).fillMaxWidth().clipToBounds()){
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.width(32.dp).align(Alignment.Center),
+                                        color = Primary,
+                                        trackColor = Primary.copy(alpha = .4f),
+                                        strokeWidth = 5.dp,
+                                    )
+                                }
+                            }
                         }
                         is FindFriendsState.UserFound -> {
                             UserProfileCard(
@@ -101,15 +119,26 @@ fun FindFriendsScreenContent(
                             )
                         }
                         is FindFriendsState.UserNotFound -> {
-                            Text(
-                                text = "User not found",
-                                textAlign = TextAlign.Start,
-                                color = Error,
-                                style = MaterialTheme.typography.bodyMedium,
+                            Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 8.dp, horizontal = 12.dp)
-                            )
+                                    .padding(vertical = 16.dp)
+                                    .align(Alignment.Center),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.White,
+                                )
+                            ){
+                                Text(
+                                    text = "User not found",
+                                    textAlign = TextAlign.Center,
+                                    color = Error,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp, horizontal = 12.dp)
+                                )
+                            }
                         }
                         else -> {}
                     }
@@ -145,6 +174,17 @@ private fun FindFriendsScreenContentPrev() {
             ),
             connectionStatus = null
         ),
+        paddingValues = PaddingValues(0.dp)
+    )
+}
+@Preview
+@Composable
+private fun FindFriendsScreenContentPrev1() {
+    FindFriendsScreenContent(
+        query = "asdubef@gmail.com",
+        onQueryChanged = {},
+        onSearch = {},
+        uiState = FindFriendsState.Loading,
         paddingValues = PaddingValues(0.dp)
     )
 }

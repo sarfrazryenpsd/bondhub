@@ -40,17 +40,20 @@ class ChatConnectionRemoteDataSource @Inject constructor(
             .toObjects(ChatConnection::class.java)
     }
 
-    suspend fun findExistingConnection(
-        user1Id: String,
-        user2Id: String
-    ): ChatConnection? {
-        return connectionsCollection
+    suspend fun findExistingConnection(user1Id: String, user2Id: String): ChatConnection? {
+        // Make sure you're using the correct field names here
+        val query = connectionsCollection
             .whereIn("user1Id", listOf(user1Id, user2Id))
             .whereIn("user2Id", listOf(user1Id, user2Id))
             .get()
             .await()
-            .toObjects(ChatConnection::class.java)
-            .firstOrNull()
+
+        return query.documents
+            .map { it.toObject(ChatConnection::class.java) }
+            .firstOrNull {
+                (it?.user1Id == user1Id && it.user2Id == user2Id) ||
+                        (it?.user1Id == user2Id && it.user2Id == user1Id)
+            }
     }
 
     suspend fun getConnectionBetweenUsers(user1Id: String, user2Id: String): Flow<ChatConnection?> = callbackFlow {

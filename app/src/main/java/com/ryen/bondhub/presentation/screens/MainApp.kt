@@ -4,8 +4,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContent
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -81,12 +83,12 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                             )
                         }
                     }
+
                 ) { paddingValues ->
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
                             .padding(
-                                bottom = if (showBottomBar) paddingValues.calculateBottomPadding() else 0.dp
+                                paddingValues.calculateTopPadding()
                             )
                     ) {
                         NavHost(

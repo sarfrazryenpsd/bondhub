@@ -82,22 +82,33 @@ class FindFriendsViewModel @Inject constructor(
 
     private fun checkConnectionStatus(userProfile: UserProfile) {
         viewModelScope.launch {
-            getConnectionStatusUseCase(currentUserId!!, userProfile.uid).fold(
-                onSuccess = { connectionStatus ->
-                    _uiState.value = FindFriendsState.UserFound(
-                        userProfile = userProfile,
-                        connectionStatus = connectionStatus!!
-                    )
-                },
-                onFailure = { e ->
-                    // Still show the user but with null connection status
-                    _uiState.value = FindFriendsState.UserFound(
-                        userProfile = userProfile,
-                        connectionStatus = null
-                    )
-                    _uiEvent.emit(UiEvent.ShowSnackbarError("Could not check connection status: ${e.message}"))
-                }
-            )
+            currentUserId?.let { userId ->
+                getConnectionStatusUseCase(userId, userProfile.uid).fold(
+                    onSuccess = { connectionStatus ->
+                        _uiState.value = FindFriendsState.UserFound(
+                            userProfile = userProfile,
+                            connectionStatus = connectionStatus
+                        )
+                    },
+                    onFailure = { e ->
+                        // Check if the error is because no connection exists yet
+                        if (e is NoSuchElementException || e.message?.contains("not found") == true) {
+                            // No connection exists yet, show as INITIAL
+                            _uiState.value = FindFriendsState.UserFound(
+                                userProfile = userProfile,
+                                connectionStatus = ConnectionStatus.INITIAL
+                            )
+                        } else {
+                            // Other error, show error state
+                            _uiState.value = FindFriendsState.Error(
+                                "Error checking connection: ${e.message ?: "Unknown error"}"
+                            )
+                        }
+                    }
+                )
+            } ?: run {
+                _uiState.value = FindFriendsState.Error("Not logged in")
+            }
         }
     }
 
@@ -107,31 +118,36 @@ class FindFriendsViewModel @Inject constructor(
             val previousState = _uiState.value
             _uiState.value = FindFriendsState.Loading
 
-            sendConnectionRequestUseCase(currentUserId!!, userProfile.uid).fold(
-                onSuccess = {
-                    _uiEvent.emit(UiEvent.ShowSnackbarSuccess("Connection request sent to ${userProfile.displayName}"))
+            currentUserId?.let { userId ->
+                // Create a new connection with PENDING status
 
-                    // Update the UI state to show PENDING status after sending request
-                    _uiState.value = FindFriendsState.UserFound(
-                        userProfile = userProfile,
-                        connectionStatus = ConnectionStatus.PENDING
-                    )
-                },
-                onFailure = { e ->
-                    // Restore previous state on failure
-                    if (previousState is FindFriendsState.UserFound) {
+                sendConnectionRequestUseCase(
+                    currentUserId = userId,
+                    targetUserId = userProfile.uid
+                ).fold(
+                    onSuccess = {
+                        // Update UI state to show the connection is now pending
+                        val currentState = _uiState.value
+                        if (currentState is FindFriendsState.UserFound) {
+                            _uiState.value = currentState.copy(
+                                connectionStatus = ConnectionStatus.PENDING
+                            )
+                        }
+                        _uiEvent.emit(UiEvent.ShowSnackbarSuccess("Connection request sent"))
+                        resetState()
+                    },
+                    onFailure = { e ->
+                        _uiEvent.emit(UiEvent.ShowSnackbarError("Failed to send request: ${e.message}"))
                         _uiState.value = previousState
-                    } else {
-                        _uiState.value = FindFriendsState.UserFound(userProfile, null)
                     }
-
-                    _uiEvent.emit(UiEvent.ShowSnackbarError(e.message ?: "Failed to send connection request"))
-                }
-            )
+                )
+            } ?: run {
+                _uiEvent.emit(UiEvent.ShowSnackbarError("You must be logged in to send a request"))
+            }
         }
     }
 
-    fun resetState() {
+    private fun resetState() {
         _uiState.value = FindFriendsState.Initial
         _searchQuery.value = ""
     }

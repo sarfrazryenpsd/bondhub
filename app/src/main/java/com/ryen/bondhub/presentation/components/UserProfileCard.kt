@@ -45,7 +45,7 @@ import java.util.UUID
 fun UserProfileCard(
     userProfile: UserProfile,
     connectionStatus: ConnectionStatus? = null,
-    onSendRequest: () -> Unit
+    onSendRequest: (UserProfile) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -108,7 +108,9 @@ fun UserProfileCard(
                         Icon(
                             painter = painterResource(R.drawable.time),
                             contentDescription = null,
-                            modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp).size(18.dp),
+                            modifier = Modifier
+                                .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
+                                .size(18.dp),
                             tint = Surface
                         )
                         Text(
@@ -133,7 +135,9 @@ fun UserProfileCard(
                         Icon(
                             painter = painterResource(R.drawable.mark),
                             contentDescription = null,
-                            modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp).size(18.dp),
+                            modifier = Modifier
+                                .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
+                                .size(18.dp),
                             tint = Surface
                         )
                         Text(
@@ -146,7 +150,7 @@ fun UserProfileCard(
                 }
                 else -> {
                     Button(
-                        onClick = onSendRequest,
+                        onClick = { onSendRequest(userProfile) },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Primary,
                             contentColor = Surface
