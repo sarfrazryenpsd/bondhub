@@ -8,15 +8,11 @@ import com.ryen.bondhub.data.local.dao.UserProfileDao
 import com.ryen.bondhub.data.repository.AuthRepositoryImpl
 import com.ryen.bondhub.data.repository.UserProfileRepositoryImpl
 import com.ryen.bondhub.domain.repository.AuthRepository
-import com.ryen.bondhub.domain.repository.ChatConnectionRepository
 import com.ryen.bondhub.domain.repository.UserProfileRepository
 import com.ryen.bondhub.domain.useCases.auth.SignInUseCase
 import com.ryen.bondhub.domain.useCases.auth.SignUpUseCase
-import com.ryen.bondhub.domain.useCases.chatConnection.AcceptConnectionRequestUseCase
-import com.ryen.bondhub.domain.useCases.chatConnection.FindExistingConnectionUseCase
-import com.ryen.bondhub.domain.useCases.chatConnection.GetConnectionsUseCase
-import com.ryen.bondhub.domain.useCases.chatConnection.SendConnectionRequestUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.CompleteProfileUseCase
+import com.ryen.bondhub.domain.useCases.userProfile.FindUserByEmailUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.UpdateProfileImageUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.UpdateUserProfileUseCase
@@ -74,6 +70,13 @@ object AppModule {
     fun provideCompleteProfileUseCase(repository: UserProfileRepository): CompleteProfileUseCase = CompleteProfileUseCase(repository)
 
     @Provides
+    fun provideFindUserByEmailUseCase(
+        userProfileRepository: UserProfileRepository
+    ): FindUserByEmailUseCase {
+        return FindUserByEmailUseCase(userProfileRepository)
+    }
+
+    @Provides
     @Singleton
     fun provideUserProfileRepositoryImpl(
         firestore: FirebaseFirestore,
@@ -89,35 +92,4 @@ object AppModule {
         )
     }
 
-    @Provides
-    @Singleton
-    fun provideSendConnectionRequestUseCase(
-        repository: ChatConnectionRepository
-    ): SendConnectionRequestUseCase {
-        return SendConnectionRequestUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideAcceptConnectionRequestUseCase(
-        repository: ChatConnectionRepository
-    ): AcceptConnectionRequestUseCase {
-        return AcceptConnectionRequestUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetConnectionsUseCase(
-        repository: ChatConnectionRepository
-    ): GetConnectionsUseCase {
-        return GetConnectionsUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideFindExistingConnectionUseCase(
-        repository: ChatConnectionRepository
-    ): FindExistingConnectionUseCase {
-        return FindExistingConnectionUseCase(repository)
-    }
 }
