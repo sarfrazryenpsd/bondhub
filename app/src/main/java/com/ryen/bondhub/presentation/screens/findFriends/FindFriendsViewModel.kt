@@ -2,8 +2,10 @@ package com.ryen.bondhub.presentation.screens.findFriends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryen.bondhub.domain.model.ConnectionStatus
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.AuthRepository
+import com.ryen.bondhub.domain.useCases.chatConnection.GetConnectionStatusUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.SendConnectionRequestUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.FindUserByEmailUseCase
 import com.ryen.bondhub.presentation.event.UiEvent
@@ -21,6 +23,7 @@ import javax.inject.Inject
 class FindFriendsViewModel @Inject constructor(
     private val findUserByEmailUseCase: FindUserByEmailUseCase,
     private val sendConnectionRequestUseCase: SendConnectionRequestUseCase,
+    private val getConnectionStatusUseCase: GetConnectionStatusUseCase,
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
@@ -63,7 +66,8 @@ class FindFriendsViewModel @Inject constructor(
                         if (userProfile.uid == currentUserId) {
                             _uiState.value = FindFriendsState.Error("This is your email address")
                         } else {
-                            _uiState.value = FindFriendsState.UserFound(userProfile)
+                            // Check connection status before showing the user
+                            checkConnectionStatus(userProfile)
                         }
                     } else {
                         _uiState.value = FindFriendsState.UserNotFound
@@ -76,17 +80,51 @@ class FindFriendsViewModel @Inject constructor(
         }
     }
 
+    private fun checkConnectionStatus(userProfile: UserProfile) {
+        viewModelScope.launch {
+            getConnectionStatusUseCase(currentUserId!!, userProfile.uid).fold(
+                onSuccess = { connectionStatus ->
+                    _uiState.value = FindFriendsState.UserFound(
+                        userProfile = userProfile,
+                        connectionStatus = connectionStatus!!
+                    )
+                },
+                onFailure = { e ->
+                    // Still show the user but with null connection status
+                    _uiState.value = FindFriendsState.UserFound(
+                        userProfile = userProfile,
+                        connectionStatus = null
+                    )
+                    _uiEvent.emit(UiEvent.ShowSnackbarError("Could not check connection status: ${e.message}"))
+                }
+            )
+        }
+    }
+
     fun sendConnectionRequest(userProfile: UserProfile) {
         viewModelScope.launch {
+            // Store the current state before showing loading
+            val previousState = _uiState.value
             _uiState.value = FindFriendsState.Loading
 
             sendConnectionRequestUseCase(currentUserId!!, userProfile.uid).fold(
                 onSuccess = {
                     _uiEvent.emit(UiEvent.ShowSnackbarSuccess("Connection request sent to ${userProfile.displayName}"))
-                    _uiState.value = FindFriendsState.UserFound(userProfile)
+
+                    // Update the UI state to show PENDING status after sending request
+                    _uiState.value = FindFriendsState.UserFound(
+                        userProfile = userProfile,
+                        connectionStatus = ConnectionStatus.PENDING
+                    )
                 },
                 onFailure = { e ->
-                    _uiState.value = FindFriendsState.UserFound(userProfile)
+                    // Restore previous state on failure
+                    if (previousState is FindFriendsState.UserFound) {
+                        _uiState.value = previousState
+                    } else {
+                        _uiState.value = FindFriendsState.UserFound(userProfile, null)
+                    }
+
                     _uiEvent.emit(UiEvent.ShowSnackbarError(e.message ?: "Failed to send connection request"))
                 }
             )

@@ -115,6 +115,40 @@ class ChatConnectionRepositoryImpl @Inject constructor(
             ?: remoteDataSource.findExistingConnection(user1Id, user2Id)
     }
 
+    override suspend fun getConnectionStatus(userId1: String, userId2: String): Result<ConnectionStatus?> = withContext(Dispatchers.IO) {
+        try {
+            // Try both directions of connection
+            val connection1 = connectionsCollection
+                .whereEqualTo("userId1", userId1)
+                .whereEqualTo("userId2", userId2)
+                .limit(1)
+                .get()
+                .await()
+                .documents
+                .firstOrNull()
+                ?.toObject(ChatConnection::class.java)
+
+            if (connection1 != null) {
+                return@withContext Result.success(connection1.status)
+            }
+
+            // Check reverse direction
+            val connection2 = connectionsCollection
+                .whereEqualTo("userId1", userId2)
+                .whereEqualTo("userId2", userId1)
+                .limit(1)
+                .get()
+                .await()
+                .documents
+                .firstOrNull()
+                ?.toObject(ChatConnection::class.java)
+
+            Result.success(connection2?.status)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun getConnectionBetweenUsers(user1Id: String, user2Id: String): Flow<ChatConnection?> {
         return networkBoundResource(
             query = {

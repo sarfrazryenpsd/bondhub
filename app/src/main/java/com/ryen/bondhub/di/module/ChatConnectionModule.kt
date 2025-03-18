@@ -9,6 +9,7 @@ import com.ryen.bondhub.domain.repository.ChatConnectionRepository
 import com.ryen.bondhub.domain.useCases.chatConnection.AcceptConnectionRequestUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.FindExistingConnectionUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.GetConnectionBetweenUsersUseCase
+import com.ryen.bondhub.domain.useCases.chatConnection.GetConnectionStatusUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.GetConnectionsUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.SendConnectionRequestUseCase
 import dagger.Module
@@ -78,6 +79,14 @@ object ChatConnectionModule {
         repository: ChatConnectionRepository
     ): GetConnectionBetweenUsersUseCase {
         return GetConnectionBetweenUsersUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetConnectionStatusUseCase(
+        repository: ChatConnectionRepository
+    ): GetConnectionStatusUseCase {
+        return GetConnectionStatusUseCase(repository)
     }
 
     @Provides

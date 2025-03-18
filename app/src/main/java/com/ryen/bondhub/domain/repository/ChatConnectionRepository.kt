@@ -1,6 +1,7 @@
 package com.ryen.bondhub.domain.repository
 
 import com.ryen.bondhub.domain.model.ChatConnection
+import com.ryen.bondhub.domain.model.ConnectionStatus
 import kotlinx.coroutines.flow.Flow
 
 interface ChatConnectionRepository {
@@ -10,4 +11,6 @@ interface ChatConnectionRepository {
     suspend fun findExistingConnection(user1Id: String, user2Id: String): ChatConnection?
     suspend fun getConnectionBetweenUsers(user1Id: String, user2Id: String): Flow<ChatConnection?>
     suspend fun createConnection(connection: ChatConnection): Result<ChatConnection>
+    suspend fun getConnectionStatus(userId1: String, userId2: String): Result<ConnectionStatus?>
+
 }

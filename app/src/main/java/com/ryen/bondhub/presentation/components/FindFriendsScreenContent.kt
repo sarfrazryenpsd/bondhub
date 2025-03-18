@@ -42,7 +42,7 @@ fun FindFriendsScreenContent(
     onSearch: () -> Unit,
     uiState: FindFriendsState,
     paddingValues: PaddingValues,
-    onSendRequest: (String) -> Unit = {}
+    onSendRequest: (UserProfile) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -96,7 +96,8 @@ fun FindFriendsScreenContent(
                         is FindFriendsState.UserFound -> {
                             UserProfileCard(
                                 userProfile = uiState.userProfile,
-                                onSendRequest = { onSendRequest(uiState.userProfile.uid) }
+                                onSendRequest = { onSendRequest(uiState.userProfile) },
+                                connectionStatus = uiState.connectionStatus
                             )
                         }
                         is FindFriendsState.UserNotFound -> {
@@ -141,7 +142,8 @@ private fun FindFriendsScreenContentPrev() {
                 displayName = "Aniyb",
                 email = "asdubef@gmail.com",
                 bio = "inih ihi"
-            )
+            ),
+            connectionStatus = null
         ),
         paddingValues = PaddingValues(0.dp)
     )
