@@ -65,6 +65,27 @@ class UserProfileRepositoryImpl @Inject constructor(
     }
 
 
+    override suspend fun findUserByEmail(email: String): Result<UserProfile?> = withContext(Dispatchers.IO) {
+        try {
+            // Search for user with the given email
+            val querySnapshot = usersCollection
+                .whereEqualTo("email", email)
+                .limit(1)
+                .get()
+                .await()
+
+            val userProfile = querySnapshot.documents.firstOrNull()?.toObject(UserProfile::class.java)
+
+            // Cache the profile if found
+            if (userProfile != null) {
+                userProfileDao.insertUserProfile(userProfile.toEntity())
+            }
+
+            Result.success(userProfile)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
 
     override suspend fun updateUserProfile(userProfile: UserProfile): Result<Unit> = try {

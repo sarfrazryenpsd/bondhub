@@ -123,12 +123,12 @@ class UserProfileViewModel @Inject constructor(
                         storeInitialValues()
                     }.onFailure {
                         _screenState.value = UserProfileScreenState.Error(it.message ?: "Failed To Fetch Profile")
-                        _uiEvent.emit(UiEvent.ShowSnackbar(it.message ?: "Failed To Fetch Profile"))
+                        _uiEvent.emit(UiEvent.ShowSnackbarError(it.message ?: "Failed To Fetch Profile"))
                     }
                 }
             } catch (e: Exception) {
                 _screenState.value = UserProfileScreenState.Error(e.message ?: "Unknown error")
-                _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
+                _uiEvent.emit(UiEvent.ShowSnackbarError(e.message ?: "Unknown error"))
             }
         }
     }
@@ -183,18 +183,18 @@ class UserProfileViewModel @Inject constructor(
                     // Refresh the user profile after update
                     val updatedProfile = getUserProfileUseCase(userId).getOrNull()
                     _screenState.value = UserProfileScreenState.Success(updatedProfile ?: userProfile)
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Profile updated successfully"))
+                    _uiEvent.emit(UiEvent.ShowSnackbarSuccess("Profile updated successfully"))
                     storeInitialValues()
                     setUpdateCompleted(true)
                 } else {
                     _screenState.value = UserProfileScreenState.Error(
                         updateResult.exceptionOrNull()?.message ?: "Failed to update profile"
                     )
-                    _uiEvent.emit(UiEvent.ShowSnackbar("Failed to update profile"))
+                    _uiEvent.emit(UiEvent.ShowSnackbarError("Failed to update profile"))
                 }
             } catch (e: Exception) {
                 _screenState.value = UserProfileScreenState.Error(e.message ?: "Unknown error")
-                _uiEvent.emit(UiEvent.ShowSnackbar(e.message ?: "Unknown error"))
+                _uiEvent.emit(UiEvent.ShowSnackbarError(e.message ?: "Unknown error"))
             }
         }
     }

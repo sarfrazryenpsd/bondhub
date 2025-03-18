@@ -9,11 +9,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ryen.bondhub.presentation.components.CustomSnackbar
 import com.ryen.bondhub.presentation.components.ProfileUpdateScreenContent
+import com.ryen.bondhub.presentation.components.SnackBarState
 import com.ryen.bondhub.presentation.event.UiEvent
 
 
@@ -31,6 +33,7 @@ fun ProfileUpdateScreen(
         uri?.let { viewModel.onImageSelected(it) }
     }
     val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarState = remember { mutableStateOf(SnackBarState.INITIAL) }
 
     LaunchedEffect(uiStateChange.isUpdateCompleted) {
         if (uiStateChange.isUpdateCompleted && uiStateChange.isInitialSetup) {
@@ -42,17 +45,24 @@ fun ProfileUpdateScreen(
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.Navigate -> {}
-                is UiEvent.ShowSnackbar -> {
+                is UiEvent.ShowSnackbarSuccess -> {
+                    snackbarHostState.showSnackbar(
+                        message = event.message,
+                    )
+                    snackbarState.value = SnackBarState.SUCCESS
+                }
+                is UiEvent.ShowSnackbarError -> {
                     snackbarHostState.showSnackbar(
                         message = event.message
                     )
+                    snackbarState.value = SnackBarState.ERROR
                 }
             }
         }
     }
 
     Scaffold(
-        snackbarHost = { CustomSnackbar(snackbarHostState) },
+        snackbarHost = { CustomSnackbar(snackbarHostState, snackBarState = snackbarState.value) },
         content = { padding ->
             ProfileUpdateScreenContent(
                 email = uiState.email,

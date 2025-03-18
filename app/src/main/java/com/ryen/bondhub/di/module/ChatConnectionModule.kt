@@ -10,7 +10,9 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 @Module
@@ -30,10 +32,12 @@ object ChatConnectionModule {
     @Singleton
     fun provideChatConnectionRepository(
         remoteDataSource: ChatConnectionRemoteDataSource,
-        chatConnectionDao: ChatConnectionDao
+        chatConnectionDao: ChatConnectionDao,
+        firestore: FirebaseFirestore
     ): ChatConnectionRepository {
         return ChatConnectionRepositoryImpl(
             remoteDataSource,
+            firestore,
             chatConnectionDao,
             dispatcher = Dispatchers.IO
         )
@@ -46,4 +50,15 @@ object ChatConnectionModule {
     ): GetConnectionBetweenUsersUseCase {
         return GetConnectionBetweenUsersUseCase(repository)
     }
+
+    @Provides
+    @Singleton
+    @IoDispatcher
+    fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
+
 }
+
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class IoDispatcher

@@ -12,6 +12,7 @@ import com.ryen.bondhub.presentation.state.AuthUiState
 import com.ryen.bondhub.util.AuthValidation
 import com.ryen.bondhub.util.ValidationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -81,7 +82,7 @@ class AuthViewModel @Inject constructor(
             // First validate the input fields
             when (val validationResult = AuthValidation.validateSignInFields(email, password)) {
                 is ValidationResult.Error -> {
-                    _uiEvent.emit(UiEvent.ShowSnackbar(validationResult.message))
+                    _uiEvent.emit(UiEvent.ShowSnackbarError(validationResult.message))
                     return@launch
                 }
                 is ValidationResult.Success -> {
@@ -91,17 +92,19 @@ class AuthViewModel @Inject constructor(
                         signInUseCase(email, password)
                             .onSuccess { user ->
                                 _authScreenState.value = AuthScreenState.Success(user, isNewUser = false)
+                                _uiEvent.emit(UiEvent.ShowSnackbarSuccess("Sign in successful"))
+                                delay(1500L)
                                 _uiEvent.emit(UiEvent.Navigate(Screen.ChatScreen.route))
                             }
                             .onFailure { exception ->
                                 val errorMessage = AuthValidation.handleFirebaseAuthError(exception)
                                 _authScreenState.value = AuthScreenState.Error(errorMessage)
-                                _uiEvent.emit(UiEvent.ShowSnackbar(errorMessage))
+                                _uiEvent.emit(UiEvent.ShowSnackbarError(errorMessage))
                             }
                     } catch (e: Exception) {
                         val errorMessage = "Unable to connect. Please check your internet connection."
                         _authScreenState.value = AuthScreenState.Error(errorMessage)
-                        _uiEvent.emit(UiEvent.ShowSnackbar(errorMessage))
+                        _uiEvent.emit(UiEvent.ShowSnackbarError(errorMessage))
                     }
                 }
             }
@@ -117,7 +120,7 @@ class AuthViewModel @Inject constructor(
                 password = password,
             )) {
                 is ValidationResult.Error -> {
-                    _uiEvent.emit(UiEvent.ShowSnackbar(validationResult.message))
+                    _uiEvent.emit(UiEvent.ShowSnackbarError(validationResult.message))
                     return@launch
                 }
                 is ValidationResult.Success -> {
@@ -126,17 +129,19 @@ class AuthViewModel @Inject constructor(
                         signUpUseCase(email, password, displayName)
                             .onSuccess { user ->
                                 _authScreenState.value = AuthScreenState.Success(user, isNewUser = true)
+                                _uiEvent.emit(UiEvent.ShowSnackbarSuccess("Sign up successful"))
+                                delay(1500L)
                                 _uiEvent.emit(UiEvent.Navigate(Screen.UserProfileSetupScreen.route))
                             }
                             .onFailure { exception ->
                                 val errorMessage = AuthValidation.handleFirebaseAuthError(exception)
                                 _authScreenState.value = AuthScreenState.Error(errorMessage)
-                                _uiEvent.emit(UiEvent.ShowSnackbar(errorMessage))
+                                _uiEvent.emit(UiEvent.ShowSnackbarError(errorMessage))
                             }
                     } catch (e: Exception) {
                         val errorMessage = "Unable to connect. Please check your internet connection."
                         _authScreenState.value = AuthScreenState.Error(errorMessage)
-                        _uiEvent.emit(UiEvent.ShowSnackbar(errorMessage))
+                        _uiEvent.emit(UiEvent.ShowSnackbarError(errorMessage))
                     }
                 }
             }

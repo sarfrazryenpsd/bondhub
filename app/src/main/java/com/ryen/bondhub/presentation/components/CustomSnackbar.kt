@@ -17,12 +17,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ryen.bondhub.presentation.theme.Error
 import com.ryen.bondhub.presentation.theme.Secondary
+import com.ryen.bondhub.presentation.theme.Success
+import com.ryen.bondhub.presentation.theme.Surface
 
 @Composable
 fun CustomSnackbar(
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
-    onDismiss: () -> Unit = {}
+    onDismiss: () -> Unit = {},
+    snackBarState: SnackBarState
 ) {
     SnackbarHost(
         hostState = snackbarHostState,
@@ -36,14 +39,14 @@ fun CustomSnackbar(
                         style = MaterialTheme.typography.bodyMedium
                     )
                 },
-                containerColor = Error,
+                containerColor = if (snackBarState == SnackBarState.SUCCESS) Success else Error,
                 shape = RoundedCornerShape(8.dp),
                 action = data.visuals.actionLabel?.let {
                     {
                         TextButton(onClick = onDismiss) {
                             Text(
                                 text = it, // Use the action label here
-                                color = Secondary,
+                                color = if (snackBarState == SnackBarState.SUCCESS) Surface else Secondary,
                             )
                         }
                     }
@@ -69,6 +72,11 @@ private fun SnackbarPrev() {
 
     CustomSnackbar(
         snackbarHostState = snackbarHostState,
-        onDismiss = {}
+        onDismiss = {},
+        snackBarState = SnackBarState.SUCCESS
     )
+}
+
+enum class SnackBarState{
+    SUCCESS, ERROR, INITIAL
 }

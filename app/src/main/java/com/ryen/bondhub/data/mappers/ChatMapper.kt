@@ -32,6 +32,7 @@ class ChatMapper {
     }
 
     fun mapDocumentToDomain(document: DocumentSnapshot): Chat {
+        @Suppress("UNCHECKED_CAST")
         return Chat(
             chatId = document.id,
             connectionId = document.getString("connectionId") ?: "",

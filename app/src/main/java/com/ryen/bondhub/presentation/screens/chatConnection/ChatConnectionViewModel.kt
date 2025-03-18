@@ -55,10 +55,10 @@ class ChatConnectionViewModel @Inject constructor(
 
             result.onSuccess { connection ->
                 _connectionState.value = ChatConnectionScreenState.Success(listOf(connection))
-                _uiEvent.emit(UiEvent.ShowSnackbar("Connection request sent successfully"))
+                _uiEvent.emit(UiEvent.ShowSnackbarError("Connection request sent successfully"))
             }.onFailure { error ->
                 _connectionState.value = ChatConnectionScreenState.Error(error.message ?: "Unknown error")
-                _uiEvent.emit(UiEvent.ShowSnackbar(error.message ?: "Failed to send connection request"))
+                _uiEvent.emit(UiEvent.ShowSnackbarError(error.message ?: "Failed to send connection request"))
             }
         }
     }
@@ -70,10 +70,10 @@ class ChatConnectionViewModel @Inject constructor(
             val result = acceptConnectionRequestUseCase(connectionId)
 
             result.onSuccess {
-                _uiEvent.emit(UiEvent.ShowSnackbar("Connection request accepted"))
+                _uiEvent.emit(UiEvent.ShowSnackbarError("Connection request accepted"))
             }.onFailure { error ->
                 _connectionState.value = ChatConnectionScreenState.Error(error.message ?: "Unknown error")
-                _uiEvent.emit(UiEvent.ShowSnackbar(error.message ?: "Failed to accept connection request"))
+                _uiEvent.emit(UiEvent.ShowSnackbarError(error.message ?: "Failed to accept connection request"))
             }
         }
     }
@@ -88,7 +88,7 @@ class ChatConnectionViewModel @Inject constructor(
                 _connectionState.value = ChatConnectionScreenState.Success(listOf(it))
             } ?: run {
                 _connectionState.value = ChatConnectionScreenState.Error("No existing connection found")
-                _uiEvent.emit(UiEvent.ShowSnackbar("No existing connection"))
+                _uiEvent.emit(UiEvent.ShowSnackbarError("No existing connection"))
             }
         }
     }

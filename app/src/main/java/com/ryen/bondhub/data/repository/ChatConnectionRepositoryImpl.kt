@@ -1,5 +1,6 @@
 package com.ryen.bondhub.data.repository
 
+import com.google.firebase.firestore.FirebaseFirestore
 import com.ryen.bondhub.data.local.dao.ChatConnectionDao
 import com.ryen.bondhub.data.local.entity.ChatConnectionEntity
 import com.ryen.bondhub.data.remote.dataSource.ChatConnectionRemoteDataSource
@@ -8,17 +9,46 @@ import com.ryen.bondhub.domain.model.ConnectionStatus
 import com.ryen.bondhub.domain.repository.ChatConnectionRepository
 import com.ryen.bondhub.util.networkBoundResource
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class ChatConnectionRepositoryImpl @Inject constructor(
     private val remoteDataSource: ChatConnectionRemoteDataSource,
+    private val firestore: FirebaseFirestore,
     private val localDao: ChatConnectionDao,
     private val dispatcher: CoroutineDispatcher
 ) : ChatConnectionRepository {
+
+    private val connectionsCollection = firestore.collection("chat_connections")
+
+    // Existing methods...
+
+    override suspend fun createConnection(connection: ChatConnection): Result<ChatConnection> = withContext(
+        Dispatchers.IO) {
+        try {
+            // Create a new document with auto-generated ID
+            val docRef = connectionsCollection.document()
+
+            // Add the connectionId to the connection object
+            val newConnection = connection.copy(connectionId = docRef.id)
+
+            // Set the data
+            docRef.set(newConnection).await()
+
+            // Cache the connection
+            localDao.insertConnection(newConnection.toEntity())
+
+            Result.success(newConnection)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     override suspend fun sendConnectionRequest(
         currentUserId: String,
@@ -26,6 +56,10 @@ class ChatConnectionRepositoryImpl @Inject constructor(
     ): Result<ChatConnection> = runCatching {
         // Check if connection already exists
         val existingConnection = findExistingConnection(currentUserId, targetUserId)
+
+        if (currentUserId == targetUserId) {
+            return Result.failure(IllegalArgumentException("Cannot send connection request to yourself"))
+        }
 
         existingConnection?.let {
             throw IllegalStateException("Connection already exists")
