@@ -74,7 +74,8 @@ fun ChatScreenContent(
                     searchText = searchQuery,
                     onValueChange = {},
                     onBackClick = { isSearchActive = false },
-                    onSearchClick = {}
+                    onSearchClick = {},
+                    searchChat = true
                 )
             }
         }

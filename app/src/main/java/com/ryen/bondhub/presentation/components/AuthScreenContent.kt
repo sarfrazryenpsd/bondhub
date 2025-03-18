@@ -79,8 +79,8 @@ fun AuthScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(12.dp)
-                .background(color = Surface),
+                .background(color = Surface)
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             AnimatedVisibility(signInState){
