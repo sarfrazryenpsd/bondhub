@@ -1,5 +1,6 @@
 package com.ryen.bondhub.data.remote.dataSource
 
+import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.ryen.bondhub.domain.model.ChatConnection
@@ -30,14 +31,29 @@ class ChatConnectionRemoteDataSource @Inject constructor(
             .await()
     }
 
-    suspend fun getConnectionsForUser(userId: String): List<ChatConnection> {
-        return connectionsCollection
-            .whereIn("user1Id", listOf(userId))
-            .whereIn("user2Id", listOf(userId))
+    suspend fun getConnectionsForUser(userId: String): Flow<List<ChatConnection>> = callbackFlow {
+        val query = connectionsCollection
+            .where(
+                Filter.or(
+                Filter.equalTo("user1Id", userId),
+                Filter.equalTo("user2Id", userId)
+            ))
             .orderBy("lastInteractedAt", Query.Direction.DESCENDING)
-            .get()
-            .await()
-            .toObjects(ChatConnection::class.java)
+
+        val registration = query.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
+
+            val connections = snapshot?.documents?.mapNotNull { doc ->
+                doc.toObject(ChatConnection::class.java)
+            } ?: emptyList()
+
+            trySend(connections)
+        }
+
+        awaitClose { registration.remove() }
     }
 
     suspend fun findExistingConnection(user1Id: String, user2Id: String): ChatConnection? {

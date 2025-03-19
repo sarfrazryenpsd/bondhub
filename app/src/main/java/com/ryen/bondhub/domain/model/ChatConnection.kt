@@ -3,7 +3,7 @@ package com.ryen.bondhub.domain.model
 import com.google.firebase.firestore.DocumentId
 
 enum class ConnectionStatus {
-    PENDING, ACCEPTED, BLOCKED, INITIAL
+    PENDING, ACCEPTED, INITIAL,
 }
 
 data class ChatConnection(

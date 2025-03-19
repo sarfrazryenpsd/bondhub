@@ -1,6 +1,8 @@
 package com.ryen.bondhub.data.repository
 
+import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.ryen.bondhub.data.local.dao.ChatConnectionDao
 import com.ryen.bondhub.data.local.entity.ChatConnectionEntity
 import com.ryen.bondhub.data.remote.dataSource.ChatConnectionRemoteDataSource
@@ -10,7 +12,9 @@ import com.ryen.bondhub.domain.repository.ChatConnectionRepository
 import com.ryen.bondhub.util.networkBoundResource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -20,7 +24,7 @@ import javax.inject.Inject
 
 class ChatConnectionRepositoryImpl @Inject constructor(
     private val remoteDataSource: ChatConnectionRemoteDataSource,
-    private val firestore: FirebaseFirestore,
+    firestore: FirebaseFirestore,
     private val localDao: ChatConnectionDao,
     private val dispatcher: CoroutineDispatcher
 ) : ChatConnectionRepository {
@@ -97,12 +101,44 @@ class ChatConnectionRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getConnectionsForUser(userId: String): Flow<List<ChatConnection>> {
-        return localDao.getConnectionsForUser(userId)
-            .map { entities ->
-                entities.map { it.toDomain() }
-            }
+    override suspend fun rejectConnectionRequest(connectionId: String): Result<Unit> {
+        return try {
+            connectionsCollection.document(connectionId)
+                .update("status", ConnectionStatus.INITIAL)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
+
+    // This should already be in your repository implementation
+    override suspend fun getConnectionsForUser(userId: String): Flow<List<ChatConnection>> {
+        return networkBoundResource(
+            query = {
+                // Query from local database
+                localDao.getConnectionsForUser(userId)
+                    .map { entities -> entities.map { it.toDomain() } }
+            },
+            fetch = {
+                // Fetch from remote
+                remoteDataSource.getConnectionsForUser(userId).first()
+            },
+            saveFetchResult = { connections ->
+                // Save to local database
+                connections.forEach { connection ->
+                    localDao.insertConnection(connection.toEntity())
+                }
+            },
+            shouldFetch = { cachedConnections ->
+                // Decide based on your app's cache policy
+                cachedConnections.isEmpty() ||
+                        cachedConnections.any { shouldRefreshCache(it.lastInteractedAt) }
+            },
+            dispatcher = dispatcher
+        )
+    }
+
 
     override suspend fun findExistingConnection(
         user1Id: String,
