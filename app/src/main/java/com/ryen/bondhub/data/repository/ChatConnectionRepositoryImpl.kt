@@ -1,8 +1,6 @@
 package com.ryen.bondhub.data.repository
 
-import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.ryen.bondhub.data.local.dao.ChatConnectionDao
 import com.ryen.bondhub.data.local.entity.ChatConnectionEntity
 import com.ryen.bondhub.data.remote.dataSource.ChatConnectionRemoteDataSource
@@ -12,9 +10,7 @@ import com.ryen.bondhub.domain.repository.ChatConnectionRepository
 import com.ryen.bondhub.util.networkBoundResource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -210,7 +206,7 @@ class ChatConnectionRepositoryImpl @Inject constructor(
             connectionId = connectionId,
             user1Id = user1Id,
             user2Id = user2Id,
-            status = status,
+            status = ConnectionStatus.fromString(status.name),
             initiatedAt = initiatedAt,
             lastInteractedAt = lastInteractedAt,
             initiatorId = initiatorId

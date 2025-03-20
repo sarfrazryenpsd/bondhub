@@ -1,4 +1,4 @@
-package com.ryen.bondhub.presentation.components
+package com.ryen.bondhub.presentation.contents
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility

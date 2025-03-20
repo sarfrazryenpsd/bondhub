@@ -12,7 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ryen.bondhub.presentation.components.CustomSnackbar
-import com.ryen.bondhub.presentation.components.FindFriendsScreenContent
+import com.ryen.bondhub.presentation.contents.FindFriendsScreenContent
 import com.ryen.bondhub.presentation.components.SnackBarState
 import com.ryen.bondhub.presentation.event.UiEvent
 import com.ryen.bondhub.presentation.state.FindFriendsState
@@ -22,7 +22,7 @@ fun FindFriendsScreen(
     viewModel: FindFriendsViewModel = hiltViewModel()
 ) {
 
-    val ffUiState by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarState = remember { mutableStateOf(SnackBarState.SUCCESS) }
@@ -54,10 +54,10 @@ fun FindFriendsScreen(
         content = {
             FindFriendsScreenContent(
                 query = searchQuery,
-                onSendRequest = { viewModel.sendConnectionRequest((ffUiState as FindFriendsState.UserFound).userProfile) },
+                onSendRequest = { viewModel.sendConnectionRequest((state as FindFriendsState.UserFound).userProfile) },
                 onQueryChanged = viewModel::onSearchQueryChanged,
                 onSearch = viewModel::searchUserByEmail,
-                uiState = ffUiState,
+                uiState = state,
                 paddingValues = it,
             )
         }

@@ -9,7 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ryen.bondhub.presentation.components.AuthScreenContent
+import com.ryen.bondhub.presentation.contents.AuthScreenContent
 import com.ryen.bondhub.presentation.components.CustomSnackbar
 import com.ryen.bondhub.presentation.components.SnackBarState
 import com.ryen.bondhub.presentation.event.AuthEvent

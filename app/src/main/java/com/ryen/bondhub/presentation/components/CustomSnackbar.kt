@@ -76,6 +76,26 @@ private fun SnackbarPrev() {
         snackBarState = SnackBarState.SUCCESS
     )
 }
+@Composable
+@Preview(showBackground = true)
+private fun SnackbarPrev1() {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Simulate showing a Snackbar
+    LaunchedEffect(Unit) {
+        snackbarHostState.showSnackbar(
+            message = "This is a custom Snackbar",
+            actionLabel = "Dismiss",
+            duration = SnackbarDuration.Short
+        )
+    }
+
+    CustomSnackbar(
+        snackbarHostState = snackbarHostState,
+        onDismiss = {},
+        snackBarState = SnackBarState.ERROR
+    )
+}
 
 enum class SnackBarState{
     SUCCESS, ERROR, INITIAL

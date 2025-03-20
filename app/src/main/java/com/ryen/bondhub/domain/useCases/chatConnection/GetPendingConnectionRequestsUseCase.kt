@@ -20,8 +20,9 @@ class GetPendingConnectionRequestsUseCase @Inject constructor(
                 // Filter for connections where the current user is the receiver (user2Id)
                 // and the status is still PENDING
                 connections.filter { connection ->
+                    connection.initiatorId != currentUser.uid &&
                     connection.user2Id == currentUser.uid &&
-                            connection.status == ConnectionStatus.PENDING
+                    connection.status == ConnectionStatus.PENDING
                 }
             }
     }

@@ -93,7 +93,7 @@ class AuthViewModel @Inject constructor(
                             .onSuccess { user ->
                                 _authScreenState.value = AuthScreenState.Success(user, isNewUser = false)
                                 _uiEvent.emit(UiEvent.ShowSnackbarSuccess("Sign in successful"))
-                                delay(1500L)
+                                delay(100L)
                                 _uiEvent.emit(UiEvent.Navigate(Screen.ChatScreen.route))
                             }
                             .onFailure { exception ->

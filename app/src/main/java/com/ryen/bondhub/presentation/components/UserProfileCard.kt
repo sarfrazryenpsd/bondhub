@@ -1,51 +1,42 @@
 package com.ryen.bondhub.presentation.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.ryen.bondhub.R
 import com.ryen.bondhub.domain.model.ConnectionStatus
 import com.ryen.bondhub.domain.model.UserProfile
-import com.ryen.bondhub.presentation.theme.Pending
-import com.ryen.bondhub.presentation.theme.Primary
+import com.ryen.bondhub.domain.model.UserStatus
+import com.ryen.bondhub.presentation.theme.BondHubTheme
 import com.ryen.bondhub.presentation.theme.Secondary
-import com.ryen.bondhub.presentation.theme.Success
-import com.ryen.bondhub.presentation.theme.Surface
-import java.util.UUID
 
 @Composable
 fun UserProfileCard(
     userProfile: UserProfile,
-    connectionStatus: ConnectionStatus? = null,
-    onSendRequest: (UserProfile) -> Unit
+    actionContent: @Composable () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -81,7 +72,10 @@ fun UserProfileCard(
             ) {
                 Text(
                     text = userProfile.displayName,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.3.sp
+                    )
                 )
                 Text(
                     text = userProfile.email,
@@ -92,121 +86,68 @@ fun UserProfileCard(
                 )
             }
 
-            // Send Request Button
-            when(connectionStatus){
-                ConnectionStatus.PENDING -> {
-                    Row(
-                        modifier = Modifier
-                            .clipToBounds()
-                            .clip(RoundedCornerShape(50))
-                            .background(Pending)
-                            .padding(4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    )
-                    {
-                        Icon(
-                            painter = painterResource(R.drawable.time),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
-                                .size(18.dp),
-                            tint = Surface
-                        )
-                        Text(
-                            text = "Pending",
-                            modifier = Modifier.padding(end = 8.dp, top = 4.dp, bottom = 4.dp),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Surface
-                        )
-                    }
-                }
-                ConnectionStatus.ACCEPTED -> {
-                    Row(
-                        modifier = Modifier
-                            .clipToBounds()
-                            .clip(RoundedCornerShape(50))
-                            .background(Success)
-                            .padding(4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        )
-                    {
-                        Icon(
-                            painter = painterResource(R.drawable.mark),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
-                                .size(18.dp),
-                            tint = Surface
-                        )
-                        Text(
-                            text = "Friends",
-                            modifier = Modifier.padding(end = 8.dp, top = 4.dp, bottom = 4.dp),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Surface
-                        )
-                    }
-                }
-                else -> {
-                    Button(
-                        onClick = { onSendRequest(userProfile) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Primary,
-                            contentColor = Surface
-                        ),
-                        modifier = Modifier.padding(horizontal = 4.dp)
-                    ){
-                        Text("Add Friend")
-                    }
-                }
-            }
+            // Action content slot
+            actionContent()
         }
     }
 }
 
 @Preview
 @Composable
-private fun UserProfileCardPreview() {
-    UserProfileCard(
-        userProfile = UserProfile(
-            uid = UUID.randomUUID().toString(),
-            email = "james@example.com",
-            displayName = "John Doe",
-            bio = "This is a sample bio."
-        ),
-        connectionStatus = ConnectionStatus.PENDING,
-        onSendRequest = {}
-
+fun UserProfileCardWithConnectionActionsPreview() {
+    // Create a sample UserProfile for the preview
+    val sampleUserProfile = UserProfile(
+        uid = "sample-uid",
+        displayName = "Jane Doe",
+        email = "jane.doe@example.com",
+        profilePictureUrl = null, // Will use placeholder
+        bio = "Sample bio text",
+        status = UserStatus.ONLINE
     )
-}
-@Preview
-@Composable
-private fun UserProfileCardPreview1() {
-    UserProfileCard(
-        userProfile = UserProfile(
-            uid = UUID.randomUUID().toString(),
-            email = "james@example.com",
-            displayName = "John Doe",
-            bio = "This is a sample bio."
-        ),
-        connectionStatus = ConnectionStatus.ACCEPTED,
-        onSendRequest = {}
 
-    )
-}
-@Preview
-@Composable
-private fun UserProfileCardPreview2() {
-    UserProfileCard(
-        userProfile = UserProfile(
-            uid = UUID.randomUUID().toString(),
-            email = "james@example.com",
-            displayName = "John Doe",
-            bio = "This is a sample bio."
-        ),
-        connectionStatus = null,
-        onSendRequest = {}
+    // Create a themed preview
+    BondHubTheme  {
+        // Preview different connection statuses
+        Column {
+            // None status
+            UserProfileCard(
+                userProfile = sampleUserProfile,
+                actionContent = {
+                    ConnectionActionButtons(
+                        connectionStatus = null,
+                        onSendRequest = { /* No-op for preview */ },
+                        userProfile = sampleUserProfile
+                    )
+                }
+            )
 
-    )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Pending status
+            UserProfileCard(
+                userProfile = sampleUserProfile,
+                actionContent = {
+                    ConnectionActionButtons(
+                        connectionStatus = ConnectionStatus.PENDING,
+                        onSendRequest = { /* No-op for preview */ },
+                        userProfile = sampleUserProfile
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Accepted status
+            UserProfileCard(
+                userProfile = sampleUserProfile,
+                actionContent = {
+                    ConnectionActionButtons(
+                        connectionStatus = ConnectionStatus.ACCEPTED,
+                        onSendRequest = { /* No-op for preview */ },
+                        userProfile = sampleUserProfile
+                    )
+                }
+            )
+        }
+    }
 }

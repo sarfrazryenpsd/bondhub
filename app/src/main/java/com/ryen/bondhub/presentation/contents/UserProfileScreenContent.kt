@@ -1,4 +1,4 @@
-package com.ryen.bondhub.presentation.components
+package com.ryen.bondhub.presentation.contents
 
 import android.content.Context
 import androidx.compose.foundation.Image

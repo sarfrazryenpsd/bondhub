@@ -1,5 +1,5 @@
 
-package com.ryen.bondhub.presentation.components
+package com.ryen.bondhub.presentation.contents
 
 import android.content.Context
 import androidx.compose.animation.AnimatedContent
@@ -30,6 +30,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ryen.bondhub.R
 import com.ryen.bondhub.domain.model.ChatMessage
+import com.ryen.bondhub.presentation.components.SearchField
+import com.ryen.bondhub.presentation.components.UserSearchAndMessageRow
 import com.ryen.bondhub.presentation.theme.Secondary
 import com.ryen.bondhub.presentation.theme.Surface
 

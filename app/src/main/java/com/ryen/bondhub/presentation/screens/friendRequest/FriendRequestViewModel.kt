@@ -65,6 +65,7 @@ class FriendRequestViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
+                _events.emit(UiEvent.ShowSnackbarError(e.message ?: "Unknown error"))
                 _state.value = FriendRequestsState.Error(e.message ?: "Unknown error")
             }
         }

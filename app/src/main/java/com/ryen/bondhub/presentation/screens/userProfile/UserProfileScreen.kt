@@ -11,10 +11,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ryen.bondhub.presentation.components.CustomSnackbar
-import com.ryen.bondhub.presentation.components.ProfileUpdateScreenContent
+import com.ryen.bondhub.presentation.contents.ProfileUpdateScreenContent
 import com.ryen.bondhub.presentation.components.SnackBarState
 import com.ryen.bondhub.presentation.event.UiEvent
 
@@ -24,6 +25,7 @@ fun ProfileUpdateScreen(
     viewModel: UserProfileViewModel = hiltViewModel(),
     onDone: () -> Unit = {},
     onSkip: () -> Unit = {},
+    modifier: Modifier,
 ) {
     val context = LocalContext.current
     val screenState by viewModel.screenState.collectAsState()

@@ -1,4 +1,4 @@
-package com.ryen.bondhub.presentation.components
+package com.ryen.bondhub.presentation.contents
 
 import android.util.Patterns
 import androidx.compose.animation.AnimatedVisibility
@@ -34,6 +34,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ryen.bondhub.R
 import com.ryen.bondhub.domain.model.UserProfile
+import com.ryen.bondhub.presentation.components.ConnectionActionButtons
+import com.ryen.bondhub.presentation.components.SearchField
+import com.ryen.bondhub.presentation.components.UserProfileCard
 import com.ryen.bondhub.presentation.state.FindFriendsState
 import com.ryen.bondhub.presentation.theme.Error
 import com.ryen.bondhub.presentation.theme.Primary
@@ -50,11 +53,10 @@ fun FindFriendsScreenContent(
 ) {
     Column(
         modifier = Modifier
-            .background(color = Color.LightGray)
-            .padding(paddingValues)
-            .padding(6.dp)
             .fillMaxSize()
-            .clip(RoundedCornerShape(16.dp))
+            .background(color = Color.LightGray)
+            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp, top = 46.dp)
+            .clip(RoundedCornerShape(32.dp))
             .background(color = Surface)
             .padding(horizontal = 18.dp, vertical = 22.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -101,9 +103,14 @@ fun FindFriendsScreenContent(
                                     containerColor = Color.White,
                                 )
                             ){
-                                Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(16.dp).fillMaxWidth().clipToBounds()){
+                                Box(contentAlignment = Alignment.Center, modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth()
+                                    .clipToBounds()){
                                     CircularProgressIndicator(
-                                        modifier = Modifier.width(32.dp).align(Alignment.Center),
+                                        modifier = Modifier
+                                            .width(32.dp)
+                                            .align(Alignment.Center),
                                         color = Primary,
                                         trackColor = Primary.copy(alpha = .4f),
                                         strokeWidth = 5.dp,
@@ -114,8 +121,13 @@ fun FindFriendsScreenContent(
                         is FindFriendsState.UserFound -> {
                             UserProfileCard(
                                 userProfile = uiState.userProfile,
-                                onSendRequest = { onSendRequest(uiState.userProfile) },
-                                connectionStatus = uiState.connectionStatus
+                                actionContent = {
+                                    ConnectionActionButtons(
+                                        userProfile = uiState.userProfile,
+                                        onSendRequest = { onSendRequest(uiState.userProfile) },
+                                        connectionStatus = uiState.connectionStatus
+                                    )
+                                }
                             )
                         }
                         is FindFriendsState.UserNotFound -> {
