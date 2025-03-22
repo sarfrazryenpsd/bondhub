@@ -78,7 +78,7 @@ fun AuthScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                //.padding(paddingValues)
                 .background(color = Surface)
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally

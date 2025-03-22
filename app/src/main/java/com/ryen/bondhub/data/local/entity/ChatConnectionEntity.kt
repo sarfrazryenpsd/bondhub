@@ -15,7 +15,8 @@ data class ChatConnectionEntity(
     val status: ConnectionStatus,
     val initiatedAt: Long,
     val lastInteractedAt: Long,
-    val initiatorId: String
+    val initiatorId: String,
+    val counterpartConnectionId: String
 )
 
 // Type Converter for ConnectionStatus

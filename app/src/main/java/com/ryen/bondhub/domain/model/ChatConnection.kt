@@ -29,5 +29,6 @@ data class ChatConnection(
     val status: ConnectionStatus = ConnectionStatus.INITIAL,
     val initiatedAt: Long = System.currentTimeMillis(),
     val lastInteractedAt: Long = System.currentTimeMillis(),
-    val initiatorId: String = ""
+    val initiatorId: String = "",
+    val counterpartConnectionId: String = ""  // ID of the opposite connection document
 )

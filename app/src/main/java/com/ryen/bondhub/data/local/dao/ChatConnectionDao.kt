@@ -20,6 +20,9 @@ interface ChatConnectionDao {
     @Query("SELECT * FROM chat_connections WHERE connectionId = :connectionId")
     suspend fun getConnectionById(connectionId: String): ChatConnectionEntity?
 
+    @Query("UPDATE chat_connections SET status = :status WHERE connectionId = :connectionId")
+    suspend fun updateConnectionStatus(connectionId: String, status: ConnectionStatus): Int
+
     @Update
     suspend fun updateConnection(connection: ChatConnectionEntity)
 

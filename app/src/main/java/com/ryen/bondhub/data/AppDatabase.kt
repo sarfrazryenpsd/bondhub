@@ -12,6 +12,7 @@ import com.ryen.bondhub.data.local.dao.UserProfileDao
 import com.ryen.bondhub.data.local.entity.ChatConnectionEntity
 import com.ryen.bondhub.data.local.entity.ChatEntity
 import com.ryen.bondhub.data.local.entity.ChatMessageEntity
+import com.ryen.bondhub.data.local.entity.ConnectionStatusConverter
 import com.ryen.bondhub.data.local.entity.StringListConverter
 import com.ryen.bondhub.data.local.entity.UserProfileEntity
 
@@ -25,7 +26,7 @@ import com.ryen.bondhub.data.local.entity.UserProfileEntity
     version = 1,
     exportSchema = false
 )
-@TypeConverters(StringListConverter::class)
+@TypeConverters(StringListConverter::class, ConnectionStatusConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userProfileDao(): UserProfileDao
     abstract fun chatConnectionDao(): ChatConnectionDao

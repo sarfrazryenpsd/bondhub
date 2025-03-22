@@ -87,8 +87,8 @@ fun FriendRequestScreenContent(
                         userProfile = request.senderProfile,
                         actionContent = {
                             FriendRequestActionButton(
-                                onAccept = { onAccept(request.connection.user2Id) },
-                                onReject = { onReject(request.connection.user2Id) }
+                                onAccept = { onAccept(request.connection.connectionId) },
+                                onReject = { onReject(request.connection.connectionId) }
                             )
                         }
                     )

@@ -3,11 +3,13 @@ package com.ryen.bondhub.data.remote.dataSource
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.snapshots
 import com.ryen.bondhub.domain.model.ChatConnection
 import com.ryen.bondhub.domain.model.ConnectionStatus
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -57,19 +59,32 @@ class ChatConnectionRemoteDataSource @Inject constructor(
     }
 
     suspend fun findExistingConnection(user1Id: String, user2Id: String): ChatConnection? {
-        // Make sure you're using the correct field names here
-        val query = connectionsCollection
-            .whereIn("user1Id", listOf(user1Id, user2Id))
-            .whereIn("user2Id", listOf(user1Id, user2Id))
+        // Check both directions of connection
+        val query1 = connectionsCollection
+            .whereEqualTo("user1Id", user1Id)
+            .whereEqualTo("user2Id", user2Id)
             .get()
             .await()
 
-        return query.documents
-            .map { it.toObject(ChatConnection::class.java) }
-            .firstOrNull {
-                (it?.user1Id == user1Id && it.user2Id == user2Id) ||
-                        (it?.user1Id == user2Id && it.user2Id == user1Id)
-            }
+        val query2 = connectionsCollection
+            .whereEqualTo("user1Id", user2Id)
+            .whereEqualTo("user2Id", user1Id)
+            .get()
+            .await()
+
+        val result1 = query1.documents.firstOrNull()?.toObject(ChatConnection::class.java)
+        val result2 = query2.documents.firstOrNull()?.toObject(ChatConnection::class.java)
+
+        return result1 ?: result2
+    }
+
+    suspend fun getConnectionById(connectionId: String): Result<ChatConnection> = runCatching {
+        connectionsCollection
+            .document(connectionId)
+            .get()
+            .await()
+            .toObject(ChatConnection::class.java)
+            ?: throw NoSuchElementException("Connection not found with ID: $connectionId")
     }
 
     suspend fun getConnectionBetweenUsers(user1Id: String, user2Id: String): Flow<ChatConnection?> = callbackFlow {
@@ -104,4 +119,10 @@ class ChatConnectionRemoteDataSource @Inject constructor(
 
         awaitClose { registration1.remove() }
     }
+    fun getUserConnections(userId: String) = connectionsCollection
+        .whereEqualTo("user1Id", userId) // Only need to query where user is primary user
+        .snapshots()
+        .map { snapshot ->
+            snapshot.documents.mapNotNull { it.toObject(ChatConnection::class.java) }
+        }
 }
