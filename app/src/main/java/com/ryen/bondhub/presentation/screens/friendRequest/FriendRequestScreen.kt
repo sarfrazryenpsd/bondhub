@@ -13,7 +13,6 @@ import com.ryen.bondhub.presentation.components.CustomSnackbar
 import com.ryen.bondhub.presentation.components.SnackBarState
 import com.ryen.bondhub.presentation.contents.FriendRequestScreenContent
 import com.ryen.bondhub.presentation.event.UiEvent
-import com.ryen.bondhub.presentation.state.FriendRequestsState
 
 @Composable
 fun FriendRequestsScreen(
@@ -33,10 +32,10 @@ fun FriendRequestsScreen(
                     )
                 }
                 is UiEvent.ShowSnackbarError -> {
+                    snackbarState.value = SnackBarState.ERROR
                     snackbarHostState.showSnackbar(
                         message = event.message
                     )
-                    snackbarState.value = SnackBarState.ERROR
                 }
 
                 is UiEvent.Navigate -> {}
@@ -50,8 +49,8 @@ fun FriendRequestsScreen(
             FriendRequestScreenContent(
                 paddingValues = paddingValues,
                 state = state,
-                onAccept = { userId -> viewModel.acceptRequest(userId) },
-                onReject = { userId -> viewModel.rejectRequest(userId) }
+                onAccept = { connectionId -> viewModel.acceptRequest(connectionId) },
+                onReject = { connectionId -> viewModel.rejectRequest(connectionId) }
             )
         }
     )

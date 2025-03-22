@@ -8,11 +8,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +35,7 @@ import com.ryen.bondhub.R
 import com.ryen.bondhub.domain.model.ChatMessage
 import com.ryen.bondhub.presentation.components.SearchField
 import com.ryen.bondhub.presentation.components.UserSearchAndMessageRow
+import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
 import com.ryen.bondhub.presentation.theme.Surface
 
@@ -44,9 +48,11 @@ fun ChatScreenContent(
     searchMode: Boolean,
     context: Context,
     onProfileClick: () -> Unit = {},
+    paddingValues: PaddingValues,
     messages: List<ChatMessage> = emptyList()
 ) {
     var isSearchActive by remember { mutableStateOf(searchMode) }
+
     Column(
         modifier = Modifier
             .background(color = Color.LightGray)
@@ -116,6 +122,21 @@ fun ChatScreenContent(
 
             }
         }
+
+    }
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd){
+        FloatingActionButton(
+            onClick = {},
+            containerColor = Primary,
+            modifier = Modifier.padding(bottom = 82.dp, end = 26.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.start_message),
+                contentDescription = "Start Chat",
+                modifier = Modifier.size(30.dp),
+                tint = Color.White
+            )
+        }
     }
 }
 
@@ -128,6 +149,7 @@ private fun ChatScreenContentPrev() {
         context = LocalContext.current,
         searchQuery = "kyaa",
         searchMode = false,
+        paddingValues = PaddingValues(0.dp),
         onProfileClick = {},
         lastMessage = ""
     )

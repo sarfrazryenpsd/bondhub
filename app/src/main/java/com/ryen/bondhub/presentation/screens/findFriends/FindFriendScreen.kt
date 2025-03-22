@@ -37,10 +37,10 @@ fun FindFriendsScreen(
                     )
                 }
                 is UiEvent.ShowSnackbarError -> {
+                    snackbarState.value = SnackBarState.ERROR
                     snackbarHostState.showSnackbar(
                         message = event.message
                     )
-                    snackbarState.value = SnackBarState.ERROR
                 }
 
                 is UiEvent.Navigate -> {}

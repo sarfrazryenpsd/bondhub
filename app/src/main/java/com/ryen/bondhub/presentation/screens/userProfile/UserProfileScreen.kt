@@ -48,16 +48,16 @@ fun ProfileUpdateScreen(
             when (event) {
                 is UiEvent.Navigate -> {}
                 is UiEvent.ShowSnackbarSuccess -> {
+                    snackbarState.value = SnackBarState.SUCCESS
                     snackbarHostState.showSnackbar(
                         message = event.message,
                     )
-                    snackbarState.value = SnackBarState.SUCCESS
                 }
                 is UiEvent.ShowSnackbarError -> {
+                    snackbarState.value = SnackBarState.ERROR
                     snackbarHostState.showSnackbar(
                         message = event.message
                     )
-                    snackbarState.value = SnackBarState.ERROR
                 }
             }
         }
