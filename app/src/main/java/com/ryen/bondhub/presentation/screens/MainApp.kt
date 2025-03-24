@@ -126,7 +126,7 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                             composable(Screen.ChatScreen.route) {
                                 // Your existing ChatScreen content (which is now MessagesScreen content)
                                 ChatScreen(
-                                    onNavigateToAuth = {
+                                    onNavigate = {
                                         navController.navigate(Screen.AuthScreen.route) {
                                             popUpTo(Screen.ChatScreen.route) {
                                                 inclusive = true

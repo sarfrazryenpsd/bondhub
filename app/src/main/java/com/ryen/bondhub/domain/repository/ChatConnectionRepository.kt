@@ -15,5 +15,5 @@ interface ChatConnectionRepository {
     suspend fun createConnection(connection: ChatConnection): Result<ChatConnection>
     suspend fun getConnectionStatus(userId1: String, userId2: String): Result<ConnectionStatus?>
     suspend fun getPendingConnectionRequestsForUser(userId: String, asRecipient: Boolean): Flow<List<ChatConnection>>
-
+    suspend fun getAcceptedConnectionsFlow(userId: String): Flow<List<ChatConnection>>
 }

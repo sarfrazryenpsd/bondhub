@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -172,6 +173,21 @@ class ChatConnectionRepositoryImpl @Inject constructor(
             .map { snapshot ->
                 snapshot.documents.mapNotNull { it.toObject(ChatConnection::class.java) }
             }
+    }
+
+    override suspend fun getAcceptedConnectionsFlow(userId: String): Flow<List<ChatConnection>>  {
+        return networkBoundResource(
+            query = {
+                localDao.getConnectionsByStatus(userId, ConnectionStatus.ACCEPTED)
+                    .map { entities -> entities.map { it.toDomain() } }},
+            fetch = { remoteDataSource.getAcceptedConnectionsSnapshot(userId) },
+            saveFetchResult = { connections ->
+                connections.forEach { connection ->
+                    localDao.insertConnection(connection.toEntity())
+                }
+            },
+            shouldFetch = { true } // Always fetch fresh data for this feature
+        )
     }
 
     // This should already be in your repository implementation

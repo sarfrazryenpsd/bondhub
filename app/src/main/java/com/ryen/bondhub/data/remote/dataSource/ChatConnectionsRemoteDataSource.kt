@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class ChatConnectionRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
@@ -119,6 +122,45 @@ class ChatConnectionRemoteDataSource @Inject constructor(
 
         awaitClose { registration1.remove() }
     }
+
+     fun getAcceptedConnectionsFlow(userId: String): Flow<List<ChatConnection>> = callbackFlow {
+        val listener = firestore.collection("chat_connections")
+            .whereEqualTo("user1Id", userId)
+            .whereEqualTo("status", ConnectionStatus.ACCEPTED)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val connections = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(ChatConnection::class.java)
+                } ?: emptyList()
+
+                trySend(connections)
+            }
+
+        awaitClose { listener.remove() }
+    }
+
+    suspend fun getAcceptedConnectionsSnapshot(userId: String): List<ChatConnection> {
+        return suspendCoroutine { continuation ->
+            firestore.collection("chat_connections")
+                .whereEqualTo("user1Id", userId)
+                .whereEqualTo("status", ConnectionStatus.ACCEPTED)
+                .get()
+                .addOnSuccessListener { snapshot ->
+                    val connections = snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(ChatConnection::class.java)
+                    }
+                    continuation.resume(connections)
+                }
+                .addOnFailureListener { exception ->
+                    continuation.resumeWithException(exception)
+                }
+        }
+    }
+
     fun getUserConnections(userId: String) = connectionsCollection
         .whereEqualTo("user1Id", userId) // Only need to query where user is primary user
         .snapshots()

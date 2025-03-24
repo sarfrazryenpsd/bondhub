@@ -32,9 +32,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ryen.bondhub.R
-import com.ryen.bondhub.domain.model.ChatMessage
+import com.ryen.bondhub.domain.model.Chat
+import com.ryen.bondhub.domain.model.ChatConnection
+import com.ryen.bondhub.domain.model.UserProfile
+import com.ryen.bondhub.presentation.components.FriendsBottomSheet
 import com.ryen.bondhub.presentation.components.SearchField
 import com.ryen.bondhub.presentation.components.UserSearchAndMessageRow
+import com.ryen.bondhub.presentation.state.FriendRequest
+import com.ryen.bondhub.presentation.state.FriendsState
 import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
 import com.ryen.bondhub.presentation.theme.Surface
@@ -48,8 +53,12 @@ fun ChatScreenContent(
     searchMode: Boolean,
     context: Context,
     onProfileClick: () -> Unit = {},
+    friendsState: FriendsState,
+    onFriendsDismiss: () -> Unit,
+    onMessageFABClick: () -> Unit,
+    onFriendClick: (ChatConnection) -> Unit,
     paddingValues: PaddingValues,
-    messages: List<ChatMessage> = emptyList()
+    chats: List<Chat> = emptyList()
 ) {
     var isSearchActive by remember { mutableStateOf(searchMode) }
 
@@ -94,7 +103,7 @@ fun ChatScreenContent(
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(top = 16.dp)
         )
-        if(messages.isEmpty()){
+        if(chats.isEmpty()){
             Box(
                 modifier = Modifier
                     .padding(bottom = 120.dp)
@@ -126,7 +135,7 @@ fun ChatScreenContent(
     }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd){
         FloatingActionButton(
-            onClick = {},
+            onClick = { onMessageFABClick() },
             containerColor = Primary,
             modifier = Modifier.padding(bottom = 82.dp, end = 26.dp)
         ) {
@@ -138,6 +147,11 @@ fun ChatScreenContent(
             )
         }
     }
+    FriendsBottomSheet(
+        friendsState = friendsState,
+        onDismiss = onFriendsDismiss,
+        onFriendClick = onFriendClick
+    )
 }
 
 @Preview
@@ -151,6 +165,160 @@ private fun ChatScreenContentPrev() {
         searchMode = false,
         paddingValues = PaddingValues(0.dp),
         onProfileClick = {},
-        lastMessage = ""
+        lastMessage = "",
+        friendsState = FriendsState.Success(
+
+            friends = listOf(
+                FriendRequest(
+                    connection = ChatConnection(
+                        connectionId = "1",
+                        user1Id = "user1",
+                        user2Id = "user2",
+                    ),
+                    senderProfile = UserProfile(
+                        uid = "46841348",
+                        displayName = "Aron Paul",
+                        email = "william.@example.com"
+                    )
+                ),
+                FriendRequest(
+                    connection = ChatConnection(
+                        connectionId = "1",
+                        user1Id = "user1",
+                        user2Id = "user2",
+                    ),
+                    senderProfile = UserProfile(
+                        uid = "46841348",
+                        displayName = "Aron Paul",
+                        email = "william.@example.com"
+                    )
+                ),
+                FriendRequest(
+                    connection = ChatConnection(
+                        connectionId = "1",
+                        user1Id = "user1",
+                        user2Id = "user2",
+                    ),
+                    senderProfile = UserProfile(
+                        uid = "46841348",
+                        displayName = "Aron Paul",
+                        email = "william.@example.com"
+                    )
+                ),
+                FriendRequest(
+                    connection = ChatConnection(
+                        connectionId = "1",
+                        user1Id = "user1",
+                        user2Id = "user2",
+                    ),
+                    senderProfile = UserProfile(
+                        uid = "46841348",
+                        displayName = "Aron Paul",
+                        email = "william.@example.com"
+                    )
+                ),
+                FriendRequest(
+                    connection = ChatConnection(
+                        connectionId = "1",
+                        user1Id = "user1",
+                        user2Id = "user2",
+                    ),
+                    senderProfile = UserProfile(
+                        uid = "46841348",
+                        displayName = "Aron Paul",
+                        email = "william.@example.com"
+                    )
+                ),
+                FriendRequest(
+                    connection = ChatConnection(
+                        connectionId = "1",
+                        user1Id = "user1",
+                        user2Id = "user2",
+                    ),
+                    senderProfile = UserProfile(
+                        uid = "46841348",
+                        displayName = "Aron Paul",
+                        email = "william.@example.com"
+                    )
+                ),
+                FriendRequest(
+                    connection = ChatConnection(
+                        connectionId = "1",
+                        user1Id = "user1",
+                        user2Id = "user2",
+                    ),
+                    senderProfile = UserProfile(
+                        uid = "46841348",
+                        displayName = "Aron Paul",
+                        email = "william.@example.com"
+                    )
+                ),
+                FriendRequest(
+                    connection = ChatConnection(
+                        connectionId = "1",
+                        user1Id = "user1",
+                        user2Id = "user2",
+                    ),
+                    senderProfile = UserProfile(
+                        uid = "46841348",
+                        displayName = "Aron Paul",
+                        email = "william.@example.com"
+                    )
+                ),
+                FriendRequest(
+                    connection = ChatConnection(
+                        connectionId = "1",
+                        user1Id = "user1",
+                        user2Id = "user2",
+                    ),
+                    senderProfile = UserProfile(
+                        uid = "46841348",
+                        displayName = "Aron Paul",
+                        email = "william.@example.com"
+                    )
+                ),
+                FriendRequest(
+                    connection = ChatConnection(
+                        connectionId = "1",
+                        user1Id = "user1",
+                        user2Id = "user2",
+                    ),
+                    senderProfile = UserProfile(
+                        uid = "46841348",
+                        displayName = "Aron Paul",
+                        email = "william.@example.com"
+                    )
+                ),
+                FriendRequest(
+                    connection = ChatConnection(
+                        connectionId = "1",
+                        user1Id = "user1",
+                        user2Id = "user2",
+                    ),
+                    senderProfile = UserProfile(
+                        uid = "46841348",
+                        displayName = "Aron Paul",
+                        email = "william.@example.com"
+                    )
+                ),
+                FriendRequest(
+                    connection = ChatConnection(
+                        connectionId = "1",
+                        user1Id = "user1",
+                        user2Id = "user2",
+                    ),
+                    senderProfile = UserProfile(
+                        uid = "46841348",
+                        displayName = "Aron Paul",
+                        email = "william.@example.com"
+                    )
+                ),
+
+                )
+        ),
+        onFriendsDismiss = {},
+        onFriendClick = {},
+        onMessageFABClick = {},
+        chats = emptyList()
     )
 }
