@@ -127,11 +127,7 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                                 // Your existing ChatScreen content (which is now MessagesScreen content)
                                 ChatScreen(
                                     onNavigate = {
-                                        navController.navigate(Screen.AuthScreen.route) {
-                                            popUpTo(Screen.ChatScreen.route) {
-                                                inclusive = true
-                                            }
-                                        }
+
                                     }
                                 )
                             }

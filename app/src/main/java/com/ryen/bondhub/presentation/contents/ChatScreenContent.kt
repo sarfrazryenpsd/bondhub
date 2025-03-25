@@ -9,15 +9,23 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,15 +37,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ryen.bondhub.R
-import com.ryen.bondhub.domain.model.Chat
 import com.ryen.bondhub.domain.model.ChatConnection
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.presentation.components.FriendsBottomSheet
 import com.ryen.bondhub.presentation.components.SearchField
 import com.ryen.bondhub.presentation.components.UserSearchAndMessageRow
+import com.ryen.bondhub.presentation.state.ChatScreenState
 import com.ryen.bondhub.presentation.state.FriendRequest
 import com.ryen.bondhub.presentation.state.FriendsState
 import com.ryen.bondhub.presentation.theme.Primary
@@ -54,11 +63,13 @@ fun ChatScreenContent(
     context: Context,
     onProfileClick: () -> Unit = {},
     friendsState: FriendsState,
+    chatState: ChatScreenState,
+    onSearchValueChange: (String) -> Unit,
+    onSearchClick: () -> Unit,
     onFriendsDismiss: () -> Unit,
     onMessageFABClick: () -> Unit,
     onFriendClick: (ChatConnection) -> Unit,
     paddingValues: PaddingValues,
-    chats: List<Chat> = emptyList()
 ) {
     var isSearchActive by remember { mutableStateOf(searchMode) }
 
@@ -89,9 +100,9 @@ fun ChatScreenContent(
             } else {
                 SearchField(
                     searchText = searchQuery,
-                    onValueChange = {},
+                    onValueChange = { onSearchValueChange(it) },
                     onBackClick = { isSearchActive = false },
-                    onSearchClick = {},
+                    onSearchClick = { onSearchClick() },
                     searchChat = true
                 )
             }
@@ -103,33 +114,83 @@ fun ChatScreenContent(
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(top = 16.dp)
         )
-        if(chats.isEmpty()){
-            Box(
-                modifier = Modifier
-                    .padding(bottom = 120.dp)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ){
-                Image(
-                    painter = painterResource(id = R.drawable.no_messages),
-                    contentDescription = "No Messages",
-                    modifier = Modifier.size(300.dp)
-                )
-                Text(
-                    text = "No messages yet",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Secondary.copy(alpha = 0.7f),
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 160.dp)
-                )
 
+        when(chatState){
+            is ChatScreenState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize()){
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .width(46.dp)
+                            .align(Alignment.Center),
+                        color = Primary,
+                        trackColor = Primary.copy(alpha = .4f),
+                        strokeWidth = 5.dp,
+                    )
+                }
             }
-        } else{
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+            is ChatScreenState.Success -> {
+                val successState = chatState as ChatScreenState.Success
+                if(successState.chats.isEmpty()){
+                    Box(
+                        modifier = Modifier
+                            .padding(bottom = 120.dp)
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ){
+                        Image(
+                            painter = painterResource(id = R.drawable.no_messages),
+                            contentDescription = "No Messages",
+                            modifier = Modifier.size(300.dp)
+                        )
+                        Text(
+                            text = "No messages yet",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Secondary.copy(alpha = 0.7f),
+                            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 160.dp)
+                        )
 
-            ) {
+                    }
+                } else{
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
 
+                        ) {
+
+                    }
+                }
+                if(successState.showFriendsBottomSheet){
+                    FriendsBottomSheet(
+                        friendsState = friendsState,
+                        onDismiss = onFriendsDismiss,
+                        onFriendClick = onFriendClick,
+                    )
+                }
             }
+            is ChatScreenState.Error -> {
+                val errorState = chatState as ChatScreenState.Error
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = "Error",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = errorState.message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+            else -> { }
         }
 
     }
@@ -137,7 +198,7 @@ fun ChatScreenContent(
         FloatingActionButton(
             onClick = { onMessageFABClick() },
             containerColor = Primary,
-            modifier = Modifier.padding(bottom = 82.dp, end = 26.dp)
+            modifier = Modifier.padding(bottom = 110.dp, end = 26.dp)
         ) {
             Icon(
                 painter = painterResource(R.drawable.start_message),
@@ -147,13 +208,9 @@ fun ChatScreenContent(
             )
         }
     }
-    FriendsBottomSheet(
-        friendsState = friendsState,
-        onDismiss = onFriendsDismiss,
-        onFriendClick = onFriendClick
-    )
 }
 
+@ExperimentalMaterial3Api
 @Preview
 @Composable
 private fun ChatScreenContentPrev() {
@@ -319,6 +376,11 @@ private fun ChatScreenContentPrev() {
         onFriendsDismiss = {},
         onFriendClick = {},
         onMessageFABClick = {},
-        chats = emptyList()
+        chatState = ChatScreenState.Success(
+            chats = emptyList(),
+            showFriendsBottomSheet = true,
+        ),
+        onSearchValueChange = {},
+        onSearchClick = {}
     )
 }
