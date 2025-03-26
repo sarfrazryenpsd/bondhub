@@ -45,7 +45,7 @@ class FriendRequestViewModel @Inject constructor(
                 getPendingConnectionRequestsUseCase().collect { connections ->
                     // For each connection, we need the sender's profile
                     val requestsWithProfiles = connections.mapNotNull { connection ->
-                        val senderProfile = getUserProfileUseCase(connection.user1Id)
+                        val senderProfile = getUserProfileUseCase(connection.user2Id)
                         senderProfile.fold(
                             onSuccess = { profile ->
                                 FriendRequest(connection, profile)
