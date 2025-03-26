@@ -21,6 +21,7 @@ import com.ryen.bondhub.util.AuthValidation
 fun AuthScreen(
     viewModel: AuthViewModel = hiltViewModel(),
     onNavigate: (String) -> Unit,
+    onLogout: () -> Unit
 ) {
     val authState by viewModel.authState.collectAsState()
     val authUiState by viewModel.authUiState.collectAsState()
@@ -42,6 +43,10 @@ fun AuthScreen(
                     snackbarHostState.showSnackbar(
                         message = event.message
                     )
+                }
+
+                UiEvent.Logout -> {
+                    onLogout()
                 }
             }
         }

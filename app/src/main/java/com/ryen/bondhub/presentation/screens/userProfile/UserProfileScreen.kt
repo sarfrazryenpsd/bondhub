@@ -25,6 +25,7 @@ fun ProfileUpdateScreen(
     viewModel: UserProfileViewModel = hiltViewModel(),
     onDone: () -> Unit = {},
     onSkip: () -> Unit = {},
+    onLogout: () -> Unit = {},
     modifier: Modifier,
 ) {
     val context = LocalContext.current
@@ -58,6 +59,10 @@ fun ProfileUpdateScreen(
                     snackbarHostState.showSnackbar(
                         message = event.message
                     )
+                }
+
+                UiEvent.Logout -> {
+                    onLogout()
                 }
             }
         }

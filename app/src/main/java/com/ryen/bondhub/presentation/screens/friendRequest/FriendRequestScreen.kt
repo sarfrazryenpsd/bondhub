@@ -39,6 +39,7 @@ fun FriendRequestsScreen(
                 }
 
                 is UiEvent.Navigate -> {}
+                UiEvent.Logout -> {}
             }
         }
     }

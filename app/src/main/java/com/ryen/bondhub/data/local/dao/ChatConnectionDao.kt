@@ -43,4 +43,8 @@ interface ChatConnectionDao {
 
     @Query("SELECT * FROM chat_connections WHERE (user1Id = :user1Id AND user2Id = :user2Id) OR (user1Id = :user2Id AND user2Id = :user1Id) LIMIT 1")
     fun getConnectionBetweenUsers(user1Id: String, user2Id: String): Flow<ChatConnectionEntity?>
+
+    @Query("DELETE FROM chat_connections")
+    fun clearAllConnections()
+
 }

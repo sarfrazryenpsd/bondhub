@@ -4,11 +4,14 @@ import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.ryen.bondhub.data.AppDatabase
+import com.ryen.bondhub.data.local.dao.ChatConnectionDao
 import com.ryen.bondhub.data.local.dao.UserProfileDao
 import com.ryen.bondhub.data.repository.AuthRepositoryImpl
 import com.ryen.bondhub.data.repository.UserProfileRepositoryImpl
 import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.repository.UserProfileRepository
+import com.ryen.bondhub.domain.useCases.auth.LogoutUseCase
 import com.ryen.bondhub.domain.useCases.auth.SignInUseCase
 import com.ryen.bondhub.domain.useCases.auth.SignUpUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.CompleteProfileUseCase
@@ -42,11 +45,22 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAuthRepository(auth: FirebaseAuth, firestore: FirebaseFirestore): AuthRepository = AuthRepositoryImpl(auth, firestore)
+    fun provideAuthRepository(
+        auth: FirebaseAuth,
+        firestore: FirebaseFirestore,
+        userProfileDao: UserProfileDao,
+        chatConnectionDao: ChatConnectionDao,
+        database: AppDatabase
+    ): AuthRepository = AuthRepositoryImpl(auth, firestore, userProfileDao, chatConnectionDao, database)
 
     @Provides
     @Singleton
     fun provideSignInUseCase(repository: AuthRepository): SignInUseCase = SignInUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun provideLogoutUseCase(repository: AuthRepository): LogoutUseCase = LogoutUseCase(repository)
+
 
     @Provides
     @Singleton

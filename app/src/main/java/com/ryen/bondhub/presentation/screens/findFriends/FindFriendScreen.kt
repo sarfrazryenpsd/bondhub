@@ -44,6 +44,7 @@ fun FindFriendsScreen(
                 }
 
                 is UiEvent.Navigate -> {}
+                UiEvent.Logout -> {}
             }
         }
     }

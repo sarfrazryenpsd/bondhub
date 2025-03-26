@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.AuthRepository
+import com.ryen.bondhub.domain.useCases.auth.LogoutUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.CompleteProfileUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.UpdateProfileImageUseCase
@@ -29,6 +30,7 @@ class UserProfileViewModel @Inject constructor(
     private val completeProfileUseCase: CompleteProfileUseCase,
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val authRepository: AuthRepository,
+    private val logoutUseCase: LogoutUseCase
 ): ViewModel() {
 
     private val _screenState = MutableStateFlow<UserProfileScreenState>(UserProfileScreenState.Initial)
@@ -195,6 +197,26 @@ class UserProfileViewModel @Inject constructor(
             } catch (e: Exception) {
                 _screenState.value = UserProfileScreenState.Error(e.message ?: "Unknown error")
                 _uiEvent.emit(UiEvent.ShowSnackbarError(e.message ?: "Unknown error"))
+            }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            try {
+                logoutUseCase().onSuccess {
+                    // Emit logout event
+                    _uiEvent.emit(UiEvent.Logout)
+                }.onFailure { exception ->
+                    // Emit error if logout fails
+                    _uiEvent.emit(UiEvent.ShowSnackbarError(
+                        exception.message ?: "Logout failed"
+                    ))
+                }
+            } catch (e: Exception) {
+                _uiEvent.emit(UiEvent.ShowSnackbarError(
+                    e.message ?: "Logout failed"
+                ))
             }
         }
     }

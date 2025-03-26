@@ -21,4 +21,7 @@ interface UserProfileDao {
     @Query("SELECT * FROM user_profiles WHERE uid = :userId AND lastUpdated > :timestamp")
     suspend fun getUserProfileIfFresh(userId: String, timestamp: Long): UserProfileEntity?
 
+    @Query("DELETE FROM user_profiles")
+    fun clearAllProfiles()
+
 }

@@ -19,7 +19,7 @@ import com.ryen.bondhub.presentation.event.UiEvent
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel = hiltViewModel(),
-    onNavigate: () -> Unit
+    onNavigate: (String) -> Unit,
 ) {
     val chatScreenState by viewModel.chatScreenState.collectAsState()
     val friendsState by viewModel.friendsState.collectAsState()
@@ -37,7 +37,10 @@ fun ChatScreen(
                     snackbarHostState.showSnackbar(event.message)
                 }
                 is UiEvent.Navigate -> {
-                    // Handle navigation later
+                    onNavigate(event.route)
+                }
+                is UiEvent.Logout -> {
+
                 }
             }
         }
@@ -47,13 +50,13 @@ fun ChatScreen(
         snackbarHost = { CustomSnackbar(snackbarHostState, snackBarState = snackbarState.value) },
         content = { paddingValues ->
             ChatScreenContent(
-                displayName = "User Name",
+                displayName = "load User Name",
                 lastMessage = "",
-                profilePictureUrl = "",
+                profilePictureUrl = "load profile pic",
                 searchQuery = "",
                 searchMode = false,
                 context = LocalContext.current,
-                onProfileClick = { },
+                onProfileClick = { /*From here I want to navigate to UserProfile Screen*/ },
                 friendsState = friendsState,
                 chatState = chatScreenState,
                 onSearchValueChange = { },

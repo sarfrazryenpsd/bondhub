@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.ryen.bondhub.di.module.LocalAuthRepository
 import com.ryen.bondhub.di.module.ProvideAuthRepository
+import com.ryen.bondhub.presentation.components.UserProfileTopAppBar
 import com.ryen.bondhub.presentation.screens.auth.AuthScreen
 import com.ryen.bondhub.presentation.screens.chat.ChatScreen
 import com.ryen.bondhub.presentation.screens.findFriends.FindFriendsScreen
@@ -67,7 +69,38 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                         currentRoute == BottomNavItems.FriendRequests.route ||
                         currentRoute == BottomNavItems.FindFriends.route
 
+                val showTopAppBar = remember(currentRoute) {
+                    currentRoute == Screen.UserProfileEditScreen.route ||
+                            currentRoute?.startsWith("chat_message/") == true
+                }
+
                 Scaffold(
+                    topBar = {
+                        if (showTopAppBar) {
+                            when {
+                                currentRoute == Screen.UserProfileEditScreen.route -> {
+                                    UserProfileTopAppBar(
+                                        onBackClick = { navController.navigateUp() },
+                                        onLogoutClick = {
+                                            // Implement logout logic
+                                            navController.navigate(Screen.AuthScreen.route) {
+                                                popUpTo(navController.graph.findStartDestination().id) {
+                                                    inclusive = true
+                                                }
+                                            }
+                                        }
+                                    )
+                                }
+                                currentRoute?.startsWith("chat_message/") == true -> {
+                                    val chatId = currentRoute.substringAfter("chat_message/")
+                                    /*ChatMessageTopAppBar(
+                                        chatId = chatId,
+                                        onBackClick = { navController.navigateUp() }
+                                    )*/
+                                }
+                            }
+                        }
+                    },
                     bottomBar = {
                         AnimatedVisibility(
                             visible = showBottomBar,
@@ -95,6 +128,13 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                                     onNavigate = { route ->
                                         navController.navigate(route) {
                                             popUpTo(Screen.AuthScreen.route) {
+                                                inclusive = true
+                                            }
+                                        }
+                                    },
+                                    onLogout = {
+                                        navController.navigate(Screen.AuthScreen.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
                                                 inclusive = true
                                             }
                                         }
@@ -128,7 +168,7 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                                 ChatScreen(
                                     onNavigate = {
 
-                                    }
+                                    },
                                 )
                             }
 

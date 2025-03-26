@@ -1,9 +1,13 @@
 package com.ryen.bondhub.data.repository
 
+import androidx.room.withTransaction
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
+import com.ryen.bondhub.data.AppDatabase
+import com.ryen.bondhub.data.local.dao.ChatConnectionDao
+import com.ryen.bondhub.data.local.dao.UserProfileDao
 import com.ryen.bondhub.domain.model.UserAuth
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.AuthRepository
@@ -14,7 +18,10 @@ import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val userProfileDao: UserProfileDao,
+    private val chatConnectionDao: ChatConnectionDao,
+    private val database: AppDatabase
 ) : AuthRepository {
 
     override suspend fun signIn(email: String, password: String): Result<UserAuth> =
@@ -79,6 +86,30 @@ class AuthRepositoryImpl @Inject constructor(
             return@withContext false
         }
     }
+
+    override suspend fun logout(): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // Start a database transaction
+            database.withTransaction {
+                try {
+                    // Attempt Firebase sign-out first
+                    auth.signOut()
+
+                    // Clear local database caches
+                    userProfileDao.clearAllProfiles()
+                    chatConnectionDao.clearAllConnections()
+                } catch (e: Exception) {
+                    // If any step fails, rollback the transaction
+                    throw e
+                }
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            // Return failure with the specific exception
+            Result.failure(e)
+        }
+    }
+
 
     override suspend fun getCurrentUser(): UserAuth? {
         return auth.currentUser?.toUserAuth()
