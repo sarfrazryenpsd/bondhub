@@ -46,7 +46,6 @@ fun FriendsBottomSheet(
         sheetState = modalBottomSheetState,
         containerColor = Surface,
         //scrimColor = MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
-        tonalElevation = 2.dp,
         properties = ModalBottomSheetProperties(
             shouldDismissOnBackPress = true
         )

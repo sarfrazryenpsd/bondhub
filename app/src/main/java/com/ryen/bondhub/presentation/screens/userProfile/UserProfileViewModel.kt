@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 @HiltViewModel
 class UserProfileViewModel @Inject constructor(
@@ -91,9 +92,11 @@ class UserProfileViewModel @Inject constructor(
         val current = _uiState.value
         val initial = _uiChangeState.value
 
-        val hasChanges = current.displayName != initial.initialDisplayName ||
-                current.bio != initial.initialBio ||
-                current.profilePictureUrl != initial.initialProfilePictureUrl
+        val hasChanges = listOf(
+            current.displayName != initial.initialDisplayName,
+            current.bio != initial.initialBio,
+            current.profilePictureUrl != initial.initialProfilePictureUrl
+        ).any { it }
 
         _uiChangeState.update { it.copy(hasChanges = hasChanges) }
     }
@@ -148,24 +151,33 @@ class UserProfileViewModel @Inject constructor(
             _screenState.value = UserProfileScreenState.Loading
 
             try {
-                // Get current user ID
                 val userId = _uiState.value.uid
-                var pfp: String? = null
-                var pfpThumbnail: String? = null
+                val currentProfile = getUserProfileUseCase(userId).getOrNull()
 
-                // Handle image upload if there's a new image URI
-                _uiState.value.profilePictureUrl?.let { uri ->
-                    val imageResult = updateProfileImageUseCase(userId, Uri.parse(uri))
-                    if (imageResult.isSuccess) {
-                        // Update the profile picture URL in UI state if upload succeeded
-                        val urls = imageResult.getOrThrow()
-                        pfp = urls.mainUrl
-                        pfpThumbnail = urls.thumbnailUrl
-                        _uiState.update { it.copy(profilePictureUrl = pfp) }
+                // Determine profile picture URLs
+                val (pfp, pfpThumbnail) = if (_uiState.value.profilePictureUrl != null) {
+                    // If a new URI is provided, check if it's different from existing
+                    if (_uiState.value.profilePictureUrl != currentProfile?.profilePictureUrl) {
+                        val imageResult = updateProfileImageUseCase(
+                            userId,
+                            _uiState.value.profilePictureUrl!!.toUri()
+                        )
+                        if (imageResult.isSuccess) {
+                            val urls = imageResult.getOrThrow()
+                            urls.mainUrl to urls.thumbnailUrl
+                        } else {
+                            throw imageResult.exceptionOrNull()
+                                ?: Exception("Failed to upload image")
+                        }
                     } else {
-                        // Handle image upload failure
-                        throw imageResult.exceptionOrNull() ?: Exception("Failed to upload image")
+                        // Use existing URLs if no change
+                        currentProfile?.profilePictureUrl to
+                                currentProfile?.profilePictureThumbnailUrl
                     }
+                } else {
+                    // No new image provided
+                    currentProfile?.profilePictureUrl to
+                            currentProfile?.profilePictureThumbnailUrl
                 }
 
                 // Create user profile with only the fields needed for update

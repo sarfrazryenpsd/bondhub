@@ -5,9 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,7 +19,10 @@ import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Surface
 
 @Composable
-fun LoadingScreen() {
+fun ErrorScreen(
+    message: String?,
+    onRetry: () -> Unit
+) {
     Scaffold {
         Column(
             modifier = Modifier
@@ -28,20 +32,29 @@ fun LoadingScreen() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            CircularProgressIndicator(
-                modifier = Modifier.width(56.dp),
-                color = Primary,
-                trackColor = Primary.copy(alpha = .4f),
-                strokeWidth = 5.dp,
-            )
+            Text(text = message ?: "Something went wrong")
+            Button(
+                onClick = onRetry,
+                modifier = Modifier.padding(top = 8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Primary,
+                    contentColor = Surface
+                )
+
+            ) {
+                Text(text = "Retry")
+            }
         }
     }
 }
 
 @Preview
 @Composable
-private fun LoadingScreenPrev() {
+private fun ErrorScreenPrev() {
     BondHubTheme {
-        LoadingScreen()
+        ErrorScreen(
+            message = "Something went wrong",
+            onRetry = {}
+        )
     }
 }

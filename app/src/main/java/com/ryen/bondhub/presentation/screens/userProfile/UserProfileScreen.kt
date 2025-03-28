@@ -115,7 +115,6 @@ fun ProfileUpdateScreen(
                             dialogTitle = "Are you sure you want to logout?",
                             icon = (R.drawable.logout)
                         )
-                            
                     }
                 }
             )

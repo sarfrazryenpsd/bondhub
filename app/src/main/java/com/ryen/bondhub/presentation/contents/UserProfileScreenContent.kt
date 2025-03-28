@@ -40,7 +40,9 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.ryen.bondhub.R
+import com.ryen.bondhub.presentation.screens.ErrorScreen
 import com.ryen.bondhub.presentation.state.UserProfileScreenState
+import com.ryen.bondhub.presentation.theme.Error
 import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
 import com.ryen.bondhub.presentation.theme.Surface
@@ -64,14 +66,14 @@ fun ProfileUpdateScreenContent(
     content: (@Composable () -> Unit)? = null,
     padding: PaddingValues
 ) {
+    if (content != null) content()
     if(screenState == UserProfileScreenState.Loading){
         LinearProgressIndicator(
-            color = Primary,
+            color = Error,
             trackColor = Primary.copy(alpha = .4f),
             modifier = Modifier.height(5.dp).fillMaxWidth()
         )
     }
-    if (content != null) content()
     Column(
         modifier = Modifier
             .padding(top = if (screenState == UserProfileScreenState.Loading) 5.dp else 0.dp)

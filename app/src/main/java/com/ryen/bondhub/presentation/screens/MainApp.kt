@@ -133,7 +133,7 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                             composable(Screen.ChatScreen.route) {
                                 // Your existing ChatScreen content (which is now MessagesScreen content)
                                 ChatScreen(
-                                    onNavigateToUserProfile = { route ->
+                                    onNavigateTo = { route ->
                                         navController.navigate(route)
                                     },
                                 )

@@ -14,7 +14,10 @@ import com.ryen.bondhub.util.ImageProcessingUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -155,6 +158,26 @@ class UserProfileRepositoryImpl @Inject constructor(
                 Result.failure(e)
             }
         }
+    }
+
+    override suspend fun getUserProfileRealTime(userId: String): Flow<Result<UserProfile>> = callbackFlow {
+        val listenerRegistration = usersCollection
+            .document(userId)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    trySend(Result.failure(e))
+                    return@addSnapshotListener
+                }
+
+                snapshot?.let {
+                    val userProfile = snapshot.toObject(UserProfile::class.java)
+                    userProfile?.let {
+                        trySend(Result.success(it))
+                    }
+                }
+            }
+
+        awaitClose { listenerRegistration.remove() }
     }
 
     override suspend fun refreshUserProfile(userId: String): Result<UserProfile> = withContext(Dispatchers.IO) {

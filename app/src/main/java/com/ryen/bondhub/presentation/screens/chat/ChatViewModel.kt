@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryen.bondhub.domain.model.ChatConnection
+import com.ryen.bondhub.domain.model.UserProfile
+import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.useCases.chatConnection.GetAcceptedConnectionsUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
 import com.ryen.bondhub.presentation.event.ChatEvent
@@ -22,12 +24,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
     private val getAcceptedConnectionsUseCase: GetAcceptedConnectionsUseCase,
     private val getUserProfileUseCase: GetUserProfileUseCase,
 ) : ViewModel() {
 
     private val _chatScreenState = MutableStateFlow<ChatScreenState>(ChatScreenState.Initial)
     val chatScreenState: StateFlow<ChatScreenState> = _chatScreenState.asStateFlow()
+
+    private val _userProfileState = MutableStateFlow<UserProfileState>(UserProfileState.Loading)
+    val userProfileState: StateFlow<UserProfileState> = _userProfileState.asStateFlow()
 
     private val _friendsState = MutableStateFlow<FriendsState>(FriendsState.Loading)
     val friendsState: StateFlow<FriendsState> = _friendsState.asStateFlow()
@@ -38,6 +44,8 @@ class ChatViewModel @Inject constructor(
     init {
         // Will load chats later
         _chatScreenState.value = ChatScreenState.Success()
+
+        loadCurrentUserProfile()
     }
 
     fun onEvent(event: ChatEvent) {
@@ -46,6 +54,45 @@ class ChatViewModel @Inject constructor(
             is ChatEvent.CloseFriendsBottomSheet -> closeFriendsBottomSheet()
             is ChatEvent.StartChatWithFriend -> startChatWithFriend(event.connection)
             is ChatEvent.NavigateToUserProfile -> navigateToRoute(event.route)
+        }
+    }
+
+    private fun loadCurrentUserProfile() {
+        viewModelScope.launch {
+            _userProfileState.value = UserProfileState.Loading
+
+            try {
+                val currentUser = authRepository.getCurrentUser()
+
+                if (currentUser != null) {
+                    getUserProfileUseCase.getUserProfileRealTime(currentUser.uid)
+                        .collect { result ->
+                            result.onSuccess { userProfile ->
+                                _userProfileState.value = UserProfileState.Success(userProfile)
+                            }.onFailure { exception ->
+                                _userProfileState.value = UserProfileState.Error(
+                                    exception.message ?: "Failed to load user profile"
+                                )
+                                _events.emit(
+                                    UiEvent.ShowSnackbarError(
+                                        exception.message ?: "Failed to load user profile"
+                                    )
+                                )
+                            }
+                        }
+                } else {
+                    _userProfileState.value = UserProfileState.Error("No current user found")
+                }
+            } catch (e: Exception) {
+                _userProfileState.value = UserProfileState.Error(
+                    e.message ?: "Unknown error loading profile"
+                )
+                _events.emit(
+                    UiEvent.ShowSnackbarError(
+                        e.message ?: "Unknown error loading profile"
+                    )
+                )
+            }
         }
     }
 
@@ -121,10 +168,20 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    fun refreshUserProfile() {
+        loadCurrentUserProfile()
+    }
+
     private fun navigateToRoute(route : String) {
         viewModelScope.launch {
             _events.emit(UiEvent.Navigate(route))
         }
     }
 
+}
+
+sealed class UserProfileState {
+    data object Loading : UserProfileState()
+    data class Success(val userProfile: UserProfile) : UserProfileState()
+    data class Error(val message: String) : UserProfileState()
 }

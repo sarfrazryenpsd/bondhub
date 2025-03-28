@@ -15,14 +15,17 @@ import com.ryen.bondhub.presentation.components.SnackBarState
 import com.ryen.bondhub.presentation.contents.ChatScreenContent
 import com.ryen.bondhub.presentation.event.ChatEvent
 import com.ryen.bondhub.presentation.event.UiEvent
+import com.ryen.bondhub.presentation.screens.ErrorScreen
+import com.ryen.bondhub.presentation.screens.LoadingScreen
 import com.ryen.bondhub.presentation.screens.Screen
 
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel = hiltViewModel(),
-    onNavigateToUserProfile: (String) -> Unit,
+    onNavigateTo: (String) -> Unit,
 ) {
     val chatScreenState by viewModel.chatScreenState.collectAsState()
+    val userProfileState by viewModel.userProfileState.collectAsState()
     val friendsState by viewModel.friendsState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarState = remember { mutableStateOf(SnackBarState.SUCCESS) }
@@ -38,7 +41,7 @@ fun ChatScreen(
                     snackbarHostState.showSnackbar(event.message)
                 }
                 is UiEvent.Navigate -> {
-                    onNavigateToUserProfile(event.route)
+                    onNavigateTo(event.route)
                 }
                 is UiEvent.Logout -> {
 
@@ -50,27 +53,42 @@ fun ChatScreen(
     Scaffold(
         snackbarHost = { CustomSnackbar(snackbarHostState, snackBarState = snackbarState.value) },
         content = { paddingValues ->
-            ChatScreenContent(
-                displayName = "load User Name",
-                lastMessage = "",
-                profilePictureUrl = "load profile pic",
-                searchQuery = "",
-                searchMode = false,
-                context = LocalContext.current,
-                onProfileClick = { viewModel.onEvent(ChatEvent.NavigateToUserProfile(Screen.UserProfileEditScreen.route)) },
-                friendsState = friendsState,
-                chatState = chatScreenState,
-                onSearchValueChange = { },
-                onSearchClick = { },
-                onFriendsDismiss = { viewModel.onEvent(ChatEvent.CloseFriendsBottomSheet) },
-                onMessageFABClick = {
-                    viewModel.onEvent(ChatEvent.ToggleFriendsBottomSheet)
-                },
-                onFriendClick = { connection ->
-                    viewModel.onEvent(ChatEvent.StartChatWithFriend(connection))
-                },
-                paddingValues = paddingValues
-            )
+            when (val profileState = userProfileState) {
+                is UserProfileState.Loading -> {
+                    LoadingScreen()
+                }
+                is UserProfileState.Success -> {
+                    ChatScreenContent(
+                        displayName = profileState.userProfile.displayName,
+                        lastMessage = "",
+                        profilePictureUrl = profileState.userProfile.profilePictureUrl ?: "",
+                        searchQuery = "",
+                        searchMode = false,
+                        context = LocalContext.current,
+                        onProfileClick = {
+                            viewModel.onEvent(ChatEvent.NavigateToUserProfile(Screen.UserProfileEditScreen.route))
+                        },
+                        friendsState = friendsState,
+                        chatState = chatScreenState,
+                        onSearchValueChange = { },
+                        onSearchClick = { },
+                        onFriendsDismiss = { viewModel.onEvent(ChatEvent.CloseFriendsBottomSheet) },
+                        onMessageFABClick = {
+                            viewModel.onEvent(ChatEvent.ToggleFriendsBottomSheet)
+                        },
+                        onFriendClick = { connection ->
+                            viewModel.onEvent(ChatEvent.StartChatWithFriend(connection))
+                        },
+                        paddingValues = paddingValues
+                    )
+                }
+                is UserProfileState.Error -> {
+                    ErrorScreen(
+                        message = profileState.message,
+                        onRetry = { viewModel.refreshUserProfile() }
+                    )
+                }
+            }
         }
     )
 }
