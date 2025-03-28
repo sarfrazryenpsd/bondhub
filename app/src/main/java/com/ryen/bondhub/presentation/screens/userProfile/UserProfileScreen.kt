@@ -11,12 +11,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ryen.bondhub.R
 import com.ryen.bondhub.presentation.components.CustomSnackbar
-import com.ryen.bondhub.presentation.contents.ProfileUpdateScreenContent
+import com.ryen.bondhub.presentation.components.LogoutDialog
 import com.ryen.bondhub.presentation.components.SnackBarState
+import com.ryen.bondhub.presentation.components.UserProfileTopAppBar
+import com.ryen.bondhub.presentation.contents.ProfileUpdateScreenContent
 import com.ryen.bondhub.presentation.event.UiEvent
 
 
@@ -27,6 +31,8 @@ fun ProfileUpdateScreen(
     onSkip: () -> Unit = {},
     onLogout: () -> Unit = {},
     modifier: Modifier,
+    showTopBar: Boolean,
+    onBackClick: () -> Unit,
 ) {
     val context = LocalContext.current
     val screenState by viewModel.screenState.collectAsState()
@@ -67,9 +73,19 @@ fun ProfileUpdateScreen(
             }
         }
     }
+    
+    var showDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         snackbarHost = { CustomSnackbar(snackbarHostState, snackBarState = snackbarState.value) },
+        topBar = {
+            if(showTopBar){
+                UserProfileTopAppBar(
+                    onBackClick = onBackClick,
+                    onLogoutClick = { showDialog = true }
+                )
+            }
+        },
         content = { padding ->
             ProfileUpdateScreenContent(
                 email = uiState.email,
@@ -87,7 +103,21 @@ fun ProfileUpdateScreen(
                 isInitialSetup = uiStateChange.isInitialSetup,
                 hasChanges = uiStateChange.hasChanges,
                 screenState = screenState,
-                padding = padding
+                padding = padding,
+                content = {
+                    if (showDialog && showTopBar) {
+                        LogoutDialog(
+                            onDismissRequest = { showDialog = false },
+                            onConfirmation = {
+                                viewModel.logout()
+                                showDialog = false
+                            },
+                            dialogTitle = "Are you sure you want to logout?",
+                            icon = (R.drawable.logout)
+                        )
+                            
+                    }
+                }
             )
         }
     )

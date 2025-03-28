@@ -203,6 +203,7 @@ class UserProfileViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
+            _screenState.value = UserProfileScreenState.Loading
             try {
                 logoutUseCase().onSuccess {
                     // Emit logout event

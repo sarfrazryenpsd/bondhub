@@ -61,6 +61,7 @@ fun ProfileUpdateScreenContent(
     isInitialSetup: Boolean,
     hasChanges: Boolean,
     screenState: UserProfileScreenState,
+    content: (@Composable () -> Unit)? = null,
     padding: PaddingValues
 ) {
     if(screenState == UserProfileScreenState.Loading){
@@ -70,6 +71,7 @@ fun ProfileUpdateScreenContent(
             modifier = Modifier.height(5.dp).fillMaxWidth()
         )
     }
+    if (content != null) content()
     Column(
         modifier = Modifier
             .padding(top = if (screenState == UserProfileScreenState.Loading) 5.dp else 0.dp)

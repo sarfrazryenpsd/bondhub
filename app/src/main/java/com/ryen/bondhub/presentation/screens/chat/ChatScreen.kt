@@ -15,11 +15,12 @@ import com.ryen.bondhub.presentation.components.SnackBarState
 import com.ryen.bondhub.presentation.contents.ChatScreenContent
 import com.ryen.bondhub.presentation.event.ChatEvent
 import com.ryen.bondhub.presentation.event.UiEvent
+import com.ryen.bondhub.presentation.screens.Screen
 
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel = hiltViewModel(),
-    onNavigate: (String) -> Unit,
+    onNavigateToUserProfile: (String) -> Unit,
 ) {
     val chatScreenState by viewModel.chatScreenState.collectAsState()
     val friendsState by viewModel.friendsState.collectAsState()
@@ -37,7 +38,7 @@ fun ChatScreen(
                     snackbarHostState.showSnackbar(event.message)
                 }
                 is UiEvent.Navigate -> {
-                    onNavigate(event.route)
+                    onNavigateToUserProfile(event.route)
                 }
                 is UiEvent.Logout -> {
 
@@ -56,7 +57,7 @@ fun ChatScreen(
                 searchQuery = "",
                 searchMode = false,
                 context = LocalContext.current,
-                onProfileClick = { /*From here I want to navigate to UserProfile Screen*/ },
+                onProfileClick = { viewModel.onEvent(ChatEvent.NavigateToUserProfile(Screen.UserProfileEditScreen.route)) },
                 friendsState = friendsState,
                 chatState = chatScreenState,
                 onSearchValueChange = { },

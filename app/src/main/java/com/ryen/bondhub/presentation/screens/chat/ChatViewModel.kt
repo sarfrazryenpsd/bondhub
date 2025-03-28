@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryen.bondhub.domain.model.ChatConnection
-import com.ryen.bondhub.domain.useCases.auth.LogoutUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.GetAcceptedConnectionsUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
 import com.ryen.bondhub.presentation.event.ChatEvent
@@ -46,7 +45,7 @@ class ChatViewModel @Inject constructor(
             is ChatEvent.ToggleFriendsBottomSheet -> toggleFriendsBottomSheet()
             is ChatEvent.CloseFriendsBottomSheet -> closeFriendsBottomSheet()
             is ChatEvent.StartChatWithFriend -> startChatWithFriend(event.connection)
-            is ChatEvent.NavigateTo -> navigateToRoute(event.route)
+            is ChatEvent.NavigateToUserProfile -> navigateToRoute(event.route)
         }
     }
 
@@ -122,7 +121,7 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    private fun navigateToRoute(route: String) {
+    private fun navigateToRoute(route : String) {
         viewModelScope.launch {
             _events.emit(UiEvent.Navigate(route))
         }

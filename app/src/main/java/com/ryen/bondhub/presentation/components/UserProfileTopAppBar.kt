@@ -34,6 +34,7 @@ fun UserProfileTopAppBar(
             .fillMaxWidth()
             .background(Primary)
             .padding(8.dp)
+            .padding(top = 24.dp)
 
     ){
         Box(

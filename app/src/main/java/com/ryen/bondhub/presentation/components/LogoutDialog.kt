@@ -1,5 +1,6 @@
 package com.ryen.bondhub.presentation.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -13,27 +14,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ryen.bondhub.presentation.theme.Error
+import androidx.compose.ui.window.DialogProperties
+import com.ryen.bondhub.presentation.theme.Primary
+import com.ryen.bondhub.presentation.theme.Secondary
+import com.ryen.bondhub.presentation.theme.Surface
 
 @Composable
 fun LogoutDialog(
     onDismissRequest: () -> Unit,
     onConfirmation: () -> Unit,
     dialogTitle: String,
-    dialogText: String,
-    icon: ImageVector,
+    @DrawableRes icon: Int,
 ) {
     AlertDialog(
         icon = {
-            Icon(icon, contentDescription = "Example Icon", tint = Error, modifier = Modifier.size(48.dp))
+            Icon(painter = painterResource(icon), contentDescription = "Example Icon", tint = Primary, modifier = Modifier.size(48.dp))
         },
         title = {
-            Text(text = dialogTitle, style = MaterialTheme.typography.titleMedium)
-        },
-        text = {
-            Text(text = dialogText, style = MaterialTheme.typography.labelMedium.copy(fontSize = 14.sp))
+            Text(text = dialogTitle, style = MaterialTheme.typography.titleMedium, color = Surface)
         },
         onDismissRequest = {
             onDismissRequest()
@@ -43,11 +45,11 @@ fun LogoutDialog(
                 onClick = {
                     onConfirmation()
                 }, colors = ButtonDefaults.buttonColors(
-                    containerColor = Error,
+                    containerColor = Primary,
                     contentColor = Color.White
                 )
             ) {
-                Text("Erase data")
+                Text("Logout")
             }
         },
         dismissButton = {
@@ -56,9 +58,15 @@ fun LogoutDialog(
                     onDismissRequest()
                 }
             ) {
-                Text("Dismiss", color = Color.White)
+                Text("Dismiss", color = Surface)
             }
         },
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(8.dp),
+        //tonalElevation = 16.dp,
+        containerColor = Secondary,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
     )
 }

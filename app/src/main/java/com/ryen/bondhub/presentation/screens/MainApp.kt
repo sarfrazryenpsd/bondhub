@@ -25,7 +25,6 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.ryen.bondhub.di.module.LocalAuthRepository
 import com.ryen.bondhub.di.module.ProvideAuthRepository
-import com.ryen.bondhub.presentation.components.UserProfileTopAppBar
 import com.ryen.bondhub.presentation.screens.auth.AuthScreen
 import com.ryen.bondhub.presentation.screens.chat.ChatScreen
 import com.ryen.bondhub.presentation.screens.findFriends.FindFriendsScreen
@@ -69,38 +68,8 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                         currentRoute == BottomNavItems.FriendRequests.route ||
                         currentRoute == BottomNavItems.FindFriends.route
 
-                val showTopAppBar = remember(currentRoute) {
-                    currentRoute == Screen.UserProfileEditScreen.route ||
-                            currentRoute?.startsWith("chat_message/") == true
-                }
 
                 Scaffold(
-                    topBar = {
-                        if (showTopAppBar) {
-                            when {
-                                currentRoute == Screen.UserProfileEditScreen.route -> {
-                                    UserProfileTopAppBar(
-                                        onBackClick = { navController.navigateUp() },
-                                        onLogoutClick = {
-                                            // Implement logout logic
-                                            navController.navigate(Screen.AuthScreen.route) {
-                                                popUpTo(navController.graph.findStartDestination().id) {
-                                                    inclusive = true
-                                                }
-                                            }
-                                        }
-                                    )
-                                }
-                                currentRoute?.startsWith("chat_message/") == true -> {
-                                    val chatId = currentRoute.substringAfter("chat_message/")
-                                    /*ChatMessageTopAppBar(
-                                        chatId = chatId,
-                                        onBackClick = { navController.navigateUp() }
-                                    )*/
-                                }
-                            }
-                        }
-                    },
                     bottomBar = {
                         AnimatedVisibility(
                             visible = showBottomBar,
@@ -133,11 +102,7 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                                         }
                                     },
                                     onLogout = {
-                                        navController.navigate(Screen.AuthScreen.route) {
-                                            popUpTo(navController.graph.findStartDestination().id) {
-                                                inclusive = true
-                                            }
-                                        }
+
                                     }
                                 )
                             }
@@ -158,7 +123,9 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                                             }
                                         }
                                     },
-                                    modifier = Modifier.padding(paddingValues)
+                                    modifier = Modifier.padding(paddingValues),
+                                    showTopBar = false,
+                                    onBackClick = {  }
                                 )
                             }
 
@@ -166,8 +133,8 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                             composable(Screen.ChatScreen.route) {
                                 // Your existing ChatScreen content (which is now MessagesScreen content)
                                 ChatScreen(
-                                    onNavigate = {
-
+                                    onNavigateToUserProfile = { route ->
+                                        navController.navigate(route)
                                     },
                                 )
                             }
@@ -190,6 +157,16 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                                     onDone = {
                                         // Will only be called if we explicitly trigger it
                                         navController.navigateUp()
+                                    },
+                                    showTopBar = true,
+                                    onBackClick = { navController.navigateUp() },
+                                    onLogout = {
+                                        // Implement logout logic
+                                        navController.navigate(Screen.AuthScreen.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                inclusive = true
+                                            }
+                                        }
                                     },
                                     onSkip = { /* This won't be shown anyway */ },
                                     modifier = Modifier.padding(paddingValues)
