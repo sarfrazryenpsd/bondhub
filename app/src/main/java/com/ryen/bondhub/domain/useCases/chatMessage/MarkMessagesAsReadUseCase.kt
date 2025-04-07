@@ -3,10 +3,10 @@ package com.ryen.bondhub.domain.useCases.chatMessage
 import com.ryen.bondhub.domain.repository.ChatMessageRepository
 import javax.inject.Inject
 
-class DeleteChatMessageUseCase @Inject constructor(
+class MarkMessagesAsReadUseCase @Inject constructor(
     private val chatMessageRepository: ChatMessageRepository
 ) {
-    suspend operator fun invoke(messageId: String): Result<Unit> {
-        return chatMessageRepository.deleteChatMessage(messageId)
+    suspend operator fun invoke(chatId: String, receiverId: String): Result<Unit> {
+        return chatMessageRepository.markAllMessagesAsRead(chatId, receiverId)
     }
 }

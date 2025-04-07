@@ -86,15 +86,6 @@ class ChatMessageRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun deleteMessage(messageId: String): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            messagesCollection.document(messageId).delete().await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     suspend fun updateAllMessageStatus(chatId: String, receiverId: String, status: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             // Create a batch to update multiple messages efficiently

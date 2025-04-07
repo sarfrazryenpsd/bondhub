@@ -125,21 +125,6 @@ class ChatMessageRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteChatMessage(messageId: String): Result<Unit> {
-        return try {
-            remoteDataSource.deleteMessage(messageId).fold(
-                onSuccess = {
-                    // Also delete from local database
-                    localDataSource.deleteMessage(messageId)
-                    Result.success(Unit)
-                },
-                onFailure = { Result.failure(it) }
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     override suspend fun getUnreadMessagesCount(connectionId: String, userId: String): Flow<Int> {
         return try {
             // First try to get from remote
