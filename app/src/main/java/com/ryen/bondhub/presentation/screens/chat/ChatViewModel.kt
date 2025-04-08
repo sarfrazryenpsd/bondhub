@@ -6,19 +6,28 @@ import androidx.lifecycle.viewModelScope
 import com.ryen.bondhub.domain.model.ChatConnection
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.AuthRepository
+import com.ryen.bondhub.domain.useCases.chat.CreateChatUseCase
+import com.ryen.bondhub.domain.useCases.chat.DeleteChatUseCase
+import com.ryen.bondhub.domain.useCases.chat.GetUserChatsUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.GetAcceptedConnectionsUseCase
+import com.ryen.bondhub.domain.useCases.chatMessage.GetUnreadMessagesCountUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
 import com.ryen.bondhub.presentation.event.ChatEvent
 import com.ryen.bondhub.presentation.event.UiEvent
 import com.ryen.bondhub.presentation.state.ChatScreenState
+import com.ryen.bondhub.presentation.state.ChatsState
 import com.ryen.bondhub.presentation.state.FriendRequest
 import com.ryen.bondhub.presentation.state.FriendsState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,6 +36,10 @@ class ChatViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val getAcceptedConnectionsUseCase: GetAcceptedConnectionsUseCase,
     private val getUserProfileUseCase: GetUserProfileUseCase,
+    private val getUserChatsUseCase: GetUserChatsUseCase,
+    private val createChatUseCase: CreateChatUseCase,
+    private val deleteChatsUseCase: DeleteChatUseCase,
+    private val getUnreadMessagesCountUseCase: GetUnreadMessagesCountUseCase
 ) : ViewModel() {
 
     private val _chatScreenState = MutableStateFlow<ChatScreenState>(ChatScreenState.Initial)
@@ -38,13 +51,14 @@ class ChatViewModel @Inject constructor(
     private val _friendsState = MutableStateFlow<FriendsState>(FriendsState.Loading)
     val friendsState: StateFlow<FriendsState> = _friendsState.asStateFlow()
 
+    private val _chatsState = MutableStateFlow<ChatsState>(ChatsState.Loading)
+    val chatsState: StateFlow<ChatsState> = _chatsState.asStateFlow()
+
     private val _events = MutableSharedFlow<UiEvent>()
     val events = _events.asSharedFlow()
 
     init {
-        // Will load chats later
-        _chatScreenState.value = ChatScreenState.Success()
-
+        loadChats()
         loadCurrentUserProfile()
     }
 
@@ -54,6 +68,8 @@ class ChatViewModel @Inject constructor(
             is ChatEvent.CloseFriendsBottomSheet -> closeFriendsBottomSheet()
             is ChatEvent.StartChatWithFriend -> startChatWithFriend(event.connection)
             is ChatEvent.NavigateToUserProfile -> navigateToRoute(event.route)
+            is ChatEvent.NavigateToChat -> navigateToChat(event.chatId, event.otherUserId)
+            is ChatEvent.DeleteChat -> deleteChat(event.chatId)
         }
     }
 
@@ -92,6 +108,42 @@ class ChatViewModel @Inject constructor(
                         e.message ?: "Unknown error loading profile"
                     )
                 )
+            }
+        }
+    }
+
+    private fun loadChats() {
+        viewModelScope.launch {
+            _chatsState.value = ChatsState.Loading
+
+            try {
+                getUserChatsUseCase().collect { chats ->
+                    if (chats.isEmpty()) {
+                        _chatsState.value = ChatsState.Empty
+                    } else {
+                        // For each chat, get the unread message count
+                        val enhancedChats = chats.map { chat ->
+                            val currentUser = authRepository.getCurrentUser()
+                            if (currentUser != null) {
+                                // Set up a flow that will update the chat with the unread count
+                                getUnreadMessagesCountUseCase(chat.chatId, currentUser.uid)
+                                    .map { count ->
+                                        chat.copy(unreadMessageCount = count)
+                                    }
+                            } else {
+                                flowOf(chat)
+                            }
+                        }
+
+                        // Combine all the flows
+                        enhancedChats.combine().collect { updatedChats ->
+                            _chatsState.value = ChatsState.Success(updatedChats)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _chatsState.value = ChatsState.Error(e.message ?: "Failed to load chats")
+                _events.emit(UiEvent.ShowSnackbarError(e.message ?: "Failed to load chats"))
             }
         }
     }
@@ -155,16 +207,45 @@ class ChatViewModel @Inject constructor(
             // Close the bottom sheet first
             closeFriendsBottomSheet()
 
-            // For now, just emit a success message
-            // Later we'll implement actual chat creation and navigation
+            try {
+                val currentUser = authRepository.getCurrentUser()
+                if (currentUser == null) {
+                    _events.emit(UiEvent.ShowSnackbarError("User not authenticated"))
+                    return@launch
+                }
 
-            // Future implementation:
-            // val chatId = createChatUseCase(connection.connectionId).getOrNull()
-            // if (chatId != null) {
-            //     _events.emit(UiEvent.Navigate("chat_screen/chat_message/$chatId"))
-            // } else {
-            //     _events.emit(UiEvent.ShowSnackbarError("Failed to create chat"))
-            // }
+                // Create or get existing chat
+                createChatUseCase(currentUser.uid, connection.user2Id).fold(
+                    onSuccess = { chat ->
+                        // Navigate to the chat screen with the chat ID
+                        navigateToChat(chat.chatId, connection.user2Id)
+                    },
+                    onFailure = { exception ->
+                        _events.emit(UiEvent.ShowSnackbarError(exception.message ?: "Failed to create chat"))
+                    }
+                )
+            } catch (e: Exception) {
+                _events.emit(UiEvent.ShowSnackbarError(e.message ?: "Failed to start chat"))
+            }
+        }
+    }
+
+    private fun deleteChat(chatId: String) {
+        viewModelScope.launch {
+            try {
+                deleteChatsUseCase(chatId).fold(
+                    onSuccess = {
+                        _events.emit(UiEvent.ShowSnackbarSuccess("Chat deleted successfully"))
+                        // Refresh chats list
+                        loadChats()
+                    },
+                    onFailure = { exception ->
+                        _events.emit(UiEvent.ShowSnackbarError(exception.message ?: "Failed to delete chat"))
+                    }
+                )
+            } catch (e: Exception) {
+                _events.emit(UiEvent.ShowSnackbarError(e.message ?: "Failed to delete chat"))
+            }
         }
     }
 
@@ -172,9 +253,28 @@ class ChatViewModel @Inject constructor(
         loadCurrentUserProfile()
     }
 
+    fun refreshChats() {
+        loadChats()
+    }
+
     private fun navigateToRoute(route : String) {
         viewModelScope.launch {
             _events.emit(UiEvent.Navigate(route))
+        }
+    }
+
+    private fun navigateToChat(chatId: String, otherUserId: String) {
+        viewModelScope.launch {
+            _events.emit(UiEvent.Navigate("chat_message_screen/$chatId?otherUserId=$otherUserId"))
+        }
+    }
+
+    private inline fun <reified T> List<Flow<T>>.combine(): Flow<List<T>> {
+        return if (isEmpty()) {
+            flowOf(emptyList())
+        } else {
+            // Combine all flows into a single flow of lists
+            combine(this) { it.toList() }
         }
     }
 

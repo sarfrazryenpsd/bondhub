@@ -8,5 +8,7 @@ sealed class ChatEvent {
     data object ToggleFriendsBottomSheet : ChatEvent()
     data object CloseFriendsBottomSheet : ChatEvent()
     data class StartChatWithFriend(val connection: ChatConnection) : ChatEvent()
+    data class NavigateToChat(val chatId: String, val otherUserId: String) : ChatEvent()
+    data class DeleteChat(val chatId: String) : ChatEvent()
 
 }
