@@ -39,10 +39,7 @@ class ChatRepositoryImpl @Inject constructor(
             }
 
             val connectionDoc = connectionResult.getOrNull()
-
-            if (connectionDoc == null) {
-                return Result.failure(Exception("No connection exists between these users"))
-            }
+                ?: return Result.failure(Exception("No connection exists between these users"))
 
             val connectionId = connectionDoc.id
             val connectionStatus = connectionDoc.getString("status")

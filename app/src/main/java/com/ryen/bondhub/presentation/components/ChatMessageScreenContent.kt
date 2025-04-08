@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
@@ -43,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.ryen.bondhub.domain.model.ChatMessage
@@ -132,12 +132,6 @@ fun MessageItem(
         MaterialTheme.colorScheme.onPrimary
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    val arrangment = if (isFromCurrentUser) {
-        Arrangement.End
-    } else {
-        Arrangement.Start
     }
 
     val dateFormatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
@@ -309,4 +303,16 @@ fun MessageInputBar(
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun MessageInputBarPrev() {
+    MessageInputBar(
+        text = "",
+        onTextChange = {},
+        onSendClick = {},
+        onAttachClick = {},
+        canSend = false
+    )
 }
