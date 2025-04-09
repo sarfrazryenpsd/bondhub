@@ -18,15 +18,18 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
 import com.ryen.bondhub.di.module.LocalAuthRepository
 import com.ryen.bondhub.di.module.ProvideAuthRepository
 import com.ryen.bondhub.presentation.screens.auth.AuthScreen
 import com.ryen.bondhub.presentation.screens.chat.ChatScreen
+import com.ryen.bondhub.presentation.screens.chatMessage.ChatMessageScreen
 import com.ryen.bondhub.presentation.screens.findFriends.FindFriendsScreen
 import com.ryen.bondhub.presentation.screens.friendRequest.FriendRequestsScreen
 import com.ryen.bondhub.presentation.screens.navBar.BottomNavItems
@@ -170,6 +173,28 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                                     },
                                     onSkip = { /* This won't be shown anyway */ },
                                     modifier = Modifier.padding(paddingValues)
+                                )
+                            }
+
+                            composable(
+                                route = "chat_message_screen/{chatId}?otherUserId={otherUserId}",
+                                arguments = listOf(
+                                    navArgument("chatId") { type = NavType.StringType },
+                                    navArgument("otherUserId") {
+                                        type = NavType.StringType
+                                        defaultValue = ""
+                                    }
+                                )
+                            ) { backStackEntry ->
+                                val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
+                                val otherUserId = backStackEntry.arguments?.getString("otherUserId") ?: ""
+
+                                ChatMessageScreen(
+                                    chatId = chatId,
+                                    otherUserId = otherUserId,
+                                    onNavigateBack = {
+                                        navController.popBackStack()
+                                    }
                                 )
                             }
                         }

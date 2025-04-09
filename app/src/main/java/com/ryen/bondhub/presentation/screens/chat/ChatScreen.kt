@@ -43,9 +43,7 @@ fun ChatScreen(
                 is UiEvent.Navigate -> {
                     onNavigateTo(event.route)
                 }
-                is UiEvent.Logout -> {
-
-                }
+                else -> {}
             }
         }
     }
@@ -60,7 +58,6 @@ fun ChatScreen(
                 is UserProfileState.Success -> {
                     ChatScreenContent(
                         displayName = profileState.userProfile.displayName,
-                        lastMessage = "",
                         profilePictureUrl = profileState.userProfile.profilePictureUrl ?: "",
                         searchQuery = "",
                         searchMode = false,
@@ -72,6 +69,12 @@ fun ChatScreen(
                         chatState = chatScreenState,
                         onSearchValueChange = { },
                         onSearchClick = { },
+                        onChatClick = { chatId, otherUserId ->
+                            viewModel.onEvent(ChatEvent.NavigateToChat(chatId, otherUserId))
+                        },
+                        onDeleteChat = { chatId ->
+                            viewModel.onEvent(ChatEvent.DeleteChat(chatId))
+                        },
                         onFriendsDismiss = { viewModel.onEvent(ChatEvent.CloseFriendsBottomSheet) },
                         onMessageFABClick = {
                             viewModel.onEvent(ChatEvent.ToggleFriendsBottomSheet)

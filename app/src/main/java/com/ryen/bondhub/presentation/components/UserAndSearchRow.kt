@@ -32,33 +32,34 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.ryen.bondhub.R
+import com.ryen.bondhub.domain.model.Chat
 import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
+import com.ryen.bondhub.util.formatTimestamp
 
 
 @Composable
 fun UserSearchAndMessageRow(
     context: Context,
-    profilePictureUrl: String,
-    displayName: String,
+    chat: Chat = Chat(),
+    profilePictureUrl: String = "",
+    displayName: String = "",
     messageMode: Boolean = false,
-    lastMessage: String,
-    lastMessageTime: String? = null,
-    unreadMessageCount: Int? = null,
     onProfileClick: () -> Unit = {},
-    onSearchClick: () -> Unit = {}
+    onSearchClick: () -> Unit = {},
+    onChatClick: (String, String) -> Unit = { _, _ -> }
 ) {
     Row (
         modifier = Modifier
             .fillMaxWidth()
-            //.padding(16.dp)
-            .height(48.dp),
+            .height(48.dp)
+            .clickable { onChatClick(chat.chatId, chat.connectionId) },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ){
         AsyncImage(
             model = ImageRequest.Builder(context)
-                .data(profilePictureUrl)
+                .data(if(!messageMode) profilePictureUrl else chat.profilePictureUrlThumbnail)
                 .crossfade(true)
                 .build(),
             contentDescription = "Profile Picture",
@@ -72,17 +73,17 @@ fun UserSearchAndMessageRow(
         )
         Column(verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.clickable { onProfileClick() }) {
             Text(
-                text = displayName,
+                text = if(!messageMode) displayName else chat.displayName,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
             )
             Text(
                 text = if(!messageMode) {
                     "Account info"
                 } else {
-                        if(lastMessage.length > 26) lastMessage.take(26) + "..." else lastMessage
+                        if(chat.lastMessage.length > 26) chat.lastMessage.take(26) + "..." else chat.lastMessage
                 },
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                color = Secondary.copy(alpha = 0.7f)
+                color = Secondary
             )
         }
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
@@ -101,14 +102,13 @@ fun UserSearchAndMessageRow(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.End
                 ) {
-                    lastMessageTime?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Secondary.copy(alpha = 0.7f)
-                        )
-                    }
-                    unreadMessageCount?.takeIf { it > 0 }?.let { count ->
+                    Text(
+                        text = formatTimestamp(chat.lastMessageTime),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Secondary.copy(alpha = 0.7f)
+                    )
+
+                    chat.unreadMessageCount.takeIf { it > 0 }?.let { count ->
                         Box(
                             modifier = Modifier
                                 .size(20.dp)
@@ -117,7 +117,7 @@ fun UserSearchAndMessageRow(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = count.toString(),
+                                text = if(count > 99) "99+" else count.toString(),
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal),
                                 color = Color.White
                             )
@@ -138,9 +138,14 @@ private fun MessageRowPrev() {
             profilePictureUrl = "",
             displayName = "Sarfraz Ryen",
             messageMode = true,
-            lastMessage = "Hello, how are you? I'm under the water",
-            lastMessageTime = "10:00 AM",
-            unreadMessageCount = 5
+            chat = Chat(
+                chatId = "1",
+                connectionId = "1",
+                participants = listOf("user1", "user2"),
+                profilePictureUrlThumbnail = "",
+                displayName = "Sarfraz Ryen",
+                lastMessage = "Hello, how are you? I'm under the water"
+            )
         )
     }
 }
@@ -154,7 +159,7 @@ private fun UserAndSearchRowPrev() {
             profilePictureUrl = "",
             displayName = "Sarfraz Ryen",
             messageMode = false,
-            lastMessage = ""
+            chat = Chat()
         )
     }
 }
