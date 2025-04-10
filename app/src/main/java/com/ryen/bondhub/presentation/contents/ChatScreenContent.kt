@@ -41,7 +41,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ryen.bondhub.R
-import com.ryen.bondhub.domain.model.Chat
 import com.ryen.bondhub.domain.model.ChatConnection
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.presentation.components.FriendsBottomSheet
@@ -70,7 +69,7 @@ fun ChatScreenContent(
     onMessageFABClick: () -> Unit,
     onFriendClick: (ChatConnection) -> Unit,
     onChatClick: (String, String) -> Unit = { _, _ -> },
-    onDeleteChat: (String) -> Unit = {},
+    //onDeleteChat: (String) -> Unit = {},
     paddingValues: PaddingValues,
 ) {
     var isSearchActive by remember { mutableStateOf(searchMode) }
@@ -395,6 +394,6 @@ private fun ChatScreenContentPrev() {
         onSearchValueChange = {},
         onSearchClick = {},
         onChatClick = { _, _ -> },
-        onDeleteChat = {}
+        //onDeleteChat = {}
     )
 }

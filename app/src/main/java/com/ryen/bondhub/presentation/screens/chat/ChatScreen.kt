@@ -72,9 +72,9 @@ fun ChatScreen(
                         onChatClick = { chatId, otherUserId ->
                             viewModel.onEvent(ChatEvent.NavigateToChat(chatId, otherUserId))
                         },
-                        onDeleteChat = { chatId ->
+                        /*onDeleteChat = { chatId ->
                             viewModel.onEvent(ChatEvent.DeleteChat(chatId))
-                        },
+                        },*/
                         onFriendsDismiss = { viewModel.onEvent(ChatEvent.CloseFriendsBottomSheet) },
                         onMessageFABClick = {
                             viewModel.onEvent(ChatEvent.ToggleFriendsBottomSheet)

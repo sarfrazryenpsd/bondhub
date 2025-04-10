@@ -15,7 +15,7 @@ class ChatRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
     private val chatsCollection = firestore.collection("chats")
-    private val connectionsCollection = firestore.collection("connections")
+    private val connectionsCollection = firestore.collection("chat_connections")
 
     suspend fun createChat(chat: Map<String, Any?>): Result<DocumentSnapshot> = withContext(Dispatchers.IO) {
         try {

@@ -58,6 +58,8 @@ class ChatViewModel @Inject constructor(
     val events = _events.asSharedFlow()
 
     init {
+        _chatScreenState.value = ChatScreenState.Success(showFriendsBottomSheet = false)
+
         loadChats()
         loadCurrentUserProfile()
     }
