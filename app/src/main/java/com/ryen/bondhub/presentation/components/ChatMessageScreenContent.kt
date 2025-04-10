@@ -307,6 +307,40 @@ fun MessageInputBar(
 
 @Preview
 @Composable
+private fun MessageItemPrev1() {
+    MessageItem(
+        message = ChatMessage(
+            chatId = "123",
+            senderId = "456",
+            receiverId = "789",
+            content = "Hello, world! This is a preview message and I'm not responsible for anything. Bye!",
+            timestamp = System.currentTimeMillis(),
+            messageType = MessageType.TEXT,
+            status = MessageStatus.SENT
+        ),
+        isFromCurrentUser = true
+    )
+}
+
+@Preview
+@Composable
+private fun MessageItemPrev2() {
+    MessageItem(
+        message = ChatMessage(
+            chatId = "123",
+            senderId = "456",
+            receiverId = "789",
+            content = "Hello, world! This is a preview message and I'm not responsible for anything. Bye!",
+            timestamp = System.currentTimeMillis(),
+            messageType = MessageType.TEXT,
+            status = MessageStatus.SENT
+        ),
+        isFromCurrentUser = false
+    )
+}
+
+@Preview
+@Composable
 private fun MessageInputBarPrev() {
     MessageInputBar(
         text = "",
@@ -314,5 +348,37 @@ private fun MessageInputBarPrev() {
         onSendClick = {},
         onAttachClick = {},
         canSend = false
+    )
+}
+
+@Preview
+@Composable
+private fun MessageScreenContentPrev() {
+    ChatMessageScreenContent(
+        messages = listOf(
+            ChatMessage(
+                chatId = "123",
+                senderId = "456",
+                receiverId = "789",
+                content = "Hello, world! This is a preview message and I'm not responsible for anything. Bye!",
+                timestamp = System.currentTimeMillis(),
+                messageType = MessageType.TEXT,
+                status = MessageStatus.SENT
+            ),
+            ChatMessage(
+                chatId = "123",
+                senderId = "456",
+                receiverId = "789",
+                content = "Hello, world! This is a preview message and I'm not responsible for anything. Bye!",
+                timestamp = System.currentTimeMillis(),
+                messageType = MessageType.TEXT,
+                status = MessageStatus.SENT
+            ),
+        ),
+        isLoading = false,
+        canSendMessage = true,
+        onSendMessage = {},
+        onAttachImage = {},
+        paddingValues = PaddingValues(0.dp)
     )
 }

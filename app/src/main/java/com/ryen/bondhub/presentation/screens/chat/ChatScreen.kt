@@ -25,6 +25,7 @@ fun ChatScreen(
     onNavigateTo: (String) -> Unit,
 ) {
     val chatScreenState by viewModel.chatScreenState.collectAsState()
+    val chatsState by viewModel.chatsState.collectAsState()
     val userProfileState by viewModel.userProfileState.collectAsState()
     val friendsState by viewModel.friendsState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -66,7 +67,8 @@ fun ChatScreen(
                             viewModel.onEvent(ChatEvent.NavigateToUserProfile(Screen.UserProfileEditScreen.route))
                         },
                         friendsState = friendsState,
-                        chatState = chatScreenState,
+                        chatScreenState = chatScreenState,
+                        chatsState = chatsState,
                         onSearchValueChange = { },
                         onSearchClick = { },
                         onChatClick = { chatId, otherUserId ->

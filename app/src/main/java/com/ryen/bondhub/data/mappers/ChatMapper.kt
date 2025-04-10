@@ -4,6 +4,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.ryen.bondhub.data.local.entity.ChatEntity
 import com.ryen.bondhub.domain.model.Chat
 
+@Suppress("UNCHECKED_CAST")
 class ChatMapper {
     fun mapEntityToDomain(entity: ChatEntity): Chat {
         return Chat(
@@ -32,7 +33,6 @@ class ChatMapper {
     }
 
     fun mapDocumentToDomain(document: DocumentSnapshot): Chat {
-        @Suppress("UNCHECKED_CAST")
         return Chat(
             chatId = document.id,
             connectionId = document.getString("connectionId") ?: "",
@@ -55,6 +55,19 @@ class ChatMapper {
             "lastMessage" to domain.lastMessage,
             "lastMessageTime" to domain.lastMessageTime,
             "unreadMessageCount" to domain.unreadMessageCount
+        )
+    }
+
+    fun mapRemoteToDomain(id: String, chatData: Map<String, Any>): Chat {
+        return Chat(
+            chatId = id,
+            connectionId = chatData["connectionId"] as? String ?: "",
+            participants = chatData["participants"] as? List<String> ?: emptyList(),
+            profilePictureUrlThumbnail = chatData["profilePictureUrlThumbnail"] as? String ?: "",
+            displayName = chatData["displayName"] as? String ?: "",
+            lastMessage = chatData["lastMessage"] as? String ?: "",
+            lastMessageTime = chatData["lastMessageTime"] as? Long ?: 0L,
+            unreadMessageCount = (chatData["unreadMessageCount"] as? Number)?.toInt() ?: 0
         )
     }
 }

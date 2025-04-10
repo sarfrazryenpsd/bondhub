@@ -47,6 +47,7 @@ import com.ryen.bondhub.presentation.components.FriendsBottomSheet
 import com.ryen.bondhub.presentation.components.SearchField
 import com.ryen.bondhub.presentation.components.UserSearchAndMessageRow
 import com.ryen.bondhub.presentation.state.ChatScreenState
+import com.ryen.bondhub.presentation.state.ChatsState
 import com.ryen.bondhub.presentation.state.FriendRequest
 import com.ryen.bondhub.presentation.state.FriendsState
 import com.ryen.bondhub.presentation.theme.Primary
@@ -62,7 +63,8 @@ fun ChatScreenContent(
     context: Context,
     onProfileClick: () -> Unit = {},
     friendsState: FriendsState,
-    chatState: ChatScreenState,
+    chatScreenState: ChatScreenState,
+    chatsState: ChatsState,
     onSearchValueChange: (String) -> Unit,
     onSearchClick: () -> Unit,
     onFriendsDismiss: () -> Unit,
@@ -116,7 +118,7 @@ fun ChatScreenContent(
             modifier = Modifier.padding(top = 16.dp)
         )
 
-        when(chatState){
+        when(chatScreenState){
             is ChatScreenState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize()){
                     CircularProgressIndicator(
@@ -130,47 +132,84 @@ fun ChatScreenContent(
                 }
             }
             is ChatScreenState.Success -> {
-                val successState = chatState as ChatScreenState.Success
-                if(successState.chats.isEmpty()){
-                    Box(
-                        modifier = Modifier
-                            .padding(bottom = 120.dp)
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ){
-                        Image(
-                            painter = painterResource(id = R.drawable.no_messages),
-                            contentDescription = "No Messages",
-                            modifier = Modifier.size(300.dp)
-                        )
-                        Text(
-                            text = "No messages yet",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Secondary.copy(alpha = 0.7f),
-                            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 160.dp)
-                        )
-
-                    }
-                } else{
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-
-                    ) {
-                        items(chatState.chats){ chat ->
-                            UserSearchAndMessageRow(
-                                context = context,
-                                messageMode = true,
-                                chat = chat,
-                                onChatClick = onChatClick
+                when(chatsState){
+                    is ChatsState.Loading -> {
+                        Box(modifier = Modifier.fillMaxSize()){
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .width(46.dp)
+                                    .align(Alignment.Center),
+                                color = Primary,
+                                trackColor = Primary.copy(alpha = .4f),
+                                strokeWidth = 5.dp,
                             )
                         }
+                    }
+                    is ChatsState.Error -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = "Error",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = chatsState.message,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                    is ChatsState.Empty -> {
+                        Box(
+                            modifier = Modifier
+                                .padding(bottom = 120.dp)
+                                .fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ){
+                            Image(
+                                painter = painterResource(id = R.drawable.no_messages),
+                                contentDescription = "No Messages",
+                                modifier = Modifier.size(300.dp)
+                            )
+                            Text(
+                                text = "No messages yet",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Secondary.copy(alpha = 0.7f),
+                                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 160.dp)
+                            )
 
-                        item {
-                            Spacer(modifier = Modifier.height(48.dp))
+                        }
+                    }
+                    is ChatsState.Success -> {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+
+                            ) {
+                            items(chatsState.chats){ chat ->
+                                UserSearchAndMessageRow(
+                                    context = context,
+                                    messageMode = true,
+                                    chat = chat,
+                                    onChatClick = onChatClick
+                                )
+                            }
+
+                            item {
+                                Spacer(modifier = Modifier.height(48.dp))
+                            }
                         }
                     }
                 }
-                if(successState.showFriendsBottomSheet){
+                if(chatScreenState.showFriendsBottomSheet){
                     FriendsBottomSheet(
                         friendsState = friendsState,
                         onDismiss = onFriendsDismiss,
@@ -179,7 +218,6 @@ fun ChatScreenContent(
                 }
             }
             is ChatScreenState.Error -> {
-                val errorState = chatState as ChatScreenState.Error
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -195,7 +233,7 @@ fun ChatScreenContent(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = errorState.message,
+                        text = chatScreenState.message,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center
@@ -387,11 +425,11 @@ private fun ChatScreenContentPrev() {
         onFriendsDismiss = {},
         onFriendClick = {},
         onMessageFABClick = {},
-        chatState = ChatScreenState.Success(
-            chats = emptyList(),
+        chatScreenState = ChatScreenState.Success(
             showFriendsBottomSheet = true,
         ),
         onSearchValueChange = {},
+        chatsState = ChatsState.Empty,
         onSearchClick = {},
         onChatClick = { _, _ -> },
         //onDeleteChat = {}

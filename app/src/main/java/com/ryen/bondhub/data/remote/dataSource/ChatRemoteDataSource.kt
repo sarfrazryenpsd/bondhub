@@ -28,6 +28,43 @@ class ChatRemoteDataSource @Inject constructor(
         }
     }
 
+    suspend fun getUserChat(userId1: String, userId2: String): Result<DocumentSnapshot?> {
+        return try {
+            // Create a sorted list of userIds to ensure consistent queries
+            val participants = listOf(userId1, userId2).sorted()
+
+            val querySnapshot = firestore.collection("chats")
+                .whereArrayContainsAny("participants", participants)
+                .get()
+                .await()
+
+            // Now filter the results to find the one that contains exactly these two participants
+            val exactMatch = querySnapshot.documents.find { doc ->
+                val docParticipants = doc.get("participants") as? List<*>
+                docParticipants?.size == 2 &&
+                        docParticipants.contains(userId1) &&
+                        docParticipants.contains(userId2)
+            }
+
+            Result.success(exactMatch)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getChatById(chatId: String): Result<DocumentSnapshot?> {
+        return try {
+            val docSnapshot = firestore.collection("chats")
+                .document(chatId)
+                .get()
+                .await()
+
+            Result.success(if (docSnapshot.exists()) docSnapshot else null)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     fun getUserChats(userId: String): Flow<List<DocumentSnapshot>> = callbackFlow {
         val subscription = chatsCollection
             .whereArrayContains("participants", userId)

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 
@@ -31,6 +32,21 @@ class ChatRepositoryImpl @Inject constructor(
 
     override suspend fun createChat(userId1: String, userId2: String): Result<Chat> {
         return try {
+            // First check if a chat already exists between these users
+            val existingChatResult = remoteDataSource.getUserChat(userId1, userId2)
+
+            if (existingChatResult.isSuccess && existingChatResult.getOrNull() != null) {
+                // Chat exists, map it to domain model and return
+                val chatDoc = existingChatResult.getOrNull()!!
+                val chatData = chatDoc.data ?: return Result.failure(Exception("Invalid chat data"))
+                val chat = mapper.mapRemoteToDomain(chatDoc.id, chatData)
+
+                // Make sure it's in the local database
+                localDataSource.insertChat(mapper.mapDomainToEntity(chat))
+
+                return Result.success(chat)
+            }
+
             // First check if connection exists
             val connectionResult = remoteDataSource.getChatConnection(userId1, userId2)
 
@@ -64,7 +80,7 @@ class ChatRepositoryImpl @Inject constructor(
             val chat = Chat(
                 chatId = chatId,
                 connectionId = connectionId,
-                participants = listOf(userId1, userId2),
+                participants = listOf(userId1, userId2).sorted(),  // Sort for consistency
                 profilePictureUrlThumbnail = userProfile.profilePictureThumbnailUrl ?: "",
                 displayName = userProfile.displayName,
                 lastMessage = "",
@@ -72,15 +88,7 @@ class ChatRepositoryImpl @Inject constructor(
                 unreadMessageCount = 0
             )
 
-            // Save to remote
-            val chatMap = mapper.mapDomainToMap(chat)
-            val remoteResult = remoteDataSource.createChat(chatMap)
-
-            if (remoteResult.isFailure) {
-                return Result.failure(remoteResult.exceptionOrNull() ?: Exception("Failed to create chat"))
-            }
-
-            // Save to local
+            // Save to local database only (will save to remote when first message is sent)
             localDataSource.insertChat(mapper.mapDomainToEntity(chat))
 
             Result.success(chat)
@@ -89,8 +97,40 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getUserChats(userId: String): Flow<List<Chat>> {
+    override suspend fun checkChatExistsRemotely(chatId: String): Result<Boolean> {
         return try {
+            val result = remoteDataSource.getChatById(chatId)
+            Result.success(result.isSuccess && result.getOrNull() != null)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun createChatInFirestore(chatId: String, userId1: String, userId2: String): Result<Unit> {
+        return try {
+            // Get the chat from local database
+            val chatEntity = localDataSource.getChatById(chatId)
+                ?: return Result.failure(Exception("Chat not found in local database"))
+
+            // Map to domain model
+            val chat = mapper.mapEntityToDomain(chatEntity)
+
+            // Save to remote
+            val chatMap = mapper.mapDomainToMap(chat)
+            val result = remoteDataSource.createChat(chatMap)
+
+            // Transform the DocumentSnapshot result to Unit result
+            result.fold(
+                onSuccess = { Result.success(Unit) },
+                onFailure = { Result.failure(it) }
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUserChats(userId: String): Flow<List<Chat>> = withContext(Dispatchers.IO){
+        try {
             val remoteChats = remoteDataSource.getUserChats(userId)
                 .map { documents ->
                     documents.map { mapper.mapDocumentToDomain(it) }
