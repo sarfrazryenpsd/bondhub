@@ -42,7 +42,7 @@ fun ChatMessageTopBar(
             ) {
                 // Profile Image or Placeholder
                 AsyncImage(
-                    model = userProfile?.profilePictureUrl ?: R.drawable.userplaceholder,
+                    model = userProfile?.profilePictureThumbnailUrl ?: R.drawable.userplaceholder,
                     contentDescription = "Profile Picture",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

@@ -7,16 +7,19 @@ import androidx.lifecycle.viewModelScope
 import com.ryen.bondhub.domain.model.ChatMessage
 import com.ryen.bondhub.domain.model.MessageStatus
 import com.ryen.bondhub.domain.model.MessageType
+import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.useCases.chat.CheckChatExistRemotelyUseCase
 import com.ryen.bondhub.domain.useCases.chat.CreateChatInFirestore
 import com.ryen.bondhub.domain.useCases.chatMessage.GetChatMessagesUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.MarkMessagesAsReadUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.SendMessageUseCase
+import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
 import com.ryen.bondhub.presentation.event.ChatMessageEvent
 import com.ryen.bondhub.presentation.event.ChatMessageUiEvent
 import com.ryen.bondhub.presentation.state.ChatMessageScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,11 +36,15 @@ class ChatMessageViewModel @Inject constructor(
     private val markMessagesAsReadUseCase: MarkMessagesAsReadUseCase,
     private val authRepository: AuthRepository,
     private val checkChatExistRemotelyUseCase: CheckChatExistRemotelyUseCase,
+    private val getUserProfileUseCase: GetUserProfileUseCase,
     private val createChatInFirestore: CreateChatInFirestore,
 ) : ViewModel() {
 
     private val _chatMessageScreenState = MutableStateFlow<ChatMessageScreenState>(ChatMessageScreenState.Initial)
     val chatMessageScreenState: StateFlow<ChatMessageScreenState> = _chatMessageScreenState.asStateFlow()
+
+    private val _friendProfile = MutableStateFlow<UserProfile>(UserProfile())
+    val friendProfile: StateFlow<UserProfile> = _friendProfile.asStateFlow()
 
     private val _events = MutableSharedFlow<ChatMessageUiEvent>()
     val events = _events.asSharedFlow()
@@ -50,6 +57,19 @@ class ChatMessageViewModel @Inject constructor(
     fun initialize(chatId: String, otherUserId: String) {
         this.currentChatId = chatId
         this.otherUserId = otherUserId
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val newProfile = getUserProfileUseCase(otherUserId).fold(
+                onSuccess = {
+                    it
+                },
+                onFailure = {
+                    Log.e("ChatMessageViewModel", "Failed to get user profile", it)
+                    null
+                }
+            )
+            _friendProfile.value = newProfile ?: UserProfile()
+        }
 
         if (_chatMessageScreenState.value is ChatMessageScreenState.Initial) {
             // Check if chat exists remotely
@@ -236,4 +256,6 @@ class ChatMessageViewModel @Inject constructor(
         super.onCleared()
         messageJob?.cancel()
     }
+
+
 }

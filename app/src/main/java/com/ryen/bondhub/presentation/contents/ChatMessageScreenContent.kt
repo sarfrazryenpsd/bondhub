@@ -1,4 +1,4 @@
-package com.ryen.bondhub.presentation.components
+package com.ryen.bondhub.presentation.contents
 
 import android.net.Uri
 import android.widget.Toast
@@ -351,6 +351,7 @@ private fun MessageInputBarPrev() {
     )
 }
 
+/*
 @Preview
 @Composable
 private fun MessageScreenContentPrev() {
@@ -381,4 +382,4 @@ private fun MessageScreenContentPrev() {
         onAttachImage = {},
         paddingValues = PaddingValues(0.dp)
     )
-}
+}*/

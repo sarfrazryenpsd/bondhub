@@ -118,6 +118,8 @@ fun ChatScreenContent(
             modifier = Modifier.padding(top = 16.dp)
         )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
         when(chatScreenState){
             is ChatScreenState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize()){
@@ -191,7 +193,7 @@ fun ChatScreenContent(
                     }
                     is ChatsState.Success -> {
                         LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
 
                             ) {
                             items(chatsState.chats){ chat ->

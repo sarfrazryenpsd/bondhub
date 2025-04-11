@@ -9,7 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ryen.bondhub.presentation.components.ChatMessageScreenContent
+import com.ryen.bondhub.presentation.contents.ChatMessageScreenContent
 import com.ryen.bondhub.presentation.components.ChatMessageTopBar
 import com.ryen.bondhub.presentation.components.CustomSnackbar
 import com.ryen.bondhub.presentation.components.SnackBarState
@@ -28,6 +28,7 @@ fun ChatMessageScreen(
     onNavigateBack: () -> Unit = {},
 ) {
     val chatMessageState by viewModel.chatMessageScreenState.collectAsState()
+    val friendProfile by viewModel.friendProfile.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarState = remember { mutableStateOf(SnackBarState.SUCCESS) }
 
@@ -67,8 +68,8 @@ fun ChatMessageScreen(
     Scaffold(
         topBar = {
             ChatMessageTopBar(
-                onBackClick = { viewModel.onEvent(ChatMessageEvent.NavigateBack) }
-                // We'll add user profile data later
+                onBackClick = { viewModel.onEvent(ChatMessageEvent.NavigateBack) },
+                userProfile = friendProfile
             )
         },
         snackbarHost = { CustomSnackbar(snackbarHostState, snackBarState = snackbarState.value) },

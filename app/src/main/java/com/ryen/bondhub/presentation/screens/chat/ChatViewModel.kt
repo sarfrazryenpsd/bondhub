@@ -175,7 +175,10 @@ class ChatViewModel @Inject constructor(
                 getLastChatMessageUseCase(chat.chatId).collect { result ->
                     result.onSuccess { lastMessage ->
                         updateChat(enhancedChatsMap, chat.chatId) { currentChat ->
-                            currentChat.copy(lastMessage = lastMessage.content)
+                            currentChat.copy(
+                                lastMessage = lastMessage.content,
+                                lastMessageTime = lastMessage.timestamp
+                            )
                         }
                     }.onFailure { error ->
                         Log.e("ChatViewModel", "Error getting last message for ${chat.chatId}", error)
