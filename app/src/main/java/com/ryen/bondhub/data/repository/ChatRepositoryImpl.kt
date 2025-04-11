@@ -1,10 +1,13 @@
 package com.ryen.bondhub.data.repository
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.ryen.bondhub.data.local.dao.ChatDao
 import com.ryen.bondhub.data.mappers.ChatMapper
+import com.ryen.bondhub.data.mappers.ChatMessageMapper
 import com.ryen.bondhub.data.remote.dataSource.ChatRemoteDataSource
 import com.ryen.bondhub.domain.model.Chat
+import com.ryen.bondhub.domain.model.ChatMessage
 import com.ryen.bondhub.domain.model.ConnectionStatus
 import com.ryen.bondhub.domain.repository.ChatRepository
 import com.ryen.bondhub.domain.repository.UserProfileRepository
@@ -12,11 +15,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
@@ -27,6 +28,7 @@ class ChatRepositoryImpl @Inject constructor(
     private val localDataSource: ChatDao,
     private val userProfileRepository: UserProfileRepository,
     private val mapper: ChatMapper,
+    private val messageMapper: ChatMessageMapper,
     private val auth: FirebaseAuth
 ) : ChatRepository {
 
@@ -129,35 +131,59 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getUserChats(userId: String): Flow<List<Chat>> = withContext(Dispatchers.IO){
-        try {
-            val remoteChats = remoteDataSource.getUserChats(userId)
-                .map { documents ->
-                    documents.map { mapper.mapDocumentToDomain(it) }
-                }
-                .onEach { chats ->
-                    // Update local cache
-                    localDataSource.insertChats(chats.map { mapper.mapDomainToEntity(it) })
-                }
-                .flowOn(Dispatchers.IO)
-                .catch { e ->
-                    // On error, emit empty list and continue with local data
-                    emit(emptyList())
-                }
-
-            // Combine remote and local data, preferring remote when available
-            remoteChats.flatMapLatest { remoteResult ->
-                if (remoteResult.isEmpty()) {
-                    // If remote is empty or failed, use local data
-                    localDataSource.getUserChats(userId)
-                        .map { entities -> entities.map { mapper.mapEntityToDomain(it) } }
-                } else {
-                    // Otherwise use remote data
-                    flow { emit(remoteResult) }
+    override suspend fun getLastChatMessage(chatId: String): Flow<Result<ChatMessage>> {
+        return remoteDataSource.getLastChatMessage(chatId)
+            .map { result ->
+                result.map { messageEntity ->
+                    messageMapper.mapEntityToDomain(messageEntity)
                 }
             }
+    }
+
+    override suspend fun getUserChats(userId: String): Flow<List<Chat>> = flow {
+        try {
+            // First emit from local database to show something immediately
+            val localChats = localDataSource.getUserChats(userId)
+                .first() // Get first emission from the flow
+                .map { mapper.mapEntityToDomain(it) }
+
+            if (localChats.isNotEmpty()) {
+                emit(localChats) // Emit local data first if available
+            }
+
+            // Then collect from remote source
+            remoteDataSource.getUserChats(userId)
+                .catch { exception ->
+                    Log.e("ChatRepository", "Error fetching remote chats", exception)
+                    // Don't emit anything here, just log the error
+                }
+                .collect { documents ->
+                    val remoteChats = documents.map { mapper.mapDocumentToDomain(it) }
+
+                    // Only update and emit if we got actual data
+                    if (remoteChats.isNotEmpty()) {
+                        // Update local cache
+                        withContext(Dispatchers.IO) {
+                            localDataSource.insertChats(remoteChats.map { mapper.mapDomainToEntity(it) })
+                        }
+
+                        emit(remoteChats) // Emit remote data
+                    }
+                }
         } catch (e: Exception) {
-            flow { emit(emptyList()) }
+            Log.e("ChatRepository", "Error in getUserChats", e)
+
+            // On outer exception, try to get data from local source
+            try {
+                val fallbackLocalChats = localDataSource.getUserChats(userId)
+                    .first()
+                    .map { mapper.mapEntityToDomain(it) }
+
+                emit(fallbackLocalChats) // Emit local data as fallback
+            } catch (fallbackException: Exception) {
+                Log.e("ChatRepository", "Failed to get local chats as fallback", fallbackException)
+                emit(emptyList()) // As a last resort, emit empty list
+            }
         }
     }
 

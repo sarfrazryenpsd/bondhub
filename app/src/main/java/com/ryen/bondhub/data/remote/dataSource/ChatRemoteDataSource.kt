@@ -3,6 +3,7 @@ package com.ryen.bondhub.data.remote.dataSource
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.ryen.bondhub.data.local.entity.ChatMessageEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -80,6 +81,38 @@ class ChatRemoteDataSource @Inject constructor(
             }
 
         awaitClose { subscription.remove() }
+    }
+
+    suspend fun getLastChatMessage(chatId: String): Flow<Result<ChatMessageEntity>> = callbackFlow {
+        val listenerRegistration = chatsCollection
+            .document(chatId)
+            .collection("messages")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .limit(1)
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    trySend(Result.failure(exception))
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null && !snapshot.isEmpty) {
+                    val document = snapshot.documents[0]
+                    val messageEntity = document.toObject(ChatMessageEntity::class.java)
+                        ?.copy(messageId = document.id)
+
+                    if (messageEntity != null) {
+                        trySend(Result.success(messageEntity))
+                    } else {
+                        trySend(Result.failure(Exception("Failed to parse message document")))
+                    }
+                } else {
+                    trySend(Result.failure(Exception("No messages found")))
+                }
+            }
+
+        awaitClose {
+            listenerRegistration.remove()
+        }
     }
 
     suspend fun deleteChat(chatId: String): Result<Unit> = withContext(Dispatchers.IO) {

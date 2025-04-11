@@ -3,11 +3,13 @@ package com.ryen.bondhub.presentation.screens.chat
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryen.bondhub.domain.model.Chat
 import com.ryen.bondhub.domain.model.ChatConnection
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.useCases.chat.CreateChatUseCase
 import com.ryen.bondhub.domain.useCases.chat.DeleteChatUseCase
+import com.ryen.bondhub.domain.useCases.chat.GetLastChatMessageUseCase
 import com.ryen.bondhub.domain.useCases.chat.GetUserChatsUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.GetAcceptedConnectionsUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.GetUnreadMessagesCountUseCase
@@ -19,6 +21,10 @@ import com.ryen.bondhub.presentation.state.ChatsState
 import com.ryen.bondhub.presentation.state.FriendRequest
 import com.ryen.bondhub.presentation.state.FriendsState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +35,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,7 +46,8 @@ class ChatViewModel @Inject constructor(
     private val getUserChatsUseCase: GetUserChatsUseCase,
     private val createChatUseCase: CreateChatUseCase,
     private val deleteChatsUseCase: DeleteChatUseCase,
-    private val getUnreadMessagesCountUseCase: GetUnreadMessagesCountUseCase
+    private val getUnreadMessagesCountUseCase: GetUnreadMessagesCountUseCase,
+    private val getLastChatMessageUseCase: GetLastChatMessageUseCase
 ) : ViewModel() {
 
     private val _chatScreenState = MutableStateFlow<ChatScreenState>(ChatScreenState.Initial)
@@ -119,28 +127,19 @@ class ChatViewModel @Inject constructor(
             _chatsState.value = ChatsState.Loading
 
             try {
+                val currentUser = authRepository.getCurrentUser() ?: run {
+                    _chatsState.value = ChatsState.Error("User not authenticated")
+                    return@launch
+                }
+
                 getUserChatsUseCase().collect { chats ->
                     if (chats.isEmpty()) {
                         _chatsState.value = ChatsState.Empty
                     } else {
-                        // For each chat, get the unread message count
-                        val enhancedChats = chats.map { chat ->
-                            val currentUser = authRepository.getCurrentUser()
-                            if (currentUser != null) {
-                                // Set up a flow that will update the chat with the unread count
-                                getUnreadMessagesCountUseCase(chat.chatId, currentUser.uid)
-                                    .map { count ->
-                                        chat.copy(unreadMessageCount = count)
-                                    }
-                            } else {
-                                flowOf(chat)
-                            }
-                        }
+                        _chatsState.value = ChatsState.Success(chats)
 
-                        // Combine all the flows
-                        enhancedChats.combine().collect { updatedChats ->
-                            _chatsState.value = ChatsState.Success(updatedChats)
-                        }
+                        // Start observing unread counts and last messages for each chat
+                        observeChatDetails(chats, currentUser.uid)
                     }
                 }
             } catch (e: Exception) {
@@ -148,6 +147,70 @@ class ChatViewModel @Inject constructor(
                 _events.emit(UiEvent.ShowSnackbarError(e.message ?: "Failed to load chats"))
             }
         }
+    }
+
+    private fun observeChatDetails(chats: List<Chat>, userId: String) {
+        // Cancel previous observation jobs if any
+        chatDetailsJob?.cancel()
+        chatDetailsJob = SupervisorJob()
+
+        val chatDetailsScope = CoroutineScope(Dispatchers.Default + chatDetailsJob!!)
+
+        // Track the latest version of each chat
+        val enhancedChatsMap = ConcurrentHashMap<String, Chat>()
+        chats.forEach { enhancedChatsMap[it.chatId] = it }
+
+        chats.forEach { chat ->
+            // Observe unread message counts
+            chatDetailsScope.launch {
+                getUnreadMessagesCountUseCase(chat.chatId, userId).collect { count ->
+                    updateChat(enhancedChatsMap, chat.chatId) { currentChat ->
+                        currentChat.copy(unreadMessageCount = count)
+                    }
+                }
+            }
+
+            // Observe last messages
+            chatDetailsScope.launch {
+                getLastChatMessageUseCase(chat.chatId).collect { result ->
+                    result.onSuccess { lastMessage ->
+                        updateChat(enhancedChatsMap, chat.chatId) { currentChat ->
+                            currentChat.copy(lastMessage = lastMessage.content)
+                        }
+                    }.onFailure { error ->
+                        Log.e("ChatViewModel", "Error getting last message for ${chat.chatId}", error)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun updateChat(
+        chatsMap: ConcurrentHashMap<String, Chat>,
+        chatId: String,
+        update: (Chat) -> Chat
+    ) {
+        viewModelScope.launch {
+            val currentChat = chatsMap[chatId] ?: return@launch
+            val updatedChat = update(currentChat)
+            chatsMap[chatId] = updatedChat
+
+            // Update the UI with the complete list of chats
+            val currentState = _chatsState.value
+            if (currentState is ChatsState.Success) {
+                val updatedChats = chatsMap.values.toList()
+                _chatsState.value = ChatsState.Success(updatedChats)
+            }
+        }
+    }
+
+    // Add a field to store and manage our chat details observation jobs
+    private var chatDetailsJob: Job? = null
+
+    // Make sure to clean up when the ViewModel is cleared
+    override fun onCleared() {
+        super.onCleared()
+        chatDetailsJob?.cancel()
     }
 
     private fun toggleFriendsBottomSheet() {

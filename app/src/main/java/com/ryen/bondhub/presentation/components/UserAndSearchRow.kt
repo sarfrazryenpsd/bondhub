@@ -80,7 +80,11 @@ fun UserSearchAndMessageRow(
                 text = if(!messageMode) {
                     "Account info"
                 } else {
-                        if(chat.lastMessage.length > 26) chat.lastMessage.take(26) + "..." else chat.lastMessage
+                    if(chat.lastMessage != null){
+                        if (chat.lastMessage.length > 26) chat.lastMessage.take(26) + "..." else chat.lastMessage
+                    } else{
+                        "No messages yet"
+                    }
                 },
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 color = Secondary

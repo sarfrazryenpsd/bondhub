@@ -26,7 +26,7 @@ class ChatMapper {
             participants = domain.participants,
             profilePictureUrlThumbnail = domain.profilePictureUrlThumbnail,
             displayName = domain.displayName,
-            lastMessage = domain.lastMessage,
+            lastMessage = domain.lastMessage?: "",
             lastMessageTime = domain.lastMessageTime,
             unreadMessageCount = domain.unreadMessageCount
         )
