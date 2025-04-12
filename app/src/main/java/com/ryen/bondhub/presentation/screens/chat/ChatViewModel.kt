@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -78,7 +77,7 @@ class ChatViewModel @Inject constructor(
             is ChatEvent.CloseFriendsBottomSheet -> closeFriendsBottomSheet()
             is ChatEvent.StartChatWithFriend -> startChatWithFriend(event.connection)
             is ChatEvent.NavigateToUserProfile -> navigateToRoute(event.route)
-            is ChatEvent.NavigateToChat -> navigateToChat(event.chatId, event.otherUserId)
+            is ChatEvent.NavigateToChat -> navigateToChat(event.chatId, event.friendConnectionId, event.friendUserId)
             is ChatEvent.DeleteChat -> deleteChat(event.chatId)
         }
     }
@@ -286,7 +285,7 @@ class ChatViewModel @Inject constructor(
                 createChatUseCase(currentUser.uid, connection.user2Id).fold(
                     onSuccess = { chat ->
                         // Navigate to the chat screen with the chat ID
-                        navigateToChat(chat.chatId, connection.user2Id)
+                        navigateToChat(chat.chatId,connection.connectionId, connection.user2Id)
                     },
                     onFailure = { exception ->
                         _events.emit(UiEvent.ShowSnackbarError(exception.message ?: "Failed to create chat"))
@@ -331,9 +330,9 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    private fun navigateToChat(chatId: String, otherUserId: String) {
+    private fun navigateToChat(chatId: String, friendConnectionId: String, friendUserId: String) {
         viewModelScope.launch {
-            _events.emit(UiEvent.Navigate("chat_message_screen/$chatId?otherUserId=$otherUserId"))
+            _events.emit(UiEvent.Navigate("chat_message_screen/$chatId?friendConnectionId=$friendConnectionId?friendUserId=$friendUserId"))
         }
     }
 

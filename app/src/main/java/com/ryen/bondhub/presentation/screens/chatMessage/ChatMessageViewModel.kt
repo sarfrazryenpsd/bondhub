@@ -43,7 +43,7 @@ class ChatMessageViewModel @Inject constructor(
     private val _chatMessageScreenState = MutableStateFlow<ChatMessageScreenState>(ChatMessageScreenState.Initial)
     val chatMessageScreenState: StateFlow<ChatMessageScreenState> = _chatMessageScreenState.asStateFlow()
 
-    private val _friendProfile = MutableStateFlow<UserProfile>(UserProfile())
+    private val _friendProfile = MutableStateFlow(UserProfile())
     val friendProfile: StateFlow<UserProfile> = _friendProfile.asStateFlow()
 
     private val _events = MutableSharedFlow<ChatMessageUiEvent>()
@@ -54,12 +54,12 @@ class ChatMessageViewModel @Inject constructor(
     private var messageJob: Job? = null
     private var chatExists: Boolean = false
 
-    fun initialize(chatId: String, otherUserId: String) {
+    fun initialize(chatId: String, friendConnectionId: String, friendUserId: String) {
         this.currentChatId = chatId
-        this.otherUserId = otherUserId
+        this.otherUserId = friendConnectionId
 
         viewModelScope.launch(Dispatchers.IO) {
-            val newProfile = getUserProfileUseCase(otherUserId).fold(
+            val newProfile = getUserProfileUseCase(friendUserId).fold(
                 onSuccess = {
                     it
                 },

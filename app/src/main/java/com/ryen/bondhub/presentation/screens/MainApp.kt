@@ -177,21 +177,27 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                             }
 
                             composable(
-                                route = "chat_message_screen/{chatId}?otherUserId={otherUserId}",
+                                route = "chat_message_screen/{chatId}?friendConnectionId={friendConnectionId}?friendUserId={friendUserId}",
                                 arguments = listOf(
                                     navArgument("chatId") { type = NavType.StringType },
-                                    navArgument("otherUserId") {
+                                    navArgument("friendConnectionId") {
+                                        type = NavType.StringType
+                                        defaultValue = ""
+                                    },
+                                    navArgument("friendUserId") {
                                         type = NavType.StringType
                                         defaultValue = ""
                                     }
                                 )
                             ) { backStackEntry ->
                                 val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
-                                val otherUserId = backStackEntry.arguments?.getString("otherUserId") ?: ""
+                                val friendConnectionId = backStackEntry.arguments?.getString("friendConnectionId") ?: ""
+                                val friendUserId = backStackEntry.arguments?.getString("friendUserId") ?: ""
 
                                 ChatMessageScreen(
                                     chatId = chatId,
-                                    otherUserId = otherUserId,
+                                    friendConnectionId = friendConnectionId,
+                                    friendUserId = friendUserId,
                                     onNavigateBack = {
                                         navController.popBackStack()
                                     }
@@ -204,4 +210,6 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
         }
     }
 }
+
+// add friendUserId to route and pass it to ChatMessageScreen
 

@@ -47,13 +47,13 @@ fun UserSearchAndMessageRow(
     messageMode: Boolean = false,
     onProfileClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
-    onChatClick: (String, String) -> Unit = { _, _ -> }
+    onChatClick: (String, String, String) -> Unit = { _, _, _ -> }
 ) {
     Row (
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .clickable { onChatClick(chat.chatId, chat.connectionId) },
+            .clickable { onChatClick(chat.chatId, chat.connectionId, chat.participants[0]) },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ){

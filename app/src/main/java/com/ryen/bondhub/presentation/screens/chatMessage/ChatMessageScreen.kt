@@ -23,7 +23,8 @@ import com.ryen.bondhub.presentation.state.ChatMessageScreenState
 fun ChatMessageScreen(
     viewModel: ChatMessageViewModel = hiltViewModel(),
     chatId: String,
-    otherUserId: String,
+    friendConnectionId: String,
+    friendUserId: String,
     // Navigation handlers will be implemented later
     onNavigateBack: () -> Unit = {},
 ) {
@@ -33,8 +34,8 @@ fun ChatMessageScreen(
     val snackbarState = remember { mutableStateOf(SnackBarState.SUCCESS) }
 
     // Initialize the ViewModel with chat parameters
-    LaunchedEffect(chatId, otherUserId) {
-        viewModel.initialize(chatId, otherUserId)
+    LaunchedEffect(chatId, friendConnectionId, friendUserId) {
+        viewModel.initialize(chatId, friendConnectionId, friendUserId)
     }
 
     // Collect UI events
