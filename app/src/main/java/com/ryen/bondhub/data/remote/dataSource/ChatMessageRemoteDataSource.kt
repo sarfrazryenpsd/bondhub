@@ -75,6 +75,29 @@ class ChatMessageRemoteDataSource @Inject constructor(
         awaitClose { subscription.remove() }
     }
 
+    suspend fun updateChatLastMessage(
+        chatId: String,
+        messageContent: String,
+        timestamp: Long,
+        message: ChatMessage
+    ): Result<Unit> {
+        return try {
+            val updates = hashMapOf<String, Any>(
+                "lastMessage" to messageContent,
+                "lastMessageTime" to timestamp,
+            )
+
+            firestore.collection("chats")
+                .document(chatId)
+                .update(updates)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun updateMessageStatus(messageId: String, status: MessageStatus): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             messagesCollection.document(messageId)
@@ -130,4 +153,6 @@ class ChatMessageRemoteDataSource @Inject constructor(
 
         awaitClose { subscription.remove() }
     }
+
+
 }

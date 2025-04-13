@@ -9,5 +9,6 @@ interface ChatMessageRepository {
     suspend fun getChatMessages(chatId: String): Flow<List<ChatMessage>>
     suspend fun updateMessageStatus(messageId: String, status: MessageStatus): Result<Unit>
     suspend fun getUnreadMessagesCount(connectionId: String, userId: String): Flow<Int>
+    suspend fun listenForNewMessages(chatId: String): Flow<ChatMessage>
     suspend fun markAllMessagesAsRead(chatId: String, receiverId: String): Result<Unit>
 }

@@ -85,7 +85,7 @@ class ChatRepositoryImpl @Inject constructor(
                 participants = listOf(userId1, userId2).sorted(),  // Sort for consistency
                 profilePictureUrlThumbnail = userProfile.profilePictureThumbnailUrl ?: "",
                 displayName = userProfile.displayName,
-                lastMessage = "",
+                lastMessage = "",  // Empty initially
                 lastMessageTime = System.currentTimeMillis(),
                 unreadMessageCount = 0
             )
