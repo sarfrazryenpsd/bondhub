@@ -68,6 +68,7 @@ class ChatMessageRepositoryImpl @Inject constructor(
                 onSuccess = {
                     // Update status to SENT
                     val sentMessage = finalMessage.copy(status = MessageStatus.SENT)
+                    remoteDataSource.updateMessageStatus(messageId = finalMessage.messageId,status = MessageStatus.SENT)
                     localDataSource.updateMessageStatus(sentMessage.messageId, MessageStatus.SENT.name)
 
                     // Update Firestore chat document with last message info

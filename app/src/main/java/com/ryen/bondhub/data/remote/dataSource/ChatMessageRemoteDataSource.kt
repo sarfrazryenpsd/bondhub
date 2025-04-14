@@ -42,9 +42,9 @@ class ChatMessageRemoteDataSource @Inject constructor(
         }
     }
 
-    fun getMessages(connectionId: String): Flow<List<ChatMessage>> = callbackFlow {
+    fun getMessages(chatId: String): Flow<List<ChatMessage>> = callbackFlow {
         val subscription = messagesCollection
-            .whereEqualTo("connectionId", connectionId)
+            .whereEqualTo("chatId", chatId)
             .orderBy("timestamp", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -75,28 +75,6 @@ class ChatMessageRemoteDataSource @Inject constructor(
         awaitClose { subscription.remove() }
     }
 
-    suspend fun updateChatLastMessage(
-        chatId: String,
-        messageContent: String,
-        timestamp: Long,
-        message: ChatMessage
-    ): Result<Unit> {
-        return try {
-            val updates = hashMapOf<String, Any>(
-                "lastMessage" to messageContent,
-                "lastMessageTime" to timestamp,
-            )
-
-            firestore.collection("chats")
-                .document(chatId)
-                .update(updates)
-                .await()
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 
     suspend fun updateMessageStatus(messageId: String, status: MessageStatus): Result<Unit> = withContext(Dispatchers.IO) {
         try {
