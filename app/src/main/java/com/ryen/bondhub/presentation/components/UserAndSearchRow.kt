@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.google.firebase.auth.FirebaseAuth
 import com.ryen.bondhub.R
 import com.ryen.bondhub.domain.model.Chat
 import com.ryen.bondhub.presentation.theme.Primary
@@ -49,11 +50,13 @@ fun UserSearchAndMessageRow(
     onSearchClick: () -> Unit = {},
     onChatClick: (String, String, String) -> Unit = { _, _, _ -> }
 ) {
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    val friendUserId = chat.participants.find { it != currentUserId } ?: ""
     Row (
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .clickable { onChatClick(chat.chatId, chat.connectionId, chat.participants[0]) },
+            .clickable { onChatClick(chat.chatId, chat.connectionId, friendUserId) },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ){
