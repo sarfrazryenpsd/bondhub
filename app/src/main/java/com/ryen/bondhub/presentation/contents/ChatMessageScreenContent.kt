@@ -42,12 +42,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.ryen.bondhub.domain.model.ChatMessage
 import com.ryen.bondhub.domain.model.MessageStatus
 import com.ryen.bondhub.domain.model.MessageType
+import com.ryen.bondhub.presentation.theme.Primary
+import com.ryen.bondhub.presentation.theme.Secondary
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -123,15 +126,15 @@ fun MessageItem(
     isFromCurrentUser: Boolean
 ) {
     val bubbleColor = if (isFromCurrentUser) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+        Primary
     } else {
-        MaterialTheme.colorScheme.surfaceVariant
+        Secondary
     }
 
     val textColor = if (isFromCurrentUser) {
         MaterialTheme.colorScheme.onPrimary
     } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
+        MaterialTheme.colorScheme.onPrimary
     }
 
     val dateFormatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
@@ -163,7 +166,7 @@ fun MessageItem(
                         Text(
                             text = message.content,
                             color = textColor,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal)
                         )
                     }
                     MessageType.IMAGE -> {

@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.ryen.bondhub.R
 import com.ryen.bondhub.domain.model.UserProfile
+import com.ryen.bondhub.presentation.theme.Primary
+import com.ryen.bondhub.presentation.theme.Surface
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +57,7 @@ fun ChatMessageTopBar(
                         text = userProfile?.displayName ?: "Chat",
                         style = MaterialTheme.typography.titleMedium,
                         overflow = TextOverflow.Ellipsis,
+                        color = Surface,
                         maxLines = 1
                     )
                     if (isOnline) {
@@ -69,16 +72,16 @@ fun ChatMessageTopBar(
         },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
-                Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
+                Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back", tint = Surface)
             }
         },
         actions = {
             IconButton(onClick = { /* Will implement later */ }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                Icon(Icons.Default.MoreVert, contentDescription = "More options", tint = Surface)
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Primary
         )
     )
 }
