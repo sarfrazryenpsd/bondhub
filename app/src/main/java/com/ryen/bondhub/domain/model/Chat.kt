@@ -9,4 +9,5 @@ data class Chat(
     val lastMessage: String? = null,
     val lastMessageTime: Long = 0,
     val unreadMessageCount: Int = 0,
+    val baseChatId: String = "",
 )

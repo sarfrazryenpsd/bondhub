@@ -1,5 +1,6 @@
 package com.ryen.bondhub.data.mappers
 
+import com.google.firebase.firestore.DocumentSnapshot
 import com.ryen.bondhub.data.local.entity.ChatMessageEntity
 import com.ryen.bondhub.domain.model.ChatMessage
 import com.ryen.bondhub.domain.model.MessageStatus
@@ -10,6 +11,7 @@ class ChatMessageMapper {
         return ChatMessage(
             messageId = entity.messageId,
             chatId = entity.chatId,
+            baseChatId = entity.baseChatId,
             senderId = entity.senderId,
             receiverId = entity.receiverId,
             content = entity.content,
@@ -20,10 +22,27 @@ class ChatMessageMapper {
         )
     }
 
+    fun mapDocumentToDomain(document: DocumentSnapshot): ChatMessage {
+        val data = document.data ?: mapOf<String, Any>()
+        return ChatMessage(
+            messageId = data["messageId"] as String,
+            chatId = data["chatId"] as String,
+            baseChatId = data["baseChatId"] as String,
+            senderId = data["senderId"] as String,
+            receiverId = data["receiverId"] as String,
+            content = data["content"] as String,
+            timestamp = data["timestamp"] as Long,
+            messageType = MessageType.valueOf(data["messageType"] as String),
+            status = MessageStatus.valueOf(data["status"] as String),
+            attachmentUrl = data["attachmentUrl"] as? String
+        )
+    }
+
     fun mapDomainToEntity(domain: ChatMessage): ChatMessageEntity {
         return ChatMessageEntity(
             messageId = domain.messageId,
             chatId = domain.chatId,
+            baseChatId = domain.baseChatId,
             senderId = domain.senderId,
             receiverId = domain.receiverId,
             content = domain.content,
@@ -38,6 +57,7 @@ class ChatMessageMapper {
         return ChatMessage(
             messageId = remote["messageId"] as String,
             chatId = remote["chatId"] as String,
+            baseChatId = remote["baseChatId"] as String,
             senderId = remote["senderId"] as String,
             receiverId = remote["receiverId"] as String,
             content = remote["content"] as String,
@@ -52,6 +72,7 @@ class ChatMessageMapper {
         return mapOf(
             "messageId" to domain.messageId,
             "chatId" to domain.chatId,
+            "baseChatId" to domain.baseChatId,
             "senderId" to domain.senderId,
             "receiverId" to domain.receiverId,
             "content" to domain.content,
@@ -61,4 +82,6 @@ class ChatMessageMapper {
             "attachmentUrl" to domain.attachmentUrl
         )
     }
+
+
 }

@@ -9,7 +9,7 @@ import com.ryen.bondhub.domain.model.MessageStatus
 import com.ryen.bondhub.domain.model.MessageType
 import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.AuthRepository
-import com.ryen.bondhub.domain.useCases.chat.CheckChatExistRemotelyUseCase
+import com.ryen.bondhub.domain.useCases.chat.CheckChatExistsByBaseChatIdUseCase
 import com.ryen.bondhub.domain.useCases.chat.CreateChatInFirestore
 import com.ryen.bondhub.domain.useCases.chatMessage.GetChatMessagesUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.MarkMessagesAsReadUseCase
@@ -35,7 +35,7 @@ class ChatMessageViewModel @Inject constructor(
     private val getChatMessagesUseCase: GetChatMessagesUseCase,
     private val markMessagesAsReadUseCase: MarkMessagesAsReadUseCase,
     private val authRepository: AuthRepository,
-    private val checkChatExistRemotelyUseCase: CheckChatExistRemotelyUseCase,
+    private val checkChatExistsByBaseChatIdUseCase: CheckChatExistsByBaseChatIdUseCase,
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val createChatInFirestore: CreateChatInFirestore,
 ) : ViewModel() {
@@ -50,16 +50,39 @@ class ChatMessageViewModel @Inject constructor(
     val events = _events.asSharedFlow()
 
     private var currentChatId: String = ""
+    private var baseChatId: String = ""
     private var otherUserId: String = ""
+    private var currentUserId: String = ""
     private var messageJob: Job? = null
     private var chatExists: Boolean = false
 
-    fun initialize(chatId: String, friendConnectionId: String, friendUserId: String) {
-        this.currentChatId = chatId
-        this.otherUserId = friendConnectionId
+    fun initialize(chatId: String, connectionId: String, otherUserId: String) {
+        if (this.currentChatId == chatId) return  // Already initialized with this chat
 
+        this.currentChatId = chatId
+        this.otherUserId = otherUserId
+
+        // Extract baseChatId from chatId (format: baseChatId_userId)
+        this.baseChatId = chatId.split("_").firstOrNull() ?: ""
+
+        viewModelScope.launch {
+            currentUserId = authRepository.getCurrentUser()?.uid ?: ""
+
+            // Load other user's profile
+            loadFriendProfile()
+
+            if (_chatMessageScreenState.value is ChatMessageScreenState.Initial) {
+                // Check if chat exists in Firestore
+                chatExists = checkChatExists()
+                loadMessages()
+                markMessagesAsRead()
+            }
+        }
+    }
+
+    private fun loadFriendProfile() {
         viewModelScope.launch(Dispatchers.IO) {
-            val newProfile = getUserProfileUseCase(friendUserId).fold(
+            val newProfile = getUserProfileUseCase(otherUserId).fold(
                 onSuccess = {
                     it
                 },
@@ -70,23 +93,15 @@ class ChatMessageViewModel @Inject constructor(
             )
             _friendProfile.value = newProfile ?: UserProfile()
         }
-
-        if (_chatMessageScreenState.value is ChatMessageScreenState.Initial) {
-            // Check if chat exists remotely
-            checkChatExists()
-            loadMessages()
-            markMessagesAsRead()
-        }
     }
 
-    private fun checkChatExists() {
-        viewModelScope.launch {
-            chatExists = try {
-                checkChatExistRemotelyUseCase(currentChatId).getOrDefault(false)
-            } catch (e: Exception) {
-                Log.e("ChatMessageViewModel", "Error checking if chat exists", e)
-                false
-            }
+    private suspend fun checkChatExists(): Boolean {
+        try {
+            val result = checkChatExistsByBaseChatIdUseCase(baseChatId)
+            return result.isSuccess && result.getOrNull() == true
+        } catch (e: Exception) {
+            Log.e("ChatMessageViewModel", "Failed to check if chat exists", e)
+            return false
         }
     }
 
@@ -105,7 +120,7 @@ class ChatMessageViewModel @Inject constructor(
         // Cancel previous job if any
         messageJob?.cancel()
 
-        if (currentChatId.isEmpty()) {
+        if (baseChatId.isEmpty()) {
             _chatMessageScreenState.value = ChatMessageScreenState.Success(emptyList())
             return
         }
@@ -114,7 +129,7 @@ class ChatMessageViewModel @Inject constructor(
 
         messageJob = viewModelScope.launch {
             try {
-                getChatMessagesUseCase(currentChatId).collect { messages ->
+                getChatMessagesUseCase(baseChatId).collect { messages ->
                     _chatMessageScreenState.value = ChatMessageScreenState.Success(messages)
                 }
             } catch (e: Exception) {
@@ -132,12 +147,6 @@ class ChatMessageViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val currentUser = authRepository.getCurrentUser()
-                if (currentUser == null) {
-                    _events.emit(ChatMessageUiEvent.ShowSnackbarError("User not authenticated"))
-                    return@launch
-                }
-
                 // Update UI state to show message is being sent
                 if (_chatMessageScreenState.value is ChatMessageScreenState.Success) {
                     _chatMessageScreenState.value = (_chatMessageScreenState.value as ChatMessageScreenState.Success)
@@ -148,16 +157,13 @@ class ChatMessageViewModel @Inject constructor(
                 if (!chatExists) {
                     try {
                         val createChatResult = createChatInFirestore(
-                            currentChatId, currentUser.uid, otherUserId
+                            currentChatId, currentUserId, otherUserId
                         )
 
                         if (createChatResult.isFailure) {
                             _events.emit(ChatMessageUiEvent.ShowSnackbarError("Failed to create chat"))
                             // Re-enable sending
-                            if (_chatMessageScreenState.value is ChatMessageScreenState.Success) {
-                                _chatMessageScreenState.value = (_chatMessageScreenState.value as ChatMessageScreenState.Success)
-                                    .copy(canSendMessage = true)
-                            }
+                            resetSendingState()
                             return@launch
                         }
 
@@ -165,19 +171,16 @@ class ChatMessageViewModel @Inject constructor(
                         chatExists = true
                     } catch (e: Exception) {
                         _events.emit(ChatMessageUiEvent.ShowSnackbarError(e.message ?: "Failed to create chat"))
-                        // Re-enable sending
-                        if (_chatMessageScreenState.value is ChatMessageScreenState.Success) {
-                            _chatMessageScreenState.value = (_chatMessageScreenState.value as ChatMessageScreenState.Success)
-                                .copy(canSendMessage = true)
-                        }
+                        resetSendingState()
                         return@launch
                     }
                 }
 
-                // Create message object
+                // Create message object with baseChatId
                 val message = ChatMessage(
                     chatId = currentChatId,
-                    senderId = currentUser.uid,
+                    baseChatId = baseChatId,
+                    senderId = currentUserId,
                     receiverId = otherUserId,
                     content = content,
                     timestamp = System.currentTimeMillis(),
@@ -189,32 +192,24 @@ class ChatMessageViewModel @Inject constructor(
                     onSuccess = {
                         // Reset input field via event
                         _events.emit(ChatMessageUiEvent.ClearInput)
-
-                        // Re-enable sending
-                        if (_chatMessageScreenState.value is ChatMessageScreenState.Success) {
-                            _chatMessageScreenState.value = (_chatMessageScreenState.value as ChatMessageScreenState.Success)
-                                .copy(canSendMessage = true)
-                        }
+                        resetSendingState()
                     },
                     onFailure = { exception ->
                         _events.emit(ChatMessageUiEvent.ShowSnackbarError(exception.message ?: "Failed to send message"))
-
-                        // Re-enable sending
-                        if (_chatMessageScreenState.value is ChatMessageScreenState.Success) {
-                            _chatMessageScreenState.value = (_chatMessageScreenState.value as ChatMessageScreenState.Success)
-                                .copy(canSendMessage = true, error = exception.message)
-                        }
+                        resetSendingState(exception.message)
                     }
                 )
             } catch (e: Exception) {
                 _events.emit(ChatMessageUiEvent.ShowSnackbarError(e.message ?: "Unknown error"))
-
-                // Re-enable sending
-                if (_chatMessageScreenState.value is ChatMessageScreenState.Success) {
-                    _chatMessageScreenState.value = (_chatMessageScreenState.value as ChatMessageScreenState.Success)
-                        .copy(canSendMessage = true, error = e.message)
-                }
+                resetSendingState(e.message)
             }
+        }
+    }
+
+    private fun resetSendingState(errorMessage: String? = null) {
+        if (_chatMessageScreenState.value is ChatMessageScreenState.Success) {
+            _chatMessageScreenState.value = (_chatMessageScreenState.value as ChatMessageScreenState.Success)
+                .copy(canSendMessage = true, error = errorMessage)
         }
     }
 
@@ -230,18 +225,14 @@ class ChatMessageViewModel @Inject constructor(
     }
 
     private fun markMessagesAsRead() {
-        if (currentChatId.isEmpty() || otherUserId.isEmpty()) return
+        if (currentChatId.isEmpty() || currentUserId.isEmpty()) return
 
         viewModelScope.launch {
             try {
-                val currentUser = authRepository.getCurrentUser() ?: return@launch
-
-                markMessagesAsReadUseCase(currentChatId, currentUser.uid)
-                    .onFailure { exception ->
-                        Log.e("ChatMessageViewModel", "Failed to mark messages as read", exception)
-                    }
+                markMessagesAsReadUseCase(baseChatId, currentUserId)
+                // No need to handle result since this is a background operation
             } catch (e: Exception) {
-                Log.e("ChatMessageViewModel", "Error marking messages as read", e)
+                Log.e("ChatMessageViewModel", "Failed to mark messages as read", e)
             }
         }
     }

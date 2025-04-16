@@ -8,7 +8,11 @@ import javax.inject.Inject
 class GetLastChatMessageUseCase @Inject constructor(
     private val chatRepository: ChatRepository
 ) {
-    suspend operator fun invoke(chatId: String): Flow<Result<ChatMessage>> {
-        return chatRepository.getLastChatMessage(chatId)
+    suspend operator fun invoke(chatIdOrBaseChatId: String): Flow<Result<ChatMessage>> {
+        // Extract baseChatId if this is a user-specific chatId
+        val components = chatIdOrBaseChatId.split("_")
+        val baseChatId = if (components.size > 1) components.first() else chatIdOrBaseChatId
+
+        return chatRepository.getLastChatMessage(baseChatId)
     }
 }

@@ -9,6 +9,7 @@ class ChatMapper {
     fun mapEntityToDomain(entity: ChatEntity): Chat {
         return Chat(
             chatId = entity.chatId,
+            baseChatId = entity.baseChatId,
             connectionId = entity.connectionId,
             participants = entity.participants,
             profilePictureUrlThumbnail = entity.profilePictureUrlThumbnail,
@@ -22,6 +23,7 @@ class ChatMapper {
     fun mapDomainToEntity(domain: Chat): ChatEntity {
         return ChatEntity(
             chatId = domain.chatId,
+            baseChatId = domain.baseChatId,
             connectionId = domain.connectionId,
             participants = domain.participants,
             profilePictureUrlThumbnail = domain.profilePictureUrlThumbnail,
@@ -32,9 +34,24 @@ class ChatMapper {
         )
     }
 
+    fun mapEntityToRemoteMap(entity: ChatEntity): Map<String, Any?> {
+        return mapOf(
+            "chatId" to entity.chatId,
+            "baseChatId" to entity.baseChatId,
+            "connectionId" to entity.connectionId,
+            "participants" to entity.participants,
+            "profilePictureUrlThumbnail" to entity.profilePictureUrlThumbnail,
+            "displayName" to entity.displayName,
+            "lastMessage" to entity.lastMessage,
+            "lastMessageTime" to entity.lastMessageTime,
+            "unreadMessageCount" to entity.unreadMessageCount,
+        )
+    }
+
     fun mapDocumentToDomain(document: DocumentSnapshot): Chat {
         return Chat(
             chatId = document.id,
+            baseChatId = document.getString("baseChatId") ?: "",
             connectionId = document.getString("connectionId") ?: "",
             participants = document.get("participants") as? List<String> ?: emptyList(),
             profilePictureUrlThumbnail = document.getString("profilePictureUrlThumbnail") ?: "",
@@ -48,6 +65,7 @@ class ChatMapper {
     fun mapDomainToMap(domain: Chat): Map<String, Any?> {
         return mapOf(
             "chatId" to domain.chatId,
+            "baseChatId" to domain.baseChatId,
             "connectionId" to domain.connectionId,
             "participants" to domain.participants,
             "profilePictureUrlThumbnail" to domain.profilePictureUrlThumbnail,
@@ -61,6 +79,7 @@ class ChatMapper {
     fun mapRemoteToDomain(id: String, chatData: Map<String, Any>): Chat {
         return Chat(
             chatId = id,
+            baseChatId = chatData["baseChatId"] as? String ?: "",
             connectionId = chatData["connectionId"] as? String ?: "",
             participants = chatData["participants"] as? List<String> ?: emptyList(),
             profilePictureUrlThumbnail = chatData["profilePictureUrlThumbnail"] as? String ?: "",

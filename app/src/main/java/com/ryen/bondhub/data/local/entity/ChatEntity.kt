@@ -9,6 +9,7 @@ import androidx.room.TypeConverters
 data class ChatEntity(
     @PrimaryKey
     val chatId: String,
+    val baseChatId: String,
     val connectionId: String,
     @TypeConverters(StringListConverter::class)
     val participants: List<String>,

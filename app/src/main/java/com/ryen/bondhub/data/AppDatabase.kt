@@ -23,7 +23,7 @@ import com.ryen.bondhub.data.local.entity.UserProfileEntity
         ChatMessageEntity::class,
         ChatEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(StringListConverter::class, ConnectionStatusConverter::class)

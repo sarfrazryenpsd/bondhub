@@ -21,19 +21,26 @@ class ChatMessageRemoteDataSource @Inject constructor(
     suspend fun sendMessage(messageMap: Map<String, Any?>): Result<ChatMessage> = withContext(Dispatchers.IO) {
         try {
             val messageId = messageMap["messageId"] as String
-            messagesCollection.document(messageId).set(messageMap).await()
+            val baseChatId = messageMap["baseChatId"] as String
+
+            // Store messages in a subcollection under the baseChatId
+            messagesCollection.document(baseChatId)
+                .collection("messages")
+                .document(messageId)
+                .set(messageMap)
+                .await()
 
             // Convert back to ChatMessage for return
             val message = ChatMessage(
                 messageId = messageId,
                 chatId = messageMap["chatId"] as String,
+                baseChatId = baseChatId,
                 senderId = messageMap["senderId"] as String,
                 receiverId = messageMap["receiverId"] as String,
                 content = messageMap["content"] as String,
                 timestamp = messageMap["timestamp"] as Long,
                 messageType = MessageType.valueOf(messageMap["messageType"] as String),
-                status = MessageStatus.valueOf(messageMap["status"] as String),
-                attachmentUrl = messageMap["attachmentUrl"] as String?
+                status = MessageStatus.valueOf(messageMap["status"] as String)
             )
 
             Result.success(message)
@@ -42,9 +49,10 @@ class ChatMessageRemoteDataSource @Inject constructor(
         }
     }
 
-    fun getMessages(chatId: String): Flow<List<ChatMessage>> = callbackFlow {
+    fun getMessages(baseChatId: String): Flow<List<ChatMessage>> = callbackFlow {
         val subscription = messagesCollection
-            .whereEqualTo("chatId", chatId)
+            .document(baseChatId)
+            .collection("messages")
             .orderBy("timestamp", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -55,8 +63,9 @@ class ChatMessageRemoteDataSource @Inject constructor(
                 val messages = snapshot?.documents?.mapNotNull { document ->
                     try {
                         ChatMessage(
-                            messageId = document.getString("messageId") ?: "",
+                            messageId = document.id,
                             chatId = document.getString("chatId") ?: "",
+                            baseChatId = document.getString("baseChatId") ?: "",
                             senderId = document.getString("senderId") ?: "",
                             receiverId = document.getString("receiverId") ?: "",
                             content = document.getString("content") ?: "",
@@ -75,10 +84,11 @@ class ChatMessageRemoteDataSource @Inject constructor(
         awaitClose { subscription.remove() }
     }
 
-
-    suspend fun updateMessageStatus(messageId: String, status: MessageStatus): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun updateMessageStatus(baseChatId: String, messageId: String, status: MessageStatus): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            messagesCollection.document(messageId)
+            messagesCollection.document(baseChatId)
+                .collection("messages")
+                .document(messageId)
                 .update("status", status.name)
                 .await()
             Result.success(Unit)
@@ -87,14 +97,15 @@ class ChatMessageRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun updateAllMessageStatus(chatId: String, receiverId: String, status: String): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun updateAllMessageStatus(baseChatId: String, receiverId: String, status: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             // Create a batch to update multiple messages efficiently
             val batch = firestore.batch()
 
             // Query for all messages in the chat that are for the receiver and not yet read
             val messagesToUpdate = messagesCollection
-                .whereEqualTo("chatId", chatId)
+                .document(baseChatId)
+                .collection("messages")
                 .whereEqualTo("receiverId", receiverId)
                 .whereNotEqualTo("status", status)
                 .get()
@@ -102,7 +113,10 @@ class ChatMessageRemoteDataSource @Inject constructor(
 
             // Add each document to the batch update
             for (document in messagesToUpdate.documents) {
-                val messageRef = messagesCollection.document(document.id)
+                val messageRef = messagesCollection
+                    .document(baseChatId)
+                    .collection("messages")
+                    .document(document.id)
                 batch.update(messageRef, "status", status)
             }
 
@@ -114,9 +128,10 @@ class ChatMessageRemoteDataSource @Inject constructor(
         }
     }
 
-    fun getUnreadMessagesCount(connectionId: String, userId: String): Flow<Int> = callbackFlow {
+    fun getUnreadMessagesCount(baseChatId: String, userId: String): Flow<Int> = callbackFlow {
         val subscription = messagesCollection
-            .whereEqualTo("chatId", connectionId)
+            .document(baseChatId)
+            .collection("messages")
             .whereEqualTo("receiverId", userId)
             .whereNotEqualTo("status", MessageStatus.READ.name)
             .addSnapshotListener { snapshot, error ->
@@ -131,6 +146,4 @@ class ChatMessageRemoteDataSource @Inject constructor(
 
         awaitClose { subscription.remove() }
     }
-
-
 }

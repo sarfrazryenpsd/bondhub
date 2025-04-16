@@ -8,6 +8,7 @@ data class ChatMessageEntity(
     @PrimaryKey
     val messageId: String,
     val chatId: String,
+    val baseChatId: String,
     val senderId: String,
     val receiverId: String,
     val content: String,

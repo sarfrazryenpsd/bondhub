@@ -1,8 +1,11 @@
 package com.ryen.bondhub.domain.model
 
+import java.util.UUID
+
 data class ChatMessage(
-    val messageId: String = "",
-    val chatId: String = "",
+    val messageId: String = UUID.randomUUID().toString(),
+    val chatId: String = "",  // Individual user's chatId
+    val baseChatId: String = "",  // Shared identifier for both chat documents
     val senderId: String = "",
     val receiverId: String = "",
     val content: String = "",

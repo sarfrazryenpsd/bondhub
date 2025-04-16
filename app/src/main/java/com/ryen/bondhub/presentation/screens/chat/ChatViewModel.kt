@@ -169,41 +169,35 @@ class ChatViewModel @Inject constructor(
         chats.forEach { enhancedChatsMap[it.chatId] = it }
 
         chats.forEach { chat ->
-            // Observe unread message counts
+            // Extract baseChatId from chatId (format: baseChatId_userId)
+            val baseChatId = chat.baseChatId
+
+            // Observe unread message counts for this user's chat
             chatDetailsScope.launch {
-                getUnreadMessagesCountUseCase(chat.chatId, userId).collect { count ->
+                getUnreadMessagesCountUseCase(baseChatId, userId).collect { count ->
                     updateChat(enhancedChatsMap, chat.chatId) { currentChat ->
                         currentChat.copy(unreadMessageCount = count)
                     }
                 }
             }
 
-            // Observe last messages using the getLastChatMessageUseCase
-            chatDetailsScope.launch {
-                getLastChatMessageUseCase(chat.chatId).collect { result ->
-                    result.onSuccess { lastMessage ->
-                        updateChat(enhancedChatsMap, chat.chatId) { currentChat ->
-                            currentChat.copy(
-                                lastMessage = lastMessage.content,
-                                lastMessageTime = lastMessage.timestamp
-                            )
-                        }
-                    }.onFailure { error ->
-                        Log.e("ChatViewModel", "Error getting last message for ${chat.chatId}", error)
-                    }
-                }
-            }
-
             // Start a real-time listener for new messages in each chat
             val listenerJob = chatDetailsScope.launch {
-                listenForNewMessagesUseCase(chat.chatId).collect { newMessage ->
+                listenForNewMessagesUseCase(baseChatId).collect { messagesList ->
+                    // Skip if list is empty
+                    if (messagesList.isEmpty()) return@collect
+
+                    // Get the most recent message (assuming the list is sorted by timestamp)
+                    val latestMessage = messagesList.maxByOrNull { it.timestamp }
+                        ?: return@collect
+
                     // Update the chat with this new message information
                     updateChat(enhancedChatsMap, chat.chatId) { currentChat ->
                         currentChat.copy(
-                            lastMessage = newMessage.content,
-                            lastMessageTime = newMessage.timestamp,
+                            lastMessage = latestMessage.content,
+                            lastMessageTime = latestMessage.timestamp,
                             // Increment unread count only for received messages (not sent by current user)
-                            unreadMessageCount = if (newMessage.senderId != userId) {
+                            unreadMessageCount = if (latestMessage.senderId != userId) {
                                 currentChat.unreadMessageCount + 1
                             } else {
                                 currentChat.unreadMessageCount
@@ -214,7 +208,7 @@ class ChatViewModel @Inject constructor(
             }
 
             // Store the listener job reference so we can cancel it later
-            newMessageListeners[chat.chatId] = listenerJob
+            newMessageListeners[baseChatId] = listenerJob
         }
     }
 
@@ -303,7 +297,7 @@ class ChatViewModel @Inject constructor(
 
     private fun startChatWithFriend(connection: ChatConnection) {
         viewModelScope.launch {
-            // Close the bottom sheet first
+            // Close the bottom sheet first if it's open
             closeFriendsBottomSheet()
 
             try {
@@ -316,8 +310,12 @@ class ChatViewModel @Inject constructor(
                 // Create or get existing chat
                 createChatUseCase(currentUser.uid, connection.user2Id).fold(
                     onSuccess = { chat ->
-                        // Navigate to the chat screen with the chat ID
-                        navigateToChat(chat.chatId, connection.connectionId, connection.user2Id)
+                        // Extract other user ID from participants
+                        val otherUserId = chat.participants.firstOrNull { it != currentUser.uid }
+                            ?: return@fold
+
+                        // Navigate to the chat screen with the chat ID, connectionId, and otherUserId
+                        navigateToChat(chat.chatId, connection.connectionId, otherUserId)
                     },
                     onFailure = { exception ->
                         _events.emit(UiEvent.ShowSnackbarError(exception.message ?: "Failed to create chat"))

@@ -1,9 +1,11 @@
 package com.ryen.bondhub.data.remote.dataSource
 
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.ryen.bondhub.data.local.entity.ChatMessageEntity
+import com.ryen.bondhub.domain.model.ChatMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -16,7 +18,8 @@ class ChatRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
     private val chatsCollection = firestore.collection("chats")
-    private val connectionsCollection = firestore.collection("chat_connections")
+    private val connectionsCollection = firestore.collection("connections")
+    private val messagesCollection = firestore.collection("messages")
 
     suspend fun createChat(chat: Map<String, Any?>): Result<DocumentSnapshot> = withContext(Dispatchers.IO) {
         try {
@@ -29,25 +32,11 @@ class ChatRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun getUserChat(userId1: String, userId2: String): Result<DocumentSnapshot?> {
+    suspend fun getChatByBaseChatId(baseChatId: String, userId: String): Result<DocumentSnapshot?> {
         return try {
-            // Create a sorted list of userIds to ensure consistent queries
-            val participants = listOf(userId1, userId2).sorted()
-
-            val querySnapshot = firestore.collection("chats")
-                .whereArrayContainsAny("participants", participants)
-                .get()
-                .await()
-
-            // Now filter the results to find the one that contains exactly these two participants
-            val exactMatch = querySnapshot.documents.find { doc ->
-                val docParticipants = doc.get("participants") as? List<*>
-                docParticipants?.size == 2 &&
-                        docParticipants.contains(userId1) &&
-                        docParticipants.contains(userId2)
-            }
-
-            Result.success(exactMatch)
+            val chatId = "${baseChatId}_${userId}"
+            val docSnapshot = chatsCollection.document(chatId).get().await()
+            Result.success(if (docSnapshot.exists()) docSnapshot else null)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -55,69 +44,99 @@ class ChatRemoteDataSource @Inject constructor(
 
     suspend fun getChatById(chatId: String): Result<DocumentSnapshot?> {
         return try {
-            val docSnapshot = firestore.collection("chats")
-                .document(chatId)
-                .get()
-                .await()
-
+            val docSnapshot = chatsCollection.document(chatId).get().await()
             Result.success(if (docSnapshot.exists()) docSnapshot else null)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    fun getUserChats(userId: String): Flow<List<DocumentSnapshot>> = callbackFlow {
-        val subscription = chatsCollection
-            .whereArrayContains("participants", userId)
-            .orderBy("lastMessageTime", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
+    suspend fun getUserChats(userId: String): Flow<List<DocumentSnapshot>> {
+        return callbackFlow {
+            val listenerRegistration = chatsCollection
+                .whereArrayContains("participants", userId)
+                .orderBy("lastMessageTime", Query.Direction.DESCENDING)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        close(error)
+                        return@addSnapshotListener
+                    }
+
+                    if (snapshot != null) {
+                        trySend(snapshot.documents)
+                    }
                 }
 
-                val chats = snapshot?.documents ?: emptyList()
-                trySend(chats)
+            awaitClose {
+                listenerRegistration.remove()
             }
-
-        awaitClose { subscription.remove() }
+        }
     }
 
-    suspend fun getLastChatMessage(chatId: String): Flow<Result<ChatMessageEntity>> = callbackFlow {
-        val listenerRegistration = chatsCollection
-            .document(chatId)
-            .collection("messages")
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .limit(1)
-            .addSnapshotListener { snapshot, exception ->
-                if (exception != null) {
-                    trySend(Result.failure(exception))
-                    return@addSnapshotListener
-                }
+    suspend fun getChatsByBaseChatId(baseChatId: String): Result<List<DocumentSnapshot>> {
+        return try {
+            val querySnapshot = chatsCollection
+                .whereEqualTo("baseChatId", baseChatId)
+                .get()
+                .await()
 
-                if (snapshot != null && !snapshot.isEmpty) {
-                    val document = snapshot.documents[0]
-                    val messageEntity = document.toObject(ChatMessageEntity::class.java)
-                        ?.copy(messageId = document.id)
-
-                    if (messageEntity != null) {
-                        trySend(Result.success(messageEntity))
-                    } else {
-                        trySend(Result.failure(Exception("Failed to parse message document")))
-                    }
-                } else {
-                    trySend(Result.failure(Exception("No messages found")))
-                }
-            }
-
-        awaitClose {
-            listenerRegistration.remove()
+            Result.success(querySnapshot.documents)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
     suspend fun deleteChat(chatId: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             chatsCollection.document(chatId).delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateChatLastMessage(baseChatId: String, message: ChatMessage): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // Get all chats associated with this baseChatId
+            val chatsQuery = chatsCollection
+                .whereEqualTo("baseChatId", baseChatId)
+                .get()
+                .await()
+
+            // Update each chat with the new message info
+            val batch = firestore.batch()
+            for (chatDoc in chatsQuery.documents) {
+                val chatId = chatDoc.id
+                val chatParticipants = chatDoc.get("participants") as? List<*>
+                val chatOwnerId = chatId.split("_").last()
+
+                // Update unread count if this user is the receiver (not the sender)
+                val unreadIncrement = if (chatOwnerId != message.senderId) {
+                    FieldValue.increment(1)
+                } else {
+                    FieldValue.increment(0) // No change for sender
+                }
+
+                // Update last message info
+                val chatRef = chatsCollection.document(chatId)
+                batch.update(chatRef, mapOf(
+                    "lastMessage" to message.content,
+                    "lastMessageTime" to message.timestamp,
+                    "unreadMessageCount" to unreadIncrement
+                ))
+            }
+
+            batch.commit().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun markChatAsRead(chatId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val chatRef = chatsCollection.document(chatId)
+            chatRef.update("unreadMessageCount", 0).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
