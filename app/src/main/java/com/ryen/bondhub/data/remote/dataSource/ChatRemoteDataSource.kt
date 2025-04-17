@@ -4,7 +4,6 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.ryen.bondhub.data.local.entity.ChatMessageEntity
 import com.ryen.bondhub.domain.model.ChatMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -19,7 +18,6 @@ class ChatRemoteDataSource @Inject constructor(
 ) {
     private val chatsCollection = firestore.collection("chats")
     private val connectionsCollection = firestore.collection("connections")
-    private val messagesCollection = firestore.collection("messages")
 
     suspend fun createChat(chat: Map<String, Any?>): Result<DocumentSnapshot> = withContext(Dispatchers.IO) {
         try {
@@ -27,16 +25,6 @@ class ChatRemoteDataSource @Inject constructor(
             chatsCollection.document(chatId).set(chat).await()
             val chatDoc = chatsCollection.document(chatId).get().await()
             Result.success(chatDoc)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun getChatByBaseChatId(baseChatId: String, userId: String): Result<DocumentSnapshot?> {
-        return try {
-            val chatId = "${baseChatId}_${userId}"
-            val docSnapshot = chatsCollection.document(chatId).get().await()
-            Result.success(if (docSnapshot.exists()) docSnapshot else null)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -63,7 +51,11 @@ class ChatRemoteDataSource @Inject constructor(
                     }
 
                     if (snapshot != null) {
-                        trySend(snapshot.documents)
+                        // Filter documents to only include those owned by this user
+                        val userChats = snapshot.documents.filter {
+                            it.id.endsWith("_$userId")
+                        }
+                        trySend(userChats)
                     }
                 }
 

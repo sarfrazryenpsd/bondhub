@@ -109,7 +109,6 @@ class ChatMessageRepositoryImpl @Inject constructor(
                 val otherUserChatId = "${baseChatId}_${otherUserId}"
 
                 // We need to implement logic to create other user's chat document
-                // This is simplified - in a real implementation you'd get the other user's info
                 val otherUserChatEntity = ChatEntity(
                     chatId = otherUserChatId,
                     baseChatId = baseChatId,

@@ -21,15 +21,20 @@ interface ChatDao {
     @Query("SELECT * FROM chats WHERE chatId = :chatId")
     suspend fun getChatById(chatId: String): ChatEntity?
 
-    @Query("SELECT * FROM chats WHERE :userId IN (participants)")
-    fun getUserChats(userId: String): Flow<List<ChatEntity>>
-
-    // New method to find chats by baseChatId
-    @Query("SELECT * FROM chats WHERE baseChatId = :baseChatId")
-    suspend fun getChatsByBaseChatId(baseChatId: String): List<ChatEntity>
-
     @Query("DELETE FROM chats WHERE chatId = :chatId")
     suspend fun deleteChat(chatId: String)
+
+    // Use a more complex query or filter in code
+    @Query("SELECT * FROM chats ORDER BY lastMessageTime DESC")
+    fun getAllChats(): Flow<List<ChatEntity>>
+
+    // Or if possible with Room, use a LIKE query
+    @Query("SELECT * FROM chats WHERE chatId LIKE '%_%' || :userId ORDER BY lastMessageTime DESC")
+    fun getUserChats(userId: String): Flow<List<ChatEntity>>
+
+    // For getting a chat by baseChatId, you'll need to filter in code
+    @Query("SELECT * FROM chats WHERE baseChatId = :baseChatId")
+    suspend fun getChatsByBaseChatId(baseChatId: String): List<ChatEntity>
 
     @Query("UPDATE chats SET lastMessage = :lastMessage, lastMessageTime = :lastMessageTime WHERE chatId = :chatId")
     suspend fun updateChatWithNewMessage(chatId: String, lastMessage: String, lastMessageTime: Long)

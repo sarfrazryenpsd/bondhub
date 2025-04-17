@@ -4,7 +4,6 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.ryen.bondhub.data.local.dao.ChatDao
 import com.ryen.bondhub.data.mappers.ChatMapper
-import com.ryen.bondhub.data.mappers.ChatMessageMapper
 import com.ryen.bondhub.data.remote.dataSource.ChatRemoteDataSource
 import com.ryen.bondhub.domain.model.Chat
 import com.ryen.bondhub.domain.model.ChatMessage
@@ -18,7 +17,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
@@ -29,7 +27,6 @@ class ChatRepositoryImpl @Inject constructor(
     private val localDataSource: ChatDao,
     private val userProfileRepository: UserProfileRepository,
     private val mapper: ChatMapper,
-    private val messageMapper: ChatMessageMapper,
     private val auth: FirebaseAuth
 ) : ChatRepository {
 
@@ -178,40 +175,44 @@ class ChatRepositoryImpl @Inject constructor(
 
     override suspend fun getUserChats(userId: String): Flow<List<Chat>> = flow {
         try {
-            // First emit from local database to show something immediately
-            val localChats = localDataSource.getUserChats(userId)
-                .first() // Get first emission from the flow
+            // First emit from local database
+            val localChats = localDataSource.getAllChats()
+                .first() // Get first emission
+                .filter { it.chatId.endsWith("_$userId") } // Filter by owner
                 .map { mapper.mapEntityToDomain(it) }
-                .sortedByDescending { it.lastMessageTime } // Sort by most recent
+                .sortedByDescending { it.lastMessageTime }
 
             if (localChats.isNotEmpty()) {
-                emit(localChats) // Emit local data first if available
+                emit(localChats)
             }
 
             // Then collect from remote source
             remoteDataSource.getUserChats(userId)
                 .catch { exception ->
                     Log.e("ChatRepository", "Error fetching remote chats", exception)
-                    // Don't emit anything here, just log the error
                 }
                 .collect { documents ->
                     val remoteChats = documents.mapNotNull {
                         try {
-                            mapper.mapDocumentToDomain(it)
+                            // Double check the chat belongs to this user
+                            if (it.id.endsWith("_$userId")) {
+                                mapper.mapDocumentToDomain(it)
+                            } else {
+                                null
+                            }
                         } catch (e: Exception) {
                             Log.e("ChatRepository", "Error mapping document to chat", e)
                             null
                         }
                     }
 
-                    // Only update and emit if we got actual data
                     if (remoteChats.isNotEmpty()) {
                         // Update local cache
                         withContext(Dispatchers.IO) {
                             localDataSource.insertChats(remoteChats.map { mapper.mapDomainToEntity(it) })
                         }
 
-                        emit(remoteChats.sortedByDescending { it.lastMessageTime }) // Sort by most recent
+                        emit(remoteChats.sortedByDescending { it.lastMessageTime })
                     }
                 }
         } catch (e: Exception) {
