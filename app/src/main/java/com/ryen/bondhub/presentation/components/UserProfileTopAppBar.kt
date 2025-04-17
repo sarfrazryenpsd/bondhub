@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +43,7 @@ fun UserProfileTopAppBar(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
+                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                 contentDescription = "Back",
                 tint = Surface,
                 modifier = Modifier.size(32.dp)

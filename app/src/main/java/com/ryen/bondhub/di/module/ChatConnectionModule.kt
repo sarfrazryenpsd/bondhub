@@ -11,7 +11,6 @@ import com.ryen.bondhub.domain.useCases.chatConnection.FindExistingConnectionUse
 import com.ryen.bondhub.domain.useCases.chatConnection.GetAcceptedConnectionsUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.GetConnectionBetweenUsersUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.GetConnectionStatusUseCase
-import com.ryen.bondhub.domain.useCases.chatConnection.GetConnectionsUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.GetPendingConnectionRequestsUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.RejectConnectionRequestUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.SendConnectionRequestUseCase
@@ -68,13 +67,6 @@ object ChatConnectionModule {
         return RejectConnectionRequestUseCase(repository)
     }
 
-    @Provides
-    @Singleton
-    fun provideGetConnectionsUseCase(
-        repository: ChatConnectionRepository
-    ): GetConnectionsUseCase {
-        return GetConnectionsUseCase(repository)
-    }
 
     @Provides
     @Singleton

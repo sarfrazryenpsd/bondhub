@@ -12,6 +12,7 @@ import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.useCases.chat.CheckChatExistsByBaseChatIdUseCase
 import com.ryen.bondhub.domain.useCases.chat.CreateChatInFirestore
 import com.ryen.bondhub.domain.useCases.chatMessage.GetChatMessagesUseCase
+import com.ryen.bondhub.domain.useCases.chatMessage.ListenForNewMessagesUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.MarkMessagesAsReadUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.SendMessageUseCase
 import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
@@ -37,6 +38,7 @@ class ChatMessageViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val checkChatExistsByBaseChatIdUseCase: CheckChatExistsByBaseChatIdUseCase,
     private val getUserProfileUseCase: GetUserProfileUseCase,
+    private val listenForNewMessagesUseCase: ListenForNewMessagesUseCase,
     private val createChatInFirestore: CreateChatInFirestore,
 ) : ViewModel() {
 
@@ -129,7 +131,8 @@ class ChatMessageViewModel @Inject constructor(
 
         messageJob = viewModelScope.launch {
             try {
-                getChatMessagesUseCase(baseChatId).collect { messages ->
+                // Use the real-time listener method instead
+                listenForNewMessagesUseCase(baseChatId).collect { messages ->
                     _chatMessageScreenState.value = ChatMessageScreenState.Success(messages)
                 }
             } catch (e: Exception) {

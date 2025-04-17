@@ -9,7 +9,6 @@ import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.useCases.chat.CreateChatUseCase
 import com.ryen.bondhub.domain.useCases.chat.DeleteChatUseCase
-import com.ryen.bondhub.domain.useCases.chat.GetLastChatMessageUseCase
 import com.ryen.bondhub.domain.useCases.chat.GetUserChatsUseCase
 import com.ryen.bondhub.domain.useCases.chatConnection.GetAcceptedConnectionsUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.GetUnreadMessagesCountUseCase
@@ -44,7 +43,6 @@ class ChatViewModel @Inject constructor(
     private val createChatUseCase: CreateChatUseCase,
     private val deleteChatsUseCase: DeleteChatUseCase,
     private val getUnreadMessagesCountUseCase: GetUnreadMessagesCountUseCase,
-    private val getLastChatMessageUseCase: GetLastChatMessageUseCase,
     private val listenForNewMessagesUseCase: ListenForNewMessagesUseCase
 ) : ViewModel() {
 

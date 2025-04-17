@@ -30,16 +30,7 @@ class ChatRemoteDataSource @Inject constructor(
         }
     }
 
-    suspend fun getChatById(chatId: String): Result<DocumentSnapshot?> {
-        return try {
-            val docSnapshot = chatsCollection.document(chatId).get().await()
-            Result.success(if (docSnapshot.exists()) docSnapshot else null)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun getUserChats(userId: String): Flow<List<DocumentSnapshot>> {
+    fun getUserChats(userId: String): Flow<List<DocumentSnapshot>> {
         return callbackFlow {
             val listenerRegistration = chatsCollection
                 .whereArrayContains("participants", userId)
@@ -99,7 +90,6 @@ class ChatRemoteDataSource @Inject constructor(
             val batch = firestore.batch()
             for (chatDoc in chatsQuery.documents) {
                 val chatId = chatDoc.id
-                val chatParticipants = chatDoc.get("participants") as? List<*>
                 val chatOwnerId = chatId.split("_").last()
 
                 // Update unread count if this user is the receiver (not the sender)

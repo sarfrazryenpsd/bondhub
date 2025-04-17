@@ -6,9 +6,7 @@ import com.ryen.bondhub.data.local.dao.ChatDao
 import com.ryen.bondhub.data.mappers.ChatMapper
 import com.ryen.bondhub.data.remote.dataSource.ChatRemoteDataSource
 import com.ryen.bondhub.domain.model.Chat
-import com.ryen.bondhub.domain.model.ChatMessage
 import com.ryen.bondhub.domain.model.ConnectionStatus
-import com.ryen.bondhub.domain.model.MessageStatus
 import com.ryen.bondhub.domain.repository.ChatRepository
 import com.ryen.bondhub.domain.repository.UserProfileRepository
 import kotlinx.coroutines.Dispatchers
@@ -94,14 +92,6 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun checkChatExistsRemotely(chatId: String): Result<Boolean> {
-        return try {
-            val result = remoteDataSource.getChatById(chatId)
-            Result.success(result.isSuccess && result.getOrNull() != null)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 
     override suspend fun checkChatExistsByBaseChatId(baseChatId: String): Result<Boolean> {
         return try {
@@ -250,50 +240,4 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getLastChatMessage(chatId: String): Flow<Result<ChatMessage>> {
-        // Extract baseChatId from chatId (format: baseChatId_userId)
-        val baseChatId = chatId.split("_").first()
-
-        return flow {
-            try {
-                // Get the latest message from the message repository
-                // This would typically be implemented differently, but for now we'll simulate it
-                val messagesResult = remoteDataSource.getChatsByBaseChatId(baseChatId)
-
-                if (messagesResult.isSuccess) {
-                    val chatDocs = messagesResult.getOrNull() ?: emptyList()
-                    if (chatDocs.isNotEmpty()) {
-                        val latestChat = chatDocs.maxByOrNull {
-                            it.getLong("lastMessageTime") ?: 0L
-                        }
-
-                        if (latestChat != null) {
-                            val lastMessageContent = latestChat.getString("lastMessage") ?: ""
-                            val lastMessageTime = latestChat.getLong("lastMessageTime") ?: 0L
-
-                            // Create a dummy message with available info
-                            val message = ChatMessage(
-                                messageId = UUID.randomUUID().toString(),
-                                chatId = chatId,
-                                baseChatId = baseChatId,
-                                content = lastMessageContent,
-                                timestamp = lastMessageTime,
-                                status = MessageStatus.SENT
-                            )
-
-                            emit(Result.success(message))
-                        } else {
-                            emit(Result.failure(Exception("No messages found")))
-                        }
-                    } else {
-                        emit(Result.failure(Exception("No chat documents found")))
-                    }
-                } else {
-                    emit(Result.failure(messagesResult.exceptionOrNull() ?: Exception("Failed to get chat")))
-                }
-            } catch (e: Exception) {
-                emit(Result.failure(e))
-            }
-        }
-    }
 }

@@ -23,7 +23,7 @@ class ChatMessageRemoteDataSource @Inject constructor(
             val messageId = messageMap["messageId"] as String
             val baseChatId = messageMap["baseChatId"] as String
 
-            // Store messages in a subcollection under the baseChatId
+            // Store messages in a sub-collection under the baseChatId
             messagesCollection.document(baseChatId)
                 .collection("messages")
                 .document(messageId)

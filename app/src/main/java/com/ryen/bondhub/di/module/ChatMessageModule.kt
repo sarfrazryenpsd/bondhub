@@ -9,7 +9,6 @@ import com.ryen.bondhub.domain.useCases.chatMessage.GetUnreadMessagesCountUseCas
 import com.ryen.bondhub.domain.useCases.chatMessage.ListenForNewMessagesUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.MarkMessagesAsReadUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.SendMessageUseCase
-import com.ryen.bondhub.domain.useCases.chatMessage.UpdateMessageStatusUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,10 +37,6 @@ object ChatMessageModule {
         return GetChatMessagesUseCase(repository)
     }
 
-    @Provides
-    fun provideUpdateMessageStatusUseCase(repository: ChatMessageRepository): UpdateMessageStatusUseCase {
-        return UpdateMessageStatusUseCase(repository)
-    }
 
     @Provides
     fun provideGetUnreadMessagesCountUseCase(repository: ChatMessageRepository): GetUnreadMessagesCountUseCase {

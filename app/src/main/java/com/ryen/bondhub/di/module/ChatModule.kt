@@ -5,7 +5,6 @@ import com.ryen.bondhub.data.mappers.ChatMapper
 import com.ryen.bondhub.data.remote.dataSource.ChatRemoteDataSource
 import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.repository.ChatRepository
-import com.ryen.bondhub.domain.useCases.chat.CheckChatExistRemotelyUseCase
 import com.ryen.bondhub.domain.useCases.chat.CheckChatExistsByBaseChatIdUseCase
 import com.ryen.bondhub.domain.useCases.chat.CreateChatInFirestore
 import com.ryen.bondhub.domain.useCases.chat.CreateChatUseCase
@@ -52,11 +51,6 @@ object ChatModule{
         return DeleteChatUseCase(chatRepository)
     }
 
-    @Provides
-    @Singleton
-    fun provideCheckChatExistRemotelyUseCase(chatRepository: ChatRepository): CheckChatExistRemotelyUseCase {
-        return CheckChatExistRemotelyUseCase(chatRepository)
-    }
 
     @Provides
     @Singleton

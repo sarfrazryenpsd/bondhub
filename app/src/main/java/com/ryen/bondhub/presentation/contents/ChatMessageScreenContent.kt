@@ -2,34 +2,40 @@ package com.ryen.bondhub.presentation.contents
 
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -246,62 +252,83 @@ fun MessageInputBar(
     text: String,
     onTextChange: (String) -> Unit,
     onSendClick: () -> Unit,
+    onEmojiClick: () -> Unit = {},
     onAttachClick: () -> Unit,
     canSend: Boolean
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shadowElevation = 4.dp
+        tonalElevation = 4.dp,
+        shadowElevation = 4.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        shape = CircleShape
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .padding(horizontal = 8.dp, vertical = 4.dp)
         ) {
-            // Attachment button
-            IconButton(
-                onClick = onAttachClick,
-                modifier = Modifier.size(40.dp)
-            ) {
-                Icon(
-                    Icons.Default.Menu,
-                    contentDescription = "Attach file",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
 
-            // Text field
+            // Message TextField with emoji prefix
             TextField(
                 value = text,
                 onValueChange = onTextChange,
                 modifier = Modifier
                     .weight(1f)
-                    .height(IntrinsicSize.Min),
+                    .heightIn(min = 48.dp),
                 placeholder = { Text("Type a message") },
-                singleLine = false,
-                maxLines = 5,
-                textStyle = MaterialTheme.typography.bodyMedium,
+                shape = CircleShape,
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent
                 ),
-                shape = RoundedCornerShape(24.dp)
+                leadingIcon = {
+                    IconButton(onClick = onEmojiClick) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Emoji"
+                        )
+                    }
+                },
+                maxLines = 4
             )
 
-            // Send button
-            IconButton(
-                onClick = onSendClick,
-                enabled = canSend,
-                modifier = Modifier.size(40.dp)
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Plus Icon Outline Circle Button
+            OutlinedButton(
+                onClick = onAttachClick,
+                shape = CircleShape,
+                contentPadding = PaddingValues(0.dp),
+                modifier = Modifier.size(40.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Icon(
-                    Icons.AutoMirrored.Default.Send,
-                    contentDescription = "Send message",
-                    tint = if (canSend) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Send Icon Filled Circle Button
+            Button(
+                onClick = onSendClick,
+                shape = CircleShape,
+                contentPadding = PaddingValues(0.dp),
+                modifier = Modifier.size(40.dp),
+                enabled = canSend,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (canSend) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Default.Send,
+                    contentDescription = "Send",
+                    tint = Color.White
                 )
             }
         }

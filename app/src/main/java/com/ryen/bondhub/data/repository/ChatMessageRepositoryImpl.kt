@@ -18,10 +18,11 @@ import com.ryen.bondhub.domain.repository.UserProfileRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
@@ -29,7 +30,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
 
@@ -188,12 +188,10 @@ class ChatMessageRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun listenForNewMessages(chatId: String): Flow<List<ChatMessage>> = channelFlow {
+    // Improved listenForNewMessages implementation
+    override suspend fun listenForNewMessages(baseChatId: String): Flow<List<ChatMessage>> = callbackFlow {
+        // First emit cached messages immediately
         try {
-            // Extract baseChatId from chatId
-            val baseChatId = chatId.split("_").first()
-
-            // First emit cached messages
             val cachedMessages = localDataSource.getMessagesByBaseChatId(baseChatId)
                 .first()
                 .map { chatMessageMapper.mapEntityToDomain(it) }
@@ -201,9 +199,14 @@ class ChatMessageRepositoryImpl @Inject constructor(
             if (cachedMessages.isNotEmpty()) {
                 send(cachedMessages)
             }
+        } catch (e: Exception) {
+            Log.e("ChatMessageRepository", "Error loading cached messages", e)
+            // Don't close the flow on cache error, just continue to the listener
+        }
 
-            // Then listen for updates
-            val listener = firestore.collection("messages")
+        // Set up real-time listener
+        val listener = try {
+            firestore.collection("messages")
                 .document(baseChatId)
                 .collection("messages")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
@@ -225,52 +228,33 @@ class ChatMessageRepositoryImpl @Inject constructor(
                             }
 
                             // Update local cache
-                            CoroutineScope(Dispatchers.IO).launch {
-                                messages.forEach { message ->
-                                    localDataSource.insertMessage(chatMessageMapper.mapDomainToEntity(message))
+                            // Use a scope that won't cause the flow to be cancelled if it fails
+                            CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+                                try {
+                                    val entities = messages.map { chatMessageMapper.mapDomainToEntity(it) }
+                                    localDataSource.insertMessages(entities)
+                                } catch (e: Exception) {
+                                    Log.e("ChatMessageRepository", "Failed to update local cache", e)
                                 }
                             }
 
+                            // Send to UI immediately
                             trySend(messages)
                         } catch (e: Exception) {
                             Log.e("ChatMessageRepository", "Error processing messages", e)
                         }
                     }
                 }
-
-            // Clean up listener when flow is cancelled
-            awaitClose {
-                listener.remove()
-            }
         } catch (e: Exception) {
-            Log.e("ChatMessageRepository", "Error in startMessageListener", e)
-            // If something goes wrong, try to get messages from local cache
-            try {
-                val fallbackMessages = localDataSource.getMessagesByBaseChatId(chatId)
-                    .first()
-                    .map { chatMessageMapper.mapEntityToDomain(it) }
-
-                send(fallbackMessages)
-            } catch (fallbackException: Exception) {
-                Log.e("ChatMessageRepository", "Failed to get local messages as fallback", fallbackException)
-                send(emptyList())
-            }
+            Log.e("ChatMessageRepository", "Failed to set up message listener", e)
+            close(e)
+            return@callbackFlow
         }
-    }
 
-    override suspend fun updateMessageStatus(messageId: String, status: MessageStatus): Result<Unit> {
-        return try {
-            // Get the message from local database
-            val messages = localDataSource.getChatMessagesByMessageId(messageId).firstOrNull()
-                ?: return Result.failure(Exception("Message not found in local database"))
-
-            // Update local status first
-            localDataSource.updateMessageStatus(messageId, status.name)
-
-            // Then update remote status
-            remoteDataSource.updateMessageStatus(messages.baseChatId, messageId, status)
-        } catch (e: Exception) {
-            Result.failure(e)
+        // IMPORTANT: awaitClose must be the last thing in the callbackFlow block
+        awaitClose {
+            listener.remove()
+            Log.d("ChatMessageRepository", "Message listener removed for baseChatId: $baseChatId")
         }
     }
 
@@ -310,40 +294,6 @@ class ChatMessageRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Result.failure(e)
-        }
-    }
-
-    private suspend fun updateChatLastMessage(chatId: String, message: ChatMessage): Result<Unit> {
-        try {
-            // Extract the baseChatId from the chatId
-            // Assuming format: "baseChatId_userId"
-            val components = chatId.split("_")
-            val baseChatId = components.first()
-
-            // Get all chats associated with this baseChatId
-            val chatsQuery = firestore.collection("chats")
-                .whereEqualTo("baseChatId", baseChatId)
-                .get()
-                .await()
-
-            // Update each chat with the new message info
-            val batch = firestore.batch()
-            for (chatDoc in chatsQuery.documents) {
-                val chatIdDoc = chatDoc.id
-                //val senderIsParticipant = chatDoc.getString("participants")[0] == message.senderId
-
-                // Update last message info
-                val chatRef = firestore.collection("chats").document(chatIdDoc)
-                batch.update(chatRef, mapOf(
-                    "lastMessage" to message.content,
-                    "lastMessageTime" to message.timestamp
-                ))
-            }
-
-            batch.commit().await()
-            return Result.success(Unit)
-        } catch (e: Exception) {
-            return Result.failure(e)
         }
     }
 

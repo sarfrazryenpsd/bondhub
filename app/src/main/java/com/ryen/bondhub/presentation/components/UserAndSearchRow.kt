@@ -69,12 +69,27 @@ fun UserSearchAndMessageRow(
             modifier = Modifier
                 .clip(CircleShape)
                 .size(48.dp)
-                .clickable(onClick = onProfileClick),
+                .clickable {
+                    if (messageMode) onChatClick(
+                        chat.chatId,
+                        chat.connectionId,
+                        friendUserId
+                    ) else onProfileClick()
+                },
             contentScale = ContentScale.Crop,
             placeholder = painterResource(R.drawable.userplaceholder),
             error = painterResource(R.drawable.userplaceholder)
         )
-        Column(verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.clickable { onProfileClick() }) {
+        Column(
+            verticalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier.clickable {
+                if (messageMode) onChatClick(
+                    chat.chatId,
+                    chat.connectionId,
+                    friendUserId
+                ) else onProfileClick()
+            }
+        ) {
             Text(
                 text = if(!messageMode) displayName else chat.displayName,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
@@ -90,7 +105,11 @@ fun UserSearchAndMessageRow(
                     }
                 },
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                color = Secondary
+                color = if(!messageMode){
+                    Secondary.copy(alpha = 0.7f)
+                }else {
+                    if (chat.unreadMessageCount > 0) Secondary else Secondary.copy(alpha = 0.7f)
+                }
             )
         }
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
