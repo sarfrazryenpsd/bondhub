@@ -113,7 +113,7 @@ fun ChatScreenContent(
 
         Text(
             text = "Message",
-            color = Secondary.copy(alpha = 0.7f),
+            color = Secondary,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(top = 16.dp)
         )
