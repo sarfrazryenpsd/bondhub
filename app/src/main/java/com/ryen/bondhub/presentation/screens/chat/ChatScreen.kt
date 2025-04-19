@@ -71,8 +71,8 @@ fun ChatScreen(
                         chatsState = chatsState,
                         onSearchValueChange = { },
                         onSearchClick = { },
-                        onChatClick = { chatId, friendConnectionId, friendUserId ->
-                            viewModel.onEvent(ChatEvent.NavigateToChat(chatId, friendConnectionId, friendUserId))
+                        onChatClick = { chatId, friendUserId ->
+                            viewModel.onEvent(ChatEvent.NavigateToChat(chatId, friendUserId))
                         },
                         /*onDeleteChat = { chatId ->
                             viewModel.onEvent(ChatEvent.DeleteChat(chatId))

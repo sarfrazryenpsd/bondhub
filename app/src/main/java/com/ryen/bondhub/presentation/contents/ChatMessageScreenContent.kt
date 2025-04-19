@@ -49,25 +49,21 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.auth.FirebaseAuth
 import com.ryen.bondhub.R
 import com.ryen.bondhub.domain.model.ChatMessage
 import com.ryen.bondhub.domain.model.MessageStatus
 import com.ryen.bondhub.domain.model.MessageType
+import com.ryen.bondhub.presentation.state.ChatUiState
 import com.ryen.bondhub.presentation.theme.MessageUser
 import com.ryen.bondhub.presentation.theme.Primary
 import com.ryen.bondhub.presentation.theme.Secondary
@@ -80,20 +76,24 @@ fun ChatMessageScreenContent(
     messages: List<ChatMessage>,
     isLoading: Boolean,
     canSendMessage: Boolean,
+    uiState: ChatUiState,
+    onInputChange: (String) -> Unit,
+    onToggleEmojiPicker: () -> Unit,
     onSendMessage: (String) -> Unit,
+    currentUserId: String?,
     onAttachImage: (Uri) -> Unit,
+    onScrollHandled: () -> Unit,
     paddingValues: PaddingValues
-) {
-    val messageInputText = remember { mutableStateOf("") }
+)
+{
     val scrollState = rememberLazyListState()
-    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     val context = LocalContext.current
-    var showEmojiPicker by remember { mutableStateOf(false) }
 
     // Scroll to bottom when new messages arrive
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
+    LaunchedEffect(uiState.scrollToBottom, messages.size) {
+        if (uiState.scrollToBottom && messages.isNotEmpty()) {
             scrollState.animateScrollToItem(messages.size - 1)
+            onScrollHandled()
         }
     }
 
@@ -124,23 +124,22 @@ fun ChatMessageScreenContent(
         // Message input
         Column {
             MessageInputBar(
-                text = messageInputText.value,
-                onTextChange = { messageInputText.value = it },
+                text = uiState.inputText,
+                onTextChange = { onInputChange(it) },
                 onSendClick = {
-                    if (messageInputText.value.isNotBlank() && canSendMessage) {
-                        onSendMessage(messageInputText.value)
-                        messageInputText.value = ""
+                    if (uiState.inputText.isNotBlank() && canSendMessage) {
+                        onSendMessage(uiState.inputText)
                     }
                 },
-                onEmojiClick = {showEmojiPicker = !showEmojiPicker},
-                showEmojiPicker = showEmojiPicker,
+                onEmojiClick = onToggleEmojiPicker,
+                showEmojiPicker = uiState.showEmojiPicker,
                 onAttachClick = {
                     // Image picker would be implemented here
                     // For now just show a toast
                     Toast.makeText(context, "Attachment feature coming soon", Toast.LENGTH_SHORT)
                         .show()
                 },
-                canSend = canSendMessage && messageInputText.value.isNotBlank()
+                canSend = canSendMessage && uiState.inputText.isNotBlank()
             )
         }
     }

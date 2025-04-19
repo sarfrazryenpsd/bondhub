@@ -11,7 +11,6 @@ import com.ryen.bondhub.domain.model.UserProfile
 import com.ryen.bondhub.domain.repository.AuthRepository
 import com.ryen.bondhub.domain.useCases.chat.CheckChatExistsByBaseChatIdUseCase
 import com.ryen.bondhub.domain.useCases.chat.CreateChatInFirestore
-import com.ryen.bondhub.domain.useCases.chatMessage.GetChatMessagesUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.ListenForNewMessagesUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.MarkMessagesAsReadUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.SendMessageUseCase
@@ -19,6 +18,7 @@ import com.ryen.bondhub.domain.useCases.userProfile.GetUserProfileUseCase
 import com.ryen.bondhub.presentation.event.ChatMessageEvent
 import com.ryen.bondhub.presentation.event.ChatMessageUiEvent
 import com.ryen.bondhub.presentation.state.ChatMessageScreenState
+import com.ryen.bondhub.presentation.state.ChatUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -27,13 +27,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ChatMessageViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
-    private val getChatMessagesUseCase: GetChatMessagesUseCase,
     private val markMessagesAsReadUseCase: MarkMessagesAsReadUseCase,
     private val authRepository: AuthRepository,
     private val checkChatExistsByBaseChatIdUseCase: CheckChatExistsByBaseChatIdUseCase,
@@ -45,6 +45,9 @@ class ChatMessageViewModel @Inject constructor(
     private val _chatMessageScreenState = MutableStateFlow<ChatMessageScreenState>(ChatMessageScreenState.Initial)
     val chatMessageScreenState: StateFlow<ChatMessageScreenState> = _chatMessageScreenState.asStateFlow()
 
+    private val _uiState = MutableStateFlow(ChatUiState())
+    val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
+
     private val _friendProfile = MutableStateFlow(UserProfile())
     val friendProfile: StateFlow<UserProfile> = _friendProfile.asStateFlow()
 
@@ -54,11 +57,11 @@ class ChatMessageViewModel @Inject constructor(
     private var currentChatId: String = ""
     private var baseChatId: String = ""
     private var otherUserId: String = ""
-    private var currentUserId: String = ""
     private var messageJob: Job? = null
     private var chatExists: Boolean = false
+    var currentUserId: String = ""
 
-    fun initialize(chatId: String, connectionId: String, otherUserId: String) {
+    fun initialize(chatId: String, otherUserId: String) {
         if (this.currentChatId == chatId) return  // Already initialized with this chat
 
         this.currentChatId = chatId
@@ -109,7 +112,21 @@ class ChatMessageViewModel @Inject constructor(
 
     fun onEvent(event: ChatMessageEvent) {
         when (event) {
-            is ChatMessageEvent.SendMessage -> sendMessage(event.content)
+            is ChatMessageEvent.InputChanged -> {
+                _uiState.update { it.copy(inputText = event.newText) }
+            }
+            is ChatMessageEvent.ToggleEmojiPicker -> {
+                _uiState.update { it.copy(showEmojiPicker = !it.showEmojiPicker) }
+            }
+            is ChatMessageEvent.ScrollHandled -> {
+                _uiState.update { it.copy(scrollToBottom = false) }
+            }
+
+            is ChatMessageEvent.SendMessage -> {
+                sendMessage(event.content)
+                _uiState.update { it.copy(inputText = "") }
+                resetSendingState()
+            }
             is ChatMessageEvent.LoadMessages -> loadMessages()
             is ChatMessageEvent.UpdateMessageStatus -> updateMessageStatus(event.messageId, event.status)
             is ChatMessageEvent.AttachImage -> attachImage(event.uri)
@@ -134,6 +151,7 @@ class ChatMessageViewModel @Inject constructor(
                 // Use the real-time listener method instead
                 listenForNewMessagesUseCase(baseChatId).collect { messages ->
                     _chatMessageScreenState.value = ChatMessageScreenState.Success(messages)
+                    _uiState.update { it.copy(scrollToBottom = true) }
                 }
             } catch (e: Exception) {
                 _chatMessageScreenState.value = ChatMessageScreenState.Error(e.message ?: "Failed to load messages")
@@ -194,11 +212,13 @@ class ChatMessageViewModel @Inject constructor(
                 sendMessageUseCase(message).fold(
                     onSuccess = {
                         // Reset input field via event
-                        _events.emit(ChatMessageUiEvent.ClearInput)
-                        resetSendingState()
+
+                        //_events.emit(ChatMessageUiEvent.ClearInput)
                     },
                     onFailure = { exception ->
                         _events.emit(ChatMessageUiEvent.ShowSnackbarError(exception.message ?: "Failed to send message"))
+                        _events.emit(ChatMessageUiEvent.ClearInput)
+                        _uiState.update { it.copy(inputText = "") }
                         resetSendingState(exception.message)
                     }
                 )

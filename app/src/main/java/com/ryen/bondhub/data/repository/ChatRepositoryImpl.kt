@@ -172,14 +172,15 @@ class ChatRepositoryImpl @Inject constructor(
                 .map { mapper.mapEntityToDomain(it) }
                 .sortedByDescending { it.lastMessageTime }
 
-            if (localChats.isNotEmpty()) {
-                emit(localChats)
-            }
+            // Always emit something - either local chats or empty list
+            emit(localChats)
 
             // Then collect from remote source
             remoteDataSource.getUserChats(userId)
                 .catch { exception ->
                     Log.e("ChatRepository", "Error fetching remote chats", exception)
+                    // Important: Emit empty list on error to prevent getting stuck
+                    emit(emptyList())
                 }
                 .collect { documents ->
                     val remoteChats = documents.mapNotNull {
@@ -196,14 +197,13 @@ class ChatRepositoryImpl @Inject constructor(
                         }
                     }
 
-                    if (remoteChats.isNotEmpty()) {
-                        // Update local cache
-                        withContext(Dispatchers.IO) {
-                            localDataSource.insertChats(remoteChats.map { mapper.mapDomainToEntity(it) })
-                        }
-
-                        emit(remoteChats.sortedByDescending { it.lastMessageTime })
+                    // Update local cache even if empty
+                    withContext(Dispatchers.IO) {
+                        localDataSource.insertChats(remoteChats.map { mapper.mapDomainToEntity(it) })
                     }
+
+                    // Always emit the latest result, even if empty
+                    emit(remoteChats.sortedByDescending { it.lastMessageTime })
                 }
         } catch (e: Exception) {
             Log.e("ChatRepository", "Error in getUserChats", e)
@@ -213,9 +213,9 @@ class ChatRepositoryImpl @Inject constructor(
                 val fallbackLocalChats = localDataSource.getUserChats(userId)
                     .first()
                     .map { mapper.mapEntityToDomain(it) }
-                    .sortedByDescending { it.lastMessageTime } // Sort by most recent
+                    .sortedByDescending { it.lastMessageTime }
 
-                emit(fallbackLocalChats) // Emit local data as fallback
+                emit(fallbackLocalChats)
             } catch (fallbackException: Exception) {
                 Log.e("ChatRepository", "Failed to get local chats as fallback", fallbackException)
                 emit(emptyList()) // As a last resort, emit empty list

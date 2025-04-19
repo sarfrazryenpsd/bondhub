@@ -24,19 +24,19 @@ import com.ryen.bondhub.presentation.theme.Surface
 fun ChatMessageScreen(
     viewModel: ChatMessageViewModel = hiltViewModel(),
     chatId: String,
-    friendConnectionId: String,
     friendUserId: String,
     // Navigation handlers will be implemented later
     onNavigateBack: () -> Unit = {},
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val chatMessageState by viewModel.chatMessageScreenState.collectAsState()
     val friendProfile by viewModel.friendProfile.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarState = remember { mutableStateOf(SnackBarState.SUCCESS) }
 
     // Initialize the ViewModel with chat parameters
-    LaunchedEffect(chatId, friendConnectionId, friendUserId) {
-        viewModel.initialize(chatId, friendConnectionId, friendUserId)
+    LaunchedEffect(chatId, friendUserId) {
+        viewModel.initialize(chatId, friendUserId)
     }
 
     // Collect UI events
@@ -62,7 +62,9 @@ fun ChatMessageScreen(
                 is ChatMessageUiEvent.NavigateBack -> {
                     onNavigateBack()
                 }
-                else -> {}
+                is ChatMessageUiEvent.ClearInput -> {
+
+                }
             }
         }
     }
@@ -87,6 +89,17 @@ fun ChatMessageScreen(
                     messages = state.messages,
                     isLoading = state.isLoading,
                     canSendMessage = state.canSendMessage,
+                    uiState = uiState,
+                    currentUserId = viewModel.currentUserId,
+                    onInputChange = { newText ->
+                        viewModel.onEvent(ChatMessageEvent.InputChanged(newText))
+                    },
+                    onToggleEmojiPicker = {
+                        viewModel.onEvent(ChatMessageEvent.ToggleEmojiPicker)
+                    },
+                    onScrollHandled = {
+                        viewModel.onEvent(ChatMessageEvent.ScrollHandled)
+                    },
                     onSendMessage = { content ->
                         viewModel.onEvent(ChatMessageEvent.SendMessage(content))
                     },

@@ -4,7 +4,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.ryen.bondhub.data.mappers.ChatMessageMapper
 import com.ryen.bondhub.data.remote.dataSource.ChatMessageRemoteDataSource
 import com.ryen.bondhub.domain.repository.ChatMessageRepository
-import com.ryen.bondhub.domain.useCases.chatMessage.GetChatMessagesUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.GetUnreadMessagesCountUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.ListenForNewMessagesUseCase
 import com.ryen.bondhub.domain.useCases.chatMessage.MarkMessagesAsReadUseCase
@@ -30,11 +29,6 @@ object ChatMessageModule {
     @Provides
     fun provideSendMessageUseCase(repository: ChatMessageRepository): SendMessageUseCase {
         return SendMessageUseCase(repository)
-    }
-
-    @Provides
-    fun provideGetMessagesUseCase(repository: ChatMessageRepository): GetChatMessagesUseCase {
-        return GetChatMessagesUseCase(repository)
     }
 
 

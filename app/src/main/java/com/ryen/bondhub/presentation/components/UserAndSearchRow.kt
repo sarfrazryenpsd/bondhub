@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.google.firebase.auth.FirebaseAuth
 import com.ryen.bondhub.R
 import com.ryen.bondhub.domain.model.Chat
 import com.ryen.bondhub.presentation.theme.Primary
@@ -48,15 +47,13 @@ fun UserSearchAndMessageRow(
     messageMode: Boolean = false,
     onProfileClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
-    onChatClick: (String, String, String) -> Unit = { _, _, _ -> }
+    onChatClick: (String, String) -> Unit = { _, _ -> }
 ) {
-    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-    val friendUserId = chat.participants.find { it != currentUserId } ?: ""
     Row (
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .clickable { onChatClick(chat.chatId, chat.connectionId, friendUserId) },
+            .clickable { onChatClick(chat.chatId, chat.participants.last()) },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ){
@@ -72,8 +69,7 @@ fun UserSearchAndMessageRow(
                 .clickable {
                     if (messageMode) onChatClick(
                         chat.chatId,
-                        chat.connectionId,
-                        friendUserId
+                        chat.participants.last()
                     ) else onProfileClick()
                 },
             contentScale = ContentScale.Crop,
@@ -85,8 +81,7 @@ fun UserSearchAndMessageRow(
             modifier = Modifier.clickable {
                 if (messageMode) onChatClick(
                     chat.chatId,
-                    chat.connectionId,
-                    friendUserId
+                    chat.participants.last()
                 ) else onProfileClick()
             }
         ) {

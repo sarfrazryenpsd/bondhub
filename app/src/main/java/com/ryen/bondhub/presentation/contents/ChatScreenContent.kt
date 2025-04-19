@@ -72,7 +72,7 @@ fun ChatScreenContent(
     onFriendsDismiss: () -> Unit,
     onMessageFABClick: () -> Unit,
     onFriendClick: (ChatConnection) -> Unit,
-    onChatClick: (String, String, String) -> Unit = { _, _, _ -> },
+    onChatClick: (String, String) -> Unit = { _, _ -> },
     //onDeleteChat: (String) -> Unit = {},
     paddingValues: PaddingValues,
 ) {
@@ -437,7 +437,7 @@ private fun ChatScreenContentPrev() {
         onSearchValueChange = {},
         chatsState = ChatsState.Empty,
         onSearchClick = {},
-        onChatClick = { _, _,_ -> },
+        onChatClick = { _, _,-> },
         //onDeleteChat = {}
     )
 }

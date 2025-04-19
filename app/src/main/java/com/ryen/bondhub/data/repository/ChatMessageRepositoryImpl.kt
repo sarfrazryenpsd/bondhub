@@ -153,41 +153,6 @@ class ChatMessageRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getChatMessages(chatId: String): Flow<List<ChatMessage>> {
-        return try {
-            // Extract baseChatId from chatId
-            val baseChatId = chatId.split("_").first()
-
-            // Get remote messages
-            val remoteMessages = remoteDataSource.getMessages(baseChatId)
-
-            remoteMessages
-                .onEach { messageList ->
-                    // Store the remote messages in local database
-                    val entities = messageList.map { chatMessageMapper.mapDomainToEntity(it) }
-                    localDataSource.insertMessages(entities)
-                }
-                .flowOn(Dispatchers.IO)
-                .catch {
-                    // Fallback to local data source on error
-                    emit(emptyList())
-                }
-                .flatMapConcat { remoteResult ->
-                    if (remoteResult.isEmpty()) {
-                        // If remote returns empty, use local data
-                        localDataSource.getMessagesByBaseChatId(baseChatId)
-                            .map { entities -> entities.map { chatMessageMapper.mapEntityToDomain(it) } }
-                    } else {
-                        // Otherwise use the remote result
-                        flow { emit(remoteResult) }
-                    }
-                }
-        } catch (e: Exception) {
-            // In case of any exception, return empty list
-            flow { emit(emptyList()) }
-        }
-    }
-
     // Improved listenForNewMessages implementation
     override suspend fun listenForNewMessages(baseChatId: String): Flow<List<ChatMessage>> = callbackFlow {
         // First emit cached messages immediately

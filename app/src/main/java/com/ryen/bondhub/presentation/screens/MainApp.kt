@@ -1,7 +1,9 @@
 package com.ryen.bondhub.presentation.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -150,7 +152,29 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                                 FindFriendsScreen()
                             }
 
-                            composable(Screen.UserProfileEditScreen.route) {
+                            composable(
+                                route = Screen.UserProfileEditScreen.route,
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        initialOffsetX = { it }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        targetOffsetX = { -it }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        initialOffsetX = { -it }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        targetOffsetX = { it }
+                                    )
+                                }
+                                ) {
                                 val viewModel: UserProfileViewModel = hiltViewModel()
                                 LaunchedEffect(Unit) {
                                     viewModel.setInitialSetupMode(false)
@@ -177,26 +201,40 @@ fun MainApp(navController: NavHostController = rememberNavController()) {
                             }
 
                             composable(
-                                route = "chat_message_screen/{chatId}?friendConnectionId={friendConnectionId}?friendUserId={friendUserId}",
+                                route = "chat_message_screen/{chatId}?friendUserId={friendUserId}",
                                 arguments = listOf(
                                     navArgument("chatId") { type = NavType.StringType },
-                                    navArgument("friendConnectionId") {
-                                        type = NavType.StringType
-                                        defaultValue = ""
-                                    },
                                     navArgument("friendUserId") {
                                         type = NavType.StringType
                                         defaultValue = ""
                                     }
-                                )
+                                ),
+                                enterTransition = {
+                                    slideInHorizontally(
+                                        initialOffsetX = { it }
+                                    )
+                                },
+                                exitTransition = {
+                                    slideOutHorizontally(
+                                        targetOffsetX = { -it }
+                                    )
+                                },
+                                popEnterTransition = {
+                                    slideInHorizontally(
+                                        initialOffsetX = { -it }
+                                    )
+                                },
+                                popExitTransition = {
+                                    slideOutHorizontally(
+                                        targetOffsetX = { it }
+                                    )
+                                }
                             ) { backStackEntry ->
                                 val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
-                                val friendConnectionId = backStackEntry.arguments?.getString("friendConnectionId") ?: ""
                                 val friendUserId = backStackEntry.arguments?.getString("friendUserId") ?: ""
 
                                 ChatMessageScreen(
                                     chatId = chatId,
-                                    friendConnectionId = friendConnectionId,
                                     friendUserId = friendUserId,
                                     onNavigateBack = {
                                         navController.popBackStack()

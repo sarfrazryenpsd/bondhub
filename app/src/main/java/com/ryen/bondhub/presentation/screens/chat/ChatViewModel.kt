@@ -80,7 +80,7 @@ class ChatViewModel @Inject constructor(
             is ChatEvent.CloseFriendsBottomSheet -> closeFriendsBottomSheet()
             is ChatEvent.StartChatWithFriend -> startChatWithFriend(event.connection)
             is ChatEvent.NavigateToUserProfile -> navigateToRoute(event.route)
-            is ChatEvent.NavigateToChat -> navigateToChat(event.chatId, event.friendConnectionId, event.friendUserId)
+            is ChatEvent.NavigateToChat -> navigateToChat(event.chatId, event.friendUserId)
             is ChatEvent.DeleteChat -> deleteChat(event.chatId)
         }
     }
@@ -313,7 +313,7 @@ class ChatViewModel @Inject constructor(
                             ?: return@fold
 
                         // Navigate to the chat screen with the chat ID, connectionId, and otherUserId
-                        navigateToChat(chat.chatId, connection.connectionId, otherUserId)
+                        navigateToChat(chat.chatId, otherUserId)
                     },
                     onFailure = { exception ->
                         _events.emit(UiEvent.ShowSnackbarError(exception.message ?: "Failed to create chat"))
@@ -358,9 +358,9 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    private fun navigateToChat(chatId: String, friendConnectionId: String, friendUserId: String) {
+    private fun navigateToChat(chatId: String, friendUserId: String) {
         viewModelScope.launch {
-            _events.emit(UiEvent.Navigate("chat_message_screen/$chatId?friendConnectionId=$friendConnectionId?friendUserId=$friendUserId"))
+            _events.emit(UiEvent.Navigate("chat_message_screen/$chatId?friendUserId=$friendUserId"))
         }
     }
 }
