@@ -17,7 +17,7 @@ class ChatRemoteDataSource @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
     private val chatsCollection = firestore.collection("chats")
-    private val connectionsCollection = firestore.collection("connections")
+    private val connectionsCollection = firestore.collection("chat_connections")
 
     suspend fun createChat(chat: Map<String, Any?>): Result<DocumentSnapshot> = withContext(Dispatchers.IO) {
         try {
@@ -53,6 +53,21 @@ class ChatRemoteDataSource @Inject constructor(
             awaitClose {
                 listenerRegistration.remove()
             }
+        }
+    }
+
+    // Add this method to ChatRemoteDataSource
+    suspend fun createMessageCollection(baseChatId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // Create an empty document at the messages collection path
+            firestore.collection("messages")
+                .document(baseChatId)
+                .set(hashMapOf("created" to FieldValue.serverTimestamp()))
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

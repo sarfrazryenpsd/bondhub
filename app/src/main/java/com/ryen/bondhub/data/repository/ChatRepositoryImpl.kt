@@ -34,12 +34,18 @@ class ChatRepositoryImpl @Inject constructor(
             val currentUserId = auth.currentUser?.uid ?: return Result.failure(Exception("User not authenticated"))
             val otherUserId = if (userId1 == currentUserId) userId2 else userId1
 
-            // Generate a unique baseChatId
+            // Generate a unique baseChatId - only needed if chat doesn't exist
             val baseChatId = UUID.randomUUID().toString()
             val chatId = "${baseChatId}_${currentUserId}"
 
-            // Check if a chat with this baseChatId already exists locally
-            val existingChats = localDataSource.getChatsByBaseChatId(baseChatId)
+            // Check if a chat already exists locally
+            val existingChats = localDataSource.getUserChats(currentUserId)
+                .first()
+                .filter { entity ->
+                    entity.participants.contains(otherUserId) &&
+                            entity.chatId.endsWith("_$currentUserId")
+                }
+
             if (existingChats.isNotEmpty()) {
                 val existingChat = mapper.mapEntityToDomain(existingChats.first())
                 return Result.success(existingChat)
@@ -70,7 +76,7 @@ class ChatRepositoryImpl @Inject constructor(
             val otherUserProfile = otherUserProfileResult.getOrNull()
                 ?: return Result.failure(Exception("Other user profile not found"))
 
-            // Create chat object for current user with other user's profile info
+            // Create chat object for local use only - no remote storage yet
             val currentUserChat = Chat(
                 chatId = chatId,
                 baseChatId = baseChatId,
@@ -114,8 +120,7 @@ class ChatRepositoryImpl @Inject constructor(
             // Get base chatId from the chat
             val baseChatId = chat.baseChatId
 
-            // Create both user chat documents
-
+            // Create both user chat documents in the chats collection (not messages)
             // 1. Current user's chat document
             val currentUserChatMap = mapper.mapDomainToMap(chat)
             val currentUserResult = remoteDataSource.createChat(currentUserChatMap)
@@ -155,6 +160,14 @@ class ChatRepositoryImpl @Inject constructor(
 
             if (otherUserResult.isFailure) {
                 return Result.failure(otherUserResult.exceptionOrNull() ?: Exception("Failed to create other user chat"))
+            }
+
+            // Create the message collection document in Firestore if it doesn't exist
+            // This ensures the path exists before we try to write messages
+            val messageCollectionResult = remoteDataSource.createMessageCollection(baseChatId)
+            if (messageCollectionResult.isFailure) {
+                return Result.failure(messageCollectionResult.exceptionOrNull() ?:
+                Exception("Failed to create message collection"))
             }
 
             return Result.success(Unit)

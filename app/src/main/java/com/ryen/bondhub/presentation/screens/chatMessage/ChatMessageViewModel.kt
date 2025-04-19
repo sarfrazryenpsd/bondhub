@@ -182,7 +182,11 @@ class ChatMessageViewModel @Inject constructor(
                         )
 
                         if (createChatResult.isFailure) {
-                            _events.emit(ChatMessageUiEvent.ShowSnackbarError("Failed to create chat"))
+                            val error = createChatResult.exceptionOrNull()
+                            Log.e("ChatMessageViewModel", "Failed to create chat", error)
+                            _events.emit(ChatMessageUiEvent.ShowSnackbarError(
+                                error?.message ?: "Failed to create chat"
+                            ))
                             // Re-enable sending
                             resetSendingState()
                             return@launch
@@ -191,6 +195,7 @@ class ChatMessageViewModel @Inject constructor(
                         // Mark chat as existing now
                         chatExists = true
                     } catch (e: Exception) {
+                        Log.e("ChatMessageViewModel", "Exception creating chat", e)
                         _events.emit(ChatMessageUiEvent.ShowSnackbarError(e.message ?: "Failed to create chat"))
                         resetSendingState()
                         return@launch
@@ -212,17 +217,19 @@ class ChatMessageViewModel @Inject constructor(
                 sendMessageUseCase(message).fold(
                     onSuccess = {
                         // Reset input field via event
-
-                        //_events.emit(ChatMessageUiEvent.ClearInput)
+                        _events.emit(ChatMessageUiEvent.ClearInput)
+                        resetSendingState()
                     },
                     onFailure = { exception ->
-                        _events.emit(ChatMessageUiEvent.ShowSnackbarError(exception.message ?: "Failed to send message"))
-                        _events.emit(ChatMessageUiEvent.ClearInput)
-                        _uiState.update { it.copy(inputText = "") }
+                        Log.e("ChatMessageViewModel", "Failed to send message", exception)
+                        _events.emit(ChatMessageUiEvent.ShowSnackbarError(
+                            exception.message ?: "Failed to send message"
+                        ))
                         resetSendingState(exception.message)
                     }
                 )
             } catch (e: Exception) {
+                Log.e("ChatMessageViewModel", "Exception in sendMessage", e)
                 _events.emit(ChatMessageUiEvent.ShowSnackbarError(e.message ?: "Unknown error"))
                 resetSendingState(e.message)
             }

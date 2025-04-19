@@ -1,7 +1,6 @@
 package com.ryen.bondhub.domain.repository
 
 import com.ryen.bondhub.domain.model.ChatMessage
-import com.ryen.bondhub.domain.model.MessageStatus
 import kotlinx.coroutines.flow.Flow
 
 interface ChatMessageRepository {
