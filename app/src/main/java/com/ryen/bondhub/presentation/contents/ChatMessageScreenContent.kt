@@ -31,12 +31,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -106,6 +108,7 @@ fun ChatMessageScreenContent(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
+                .background( com.ryen.bondhub.presentation.theme.Surface)
                 .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -190,7 +193,7 @@ fun MessageItem(
                         Text(
                             text = message.content,
                             color = textColor,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal)
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                     MessageType.IMAGE -> {
@@ -296,17 +299,18 @@ fun MessageInputBar(
                         onTextChange(text + emoji)
                     }
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
+        HorizontalDivider()
         Surface(
-            tonalElevation = 2.dp,
-            shadowElevation = 2.dp,
+            /*tonalElevation = 2.dp,
+            shadowElevation = 2.dp,*/
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp),
+                .fillMaxWidth(),
+                //.padding(4.dp),
             color = com.ryen.bondhub.presentation.theme.Surface,
-            shape = CircleShape
+            //shape = CircleShape
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -327,7 +331,12 @@ fun MessageInputBar(
                         unfocusedContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = .15f),
                         focusedContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = .2f),
                         unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent
+                        focusedIndicatorColor = Color.Transparent,
+                        cursorColor = Primary,
+                        selectionColors = TextSelectionColors(
+                            handleColor = Primary,
+                            backgroundColor = Primary.copy(alpha = .4f)
+                        )
                     ),
                     leadingIcon = {
                         IconButton(onClick = onEmojiClick) {

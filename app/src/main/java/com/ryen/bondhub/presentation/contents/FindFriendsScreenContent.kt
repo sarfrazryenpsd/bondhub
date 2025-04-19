@@ -55,9 +55,10 @@ fun FindFriendsScreenContent(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color.LightGray)
-            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp, top = 46.dp)
             .clip(RoundedCornerShape(32.dp))
+            .padding(6.dp)
             .background(color = Surface)
+            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp, top = 46.dp)
             .padding(horizontal = 18.dp, vertical = 22.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

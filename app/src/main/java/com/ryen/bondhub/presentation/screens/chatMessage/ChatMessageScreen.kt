@@ -18,6 +18,7 @@ import com.ryen.bondhub.presentation.event.ChatMessageUiEvent
 import com.ryen.bondhub.presentation.screens.ErrorScreen
 import com.ryen.bondhub.presentation.screens.LoadingScreen
 import com.ryen.bondhub.presentation.state.ChatMessageScreenState
+import com.ryen.bondhub.presentation.theme.Surface
 
 @Composable
 fun ChatMessageScreen(
@@ -67,6 +68,7 @@ fun ChatMessageScreen(
     }
 
     Scaffold(
+        containerColor = Surface,
         topBar = {
             ChatMessageTopBar(
                 onBackClick = { viewModel.onEvent(ChatMessageEvent.NavigateBack) },
