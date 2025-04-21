@@ -148,7 +148,6 @@ class ChatMessageRepositoryImpl @Inject constructor(
         }
     }
 
-    // Improved listenForNewMessages implementation
     override suspend fun listenForNewMessages(baseChatId: String): Flow<List<ChatMessage>> = callbackFlow {
         // First emit cached messages immediately
         try {

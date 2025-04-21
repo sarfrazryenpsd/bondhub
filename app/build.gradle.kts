@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.coil.network)
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)
+    implementation(libs.firebase.messaging.ktx)
     implementation(libs.play.services.auth)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
