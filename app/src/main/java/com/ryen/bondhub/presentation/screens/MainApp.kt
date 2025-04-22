@@ -1,5 +1,6 @@
 package com.ryen.bondhub.presentation.screens
 
+import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
@@ -27,6 +28,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
+import com.ryen.bondhub.MainActivity
 import com.ryen.bondhub.di.module.LocalAuthRepository
 import com.ryen.bondhub.di.module.ProvideAuthRepository
 import com.ryen.bondhub.presentation.screens.auth.AuthScreen
@@ -40,11 +42,17 @@ import com.ryen.bondhub.presentation.screens.userProfile.ProfileUpdateScreen
 import com.ryen.bondhub.presentation.screens.userProfile.UserProfileViewModel
 
 @Composable
-fun MainApp(navController: NavHostController = rememberNavController()) {
+fun MainApp(navController: NavHostController = rememberNavController(), notificationIntent: Intent? = null) {
     ProvideAuthRepository {
-        Surface() {
+        Surface {
             var startDestination by remember { mutableStateOf<String?>(null) }
             val authRepository = LocalAuthRepository.current
+
+            LaunchedEffect(navController) {
+                notificationIntent?.let {
+                    MainActivity.handleNotificationNavigation(it, navController)
+                }
+            }
 
             LaunchedEffect(Unit) {
                 val currentUser = FirebaseAuth.getInstance().currentUser
