@@ -34,8 +34,23 @@ class ChatFirebaseMessagingService: FirebaseMessagingService() {
         }
     }
 
-    override fun onMessageReceived(message: RemoteMessage) {
-        Log.d(TAG, "Received FCM message: ${message.data}")
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        Log.d(TAG, "Received FCM message: ${remoteMessage.data}")
+
+        remoteMessage.data.forEach { (key, value) ->
+            Log.d(TAG, "FCM data: $key = $value")
+        }
+
+        val title = remoteMessage.data["title"] ?: "New message"
+        val message = remoteMessage.data["message"] ?: ""
+        val senderName = remoteMessage.data["senderName"] ?: ""
+        val senderImage = remoteMessage.data["senderImage"] ?: ""
+        val chatId = remoteMessage.data["chatId"] ?: ""
+        val baseChatId = remoteMessage.data["baseChatId"] ?: ""
+        val senderId = remoteMessage.data["senderId"] ?: ""
+        val unreadCount = remoteMessage.data["unreadCount"]?.toIntOrNull() ?: 1
+
+        showNotification(title, message, senderName, senderImage, chatId, baseChatId, senderId, unreadCount)
 
     }
 

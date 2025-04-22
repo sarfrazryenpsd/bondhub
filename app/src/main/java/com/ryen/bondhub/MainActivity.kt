@@ -5,20 +5,50 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.ryen.bondhub.presentation.screens.MainApp
-import com.ryen.bondhub.presentation.screens.Screen
 import com.ryen.bondhub.presentation.theme.BondHubTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    // Companion object to hold notification navigation data that can be accessed statically
+    companion object {
+        private var pendingChatId: String? = null
+        private var pendingFriendUserId: String? = null
+        private var pendingNavigationNeeded = false
+        private const val NOTIFICATION_PERMISSION_CODE = 123
+
+        fun handleNotificationNavigation(navController: NavHostController) {
+            if (pendingNavigationNeeded && pendingChatId != null && pendingFriendUserId != null) {
+                try {
+                    val route = "chat_message_screen/$pendingChatId?friendUserId=$pendingFriendUserId"
+                    navController.navigate(route)
+
+                    // Reset pending navigation flags after successful navigation
+                    pendingNavigationNeeded = false
+                    pendingChatId = null
+                    pendingFriendUserId = null
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "Failed to navigate from notification", e)
+                }
+            }
+        }
+
+        fun setPendingNavigation(chatId: String?, friendUserId: String?) {
+            pendingChatId = chatId
+            pendingFriendUserId = friendUserId
+            pendingNavigationNeeded = true
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,24 +59,30 @@ class MainActivity : ComponentActivity() {
             requestNotificationPermission()
         }
 
-        val launchIntent = intent
+        // Store navigation data from intent, don't try to navigate yet
+        handleNotificationIntent(intent)
 
         setContent {
             BondHubTheme {
-                MainApp(notificationIntent = launchIntent)
+                MainApp()
             }
         }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        setIntent(intent)
-
-        val navController = findNavController()
-        handleNotificationNavigation(intent, navController)
+        handleNotificationIntent(intent)
     }
 
+    private fun handleNotificationIntent(intent: Intent) {
+        if (intent.getBooleanExtra("NAVIGATE_TO_CHAT", false)) {
+            val chatId = intent.getStringExtra("CHAT_ID")
+            val friendUserId = intent.getStringExtra("OTHER_USER_ID")
 
+            // Store these values for later use when NavController is ready
+            setPendingNavigation(chatId, friendUserId)
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun requestNotificationPermission() {
@@ -61,35 +97,6 @@ class MainActivity : ComponentActivity() {
                 arrayOf(Manifest.permission.POST_NOTIFICATIONS),
                 NOTIFICATION_PERMISSION_CODE
             )
-        }
-    }
-
-    private fun findNavController(): NavController? {
-        // This is a fallback method - won't be needed with proper implementation
-        return null
-    }
-
-    companion object {
-        private const val NOTIFICATION_PERMISSION_CODE = 123
-
-        fun handleNotificationNavigation(intent: Intent, navController: NavController?) {
-            if (intent.getBooleanExtra("NAVIGATE_TO_CHAT", false)) {
-                val chatId = intent.getStringExtra("CHAT_ID") ?: return
-                val friendUserId = intent.getStringExtra("OTHER_USER_ID") ?: return
-
-                // Navigate to chat message screen
-                val route = "chat_message_screen/$chatId?friendUserId=$friendUserId"
-
-                // Navigate while ensuring proper back stack behavior
-                navController?.navigate(route) {
-                    // Pop up to the main chat screen to avoid stacking
-                    popUpTo(Screen.ChatScreen.route) {
-                        saveState = true
-                    }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            }
         }
     }
 }
