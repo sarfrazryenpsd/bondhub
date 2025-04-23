@@ -54,9 +54,6 @@ Watch the full app demo series (5 short videos) on YouTube:
 🚀 Getting Started
 Clone the repository
 
-bash
-Copy
-Edit
 git clone https://github.com/yourusername/bondhub.git
 cd bondhub
 Open in Android Studio
