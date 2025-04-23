@@ -49,9 +49,7 @@ bondhub/
 ├── domain/         # Domain layer: models, use cases
 ├── notification/   # Notification handling (FCM)
 └── presentation/   # Presentation layer: UI components, viewmodels
-
-
----
+```
 
 🚀 Getting Started
 Clone the repository
