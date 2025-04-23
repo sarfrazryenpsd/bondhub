@@ -8,6 +8,10 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import coil3.ImageLoader
+import coil3.request.ImageRequest
+import coil3.request.allowHardware
+import coil3.toBitmap
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -17,6 +21,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -116,7 +121,7 @@ class ChatFirebaseMessagingService: FirebaseMessagingService() {
 
         // Load profile image for notification (optional)
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.mipmap.ic_launcher) // Make sure to create this icon
+            .setSmallIcon(R.drawable.notification_ic) // Make sure to create this icon
             .setContentTitle(senderName)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -139,6 +144,48 @@ class ChatFirebaseMessagingService: FirebaseMessagingService() {
         }
 
         // Display the notification
-        notificationManager.notify(chatId.hashCode(), notificationBuilder.build())
+        if (senderImage.isNotEmpty()) {
+            Log.d(TAG, "Loading profile image: $senderImage")
+
+            if (senderImage.isNotEmpty()) {
+                Log.d(TAG, "Loading profile image: $senderImage")
+
+                // First, show the notification without the image
+                val initialNotificationId = chatId.hashCode()
+                notificationManager.notify(initialNotificationId, notificationBuilder.build())
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        // Use Coil's suspending get function to fetch the bitmap directly
+                        val bitmap = ImageLoader(this@ChatFirebaseMessagingService)
+                            .execute(
+                                ImageRequest.Builder(this@ChatFirebaseMessagingService)
+                                    .data(senderImage)
+                                    .allowHardware(false)
+                                    .size(128, 128) // Set a specific size for the notification icon
+                                    .build()
+                            ).image?.toBitmap()
+
+                        // Update the notification with the bitmap on the main thread
+                        withContext(Dispatchers.Main) {
+                            if (bitmap != null) {
+                                notificationBuilder.setLargeIcon(bitmap)
+                                // Update the existing notification with the new bitmap
+                                notificationManager.notify(initialNotificationId, notificationBuilder.build())
+                            } else {
+                                Log.e(TAG, "Bitmap is null after loading")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Exception loading image: ${e.message}", e)
+                    }
+                }
+            } else {
+                notificationManager.notify(chatId.hashCode(), notificationBuilder.build())
+            }
+        } else {
+            // Show notification without image if no URL is provided
+            notificationManager.notify(chatId.hashCode(), notificationBuilder.build())
+        }
     }
 }

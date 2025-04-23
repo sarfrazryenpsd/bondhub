@@ -11,6 +11,7 @@ import com.ryen.bondhub.domain.useCases.userProfile.FindUserByEmailUseCase
 import com.ryen.bondhub.presentation.event.UiEvent
 import com.ryen.bondhub.presentation.state.FindFriendsState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -113,7 +114,7 @@ class FindFriendsViewModel @Inject constructor(
     }
 
     fun sendConnectionRequest(userProfile: UserProfile) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Store the current state before showing loading
             val previousState = _uiState.value
             _uiState.value = FindFriendsState.Loading

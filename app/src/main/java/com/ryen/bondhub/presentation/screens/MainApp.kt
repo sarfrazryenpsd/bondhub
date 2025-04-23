@@ -278,7 +278,9 @@ Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [St
 
 /*2.Mark messages as read use case and unreadMessageCount issue*/
 
-//3.FriendRequest status not updating on FindFriendScreen due to running on main thread
+//3.Find Friend status not updating on FindFriendScreen due to running on main thread
+
+//6. Friend Request showing with currentUser profile in FriendRequest Screen of current user after sending friend request to other user
 
 /*4.Error mapping document to chat (Ask Gemini)
 java.lang.RuntimeException: Field 'lastMessageTime' is not a java.lang.Number
