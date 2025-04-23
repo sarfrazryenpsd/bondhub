@@ -1,5 +1,6 @@
 package com.ryen.bondhub.data.repository
 
+import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
 import com.ryen.bondhub.data.local.dao.ChatConnectionDao
@@ -13,7 +14,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -157,22 +157,32 @@ class ChatConnectionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getPendingConnectionRequestsForUser(userId: String, asRecipient: Boolean): Flow<List<ChatConnection>> = withContext(Dispatchers.IO) {
-        connectionsCollection
-            .whereEqualTo("user1Id", userId)
-            .whereEqualTo("status", ConnectionStatus.PENDING)
-            .apply {
-                if (asRecipient) {
-                    // Only show requests where the user is NOT the initiator
-                    whereNotEqualTo("initiatorId", userId)
-                } else {
-                    // Only show requests where the user IS the initiator
-                    whereEqualTo("initiatorId", userId)
-                }
-            }
-            .snapshots()
-            .map { snapshot ->
-                snapshot.documents.mapNotNull { it.toObject(ChatConnection::class.java) }
-            }
+        // Create a filter for connections where the user is either user1Id or user2Id
+        val query = if (asRecipient) {
+            // Get connections where:
+            // 1. Status is PENDING and user is a participant (user1 or user2)
+            // 2. But the user is NOT the initiator (they received the request)
+            connectionsCollection
+                .whereEqualTo("status", ConnectionStatus.PENDING)
+                .whereNotEqualTo("initiatorId", userId)
+                .where(
+                    Filter.or(
+                        Filter.equalTo("user1Id", userId),
+                        Filter.equalTo("user2Id", userId)
+                    )
+                )
+        } else {
+            // Get connections where:
+            // 1. Status is PENDING
+            // 2. User IS the initiator (they sent the request)
+            connectionsCollection
+                .whereEqualTo("status", ConnectionStatus.PENDING)
+                .whereEqualTo("initiatorId", userId)
+        }
+
+        query.snapshots().map { snapshot ->
+            snapshot.documents.mapNotNull { it.toObject(ChatConnection::class.java) }
+        }
     }
 
     override suspend fun getAcceptedConnectionsFlow(userId: String): Flow<List<ChatConnection>>  {
