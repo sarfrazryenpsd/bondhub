@@ -107,6 +107,6 @@ This project is licensed under the MIT License – see the LICENSE file for deta
 
 ## 🙋‍♂️ Creator
 Developed with 💙 by Sarfraz
-🔗 [![LinkedIn](https://www.linkedin.com/in/md-sarfraz-uddin/)
+🔗 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/yourusername/)
 Feel free to connect for collaborations, feedback, or just to chat!
 
