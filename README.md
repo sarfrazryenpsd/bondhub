@@ -42,12 +42,14 @@ Watch the full app demo series (5 short videos) on YouTube:
 > Clean Architecture with separation of concerns  
 > Domain ↔ Data ↔ Presentation
 
-└── bondhub/
-    ├── data/           # Data layer: repositories, data sources
-    ├── di/             # Dependency Injection modules (Hilt)
-    ├── domain/         # Domain layer: models, use cases
-    ├── notification/   # Notification handling (FCM)
-    └── presentation/   # Presentation layer: UI components, viewmodels
+```text
+bondhub/
+├── data/           # Data layer: repositories, data sources
+├── di/             # Dependency Injection modules (Hilt)
+├── domain/         # Domain layer: models, use cases
+├── notification/   # Notification handling (FCM)
+└── presentation/   # Presentation layer: UI components, viewmodels
+
 
 ---
 
