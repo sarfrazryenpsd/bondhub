@@ -3,4 +3,5 @@ A real-time, secure, and modern messaging app built with Jetpack Compose, Fireba
 
 ## 📱 Chat Screen Demo
 
-[![Watch the video](https://img.youtube.com/shorts/tdbVj3AGl8M/hqdefault.jpg)](https://youtu.be/shorts/tdbVj3AGl8M)
+[![Watch the video](https://img.youtube.com/vi/tdbVj3AGl8M/hqdefault.jpg)](https://www.youtube.com/watch?v=tdbVj3AGl8M)
+
