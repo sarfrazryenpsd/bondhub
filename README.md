@@ -42,64 +42,71 @@ Watch the full app demo series (5 short videos) on YouTube:
 > Clean Architecture with separation of concerns  
 > Domain ↔ Data ↔ Presentation
 
-📦 app/ ┣ 📂data/ ┃ ┣ 📂local/ (Room) ┃ ┣ 📂remote/ (Firestore, Firebase) ┃ ┗ 📂repository/ ┣ 📂domain/ ┃ ┣ 📂model/ ┃ ┣ 📂repository/ ┃ ┗ 📂usecase/ ┣ 📂presentation/ ┃ ┣ 📂screens/ ┃ ┣ 📂components/ ┃ ┗ 📂viewmodel/ ┗ 📜 MainActivity.kt
-
+└── bondhub/
+    ├── data/           # Data layer: repositories, data sources
+    ├── di/             # Dependency Injection modules (Hilt)
+    ├── domain/         # Domain layer: models, use cases
+    ├── notification/   # Notification handling (FCM)
+    └── presentation/   # Presentation layer: UI components, viewmodels
 
 ---
 
-## 🚀 Getting Started
+🚀 Getting Started
+Clone the repository
 
-### 1. Clone the repository
-```bash
+bash
+Copy
+Edit
 git clone https://github.com/yourusername/bondhub.git
 cd bondhub
-2. Open in Android Studio
+Open in Android Studio
+
 Connect your Firebase project
 
-Replace google-services.json in the app/ folder
+Replace the google-services.json file in the app/ folder
 
-Run the app on emulator or physical device
+Run the app on an emulator or physical device
 
-🛣️ Roadmap
- Basic Authentication & Chat Messaging
+## 🛣️ Roadmap
+✅ Basic Authentication & Chat Messaging
 
- Push Notifications with Deep Linking
+✅ Push Notifications with Deep Linking
 
- Dual Chat Documents & Message Deletion
+✅ Dual Chat Documents & Message Deletion
 
- Clean Architecture + Offline Sync
+✅ Clean Architecture + Offline Sync
 
- Media Message Support (Images, Videos)
+🔄 Media Message Support (Images, Videos)
 
- Voice Message Recording
+🔄 Voice Message Recording
 
- End-to-End Encryption (E2EE)
+🔜 End-to-End Encryption (E2EE)
 
- Message Reactions & Typing Indicator
+🔜 Message Reactions & Typing Indicator
 
- Online/Offline Status Visibility
+🔜 Online/Offline Status Visibility
 
-💡 Why BondHub is Special
-Not just another chat app — this is a complete ecosystem with attention to real-world design patterns:
+## 💡 Why BondHub is Special
+Not just another chat app — this is a complete ecosystem with real-world patterns:
 
-🔁 Dual Firestore chat model → messages managed per user
+🔁 Dual Firestore chat model → messages stored per user
 
-🌐 Deep linked push notifications → open chat directly
+🌐 Deep linked push notifications → open chats directly
 
 📶 Offline-first → Room syncing with Firestore
 
-🔄 Reactive event-driven UI using StateFlow & SharedFlow
+🔄 Reactive UI using StateFlow & SharedFlow
 
-🧼 Fully modular, testable, and scalable project setup
+🧼 Modular, testable, and scalable project setup
 
-🤝 Contributing
-Pull requests are welcome. If you’d like to contribute major changes, please open an issue first to discuss the scope.
+## 🤝 Contributing
+Pull requests are welcome. For major changes, please open an issue first to discuss what you'd like to change.
 
-📝 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 📝 License
+This project is licensed under the MIT License – see the LICENSE file for details.
 
-🙋‍♂️ Creator
-Developed with 💙 by Sarfraz LinkedIn(https://www.linkedin.com/in/md-sarfraz-uddin/)
-Connect with me for collabs, feedback, or just to chat!
-
+## 🙋‍♂️ Creator
+Developed with 💙 by Sarfraz
+🔗 [![LinkedIn](https://www.linkedin.com/in/md-sarfraz-uddin/)
+Feel free to connect for collaborations, feedback, or just to chat!
 
