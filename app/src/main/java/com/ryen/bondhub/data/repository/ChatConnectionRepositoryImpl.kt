@@ -182,6 +182,8 @@ class ChatConnectionRepositoryImpl @Inject constructor(
 
         query.snapshots().map { snapshot ->
             snapshot.documents.mapNotNull { it.toObject(ChatConnection::class.java) }
+                .groupBy { it.initiatorId }
+                .map { (_, connections) -> connections.first() }
         }
     }
 
