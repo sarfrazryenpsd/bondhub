@@ -54,7 +54,7 @@ bondhub/
 🚀 Getting Started
 Clone the repository
 
-git clone [https://github.com/yourusername/bondhub.git](https://github.com/sarfrazryenpsd/bondhub)
+git clone [https://github.com/sarfrazryenpsd/bondhub.git](https://github.com/sarfrazryenpsd/bondhub)
 cd bondhub
 Open in Android Studio
 
