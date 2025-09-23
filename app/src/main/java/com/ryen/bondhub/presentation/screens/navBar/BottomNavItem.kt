@@ -107,3 +107,13 @@ private fun NavItemPrev2() {
         onClick = {}
     )
 }
+
+@Preview
+@Composable
+private fun NavItemPrev3() {
+    BottomNavItem(
+        item = BottomNavItems.FriendRequests,
+        isSelected = false,
+        onClick = {}
+    )
+}
