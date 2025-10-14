@@ -3,13 +3,11 @@ package com.ryen.bondhub.data.remote.dataSource
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.snapshots
 import com.ryen.bondhub.domain.model.ChatConnection
 import com.ryen.bondhub.domain.model.ConnectionStatus
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -21,22 +19,7 @@ class ChatConnectionRemoteDataSource @Inject constructor(
 ) {
     private val connectionsCollection = firestore.collection("chat_connections")
 
-    suspend fun createConnection(connection: ChatConnection): ChatConnection {
-        val docRef = connectionsCollection.add(connection).await()
-        return connection.copy(connectionId = docRef.id)
-    }
-
-    suspend fun updateConnectionStatus(
-        connectionId: String,
-        status: ConnectionStatus
-    ): Result<Unit> = runCatching {
-        connectionsCollection
-            .document(connectionId)
-            .update("status", status)
-            .await()
-    }
-
-    suspend fun getConnectionsForUser(userId: String): Flow<List<ChatConnection>> = callbackFlow {
+    fun getConnectionsForUser(userId: String): Flow<List<ChatConnection>> = callbackFlow {
         val query = connectionsCollection
             .where(
                 Filter.or(
@@ -90,7 +73,7 @@ class ChatConnectionRemoteDataSource @Inject constructor(
             ?: throw NoSuchElementException("Connection not found with ID: $connectionId")
     }
 
-    suspend fun getConnectionBetweenUsers(user1Id: String, user2Id: String): Flow<ChatConnection?> = callbackFlow {
+    fun getConnectionBetweenUsers(user1Id: String, user2Id: String): Flow<ChatConnection?> = callbackFlow {
         // We need to check for connection in both directions since user1 or user2 could be the initiator
         val query1 = connectionsCollection
             .whereEqualTo("user1Id", user1Id)
@@ -123,26 +106,6 @@ class ChatConnectionRemoteDataSource @Inject constructor(
         awaitClose { registration1.remove() }
     }
 
-     fun getAcceptedConnectionsFlow(userId: String): Flow<List<ChatConnection>> = callbackFlow {
-        val listener = firestore.collection("chat_connections")
-            .whereEqualTo("user1Id", userId)
-            .whereEqualTo("status", ConnectionStatus.ACCEPTED)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-
-                val connections = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(ChatConnection::class.java)
-                } ?: emptyList()
-
-                trySend(connections)
-            }
-
-        awaitClose { listener.remove() }
-    }
-
     suspend fun getAcceptedConnectionsSnapshot(userId: String): List<ChatConnection> {
         return suspendCoroutine { continuation ->
             firestore.collection("chat_connections")
@@ -160,11 +123,4 @@ class ChatConnectionRemoteDataSource @Inject constructor(
                 }
         }
     }
-
-    fun getUserConnections(userId: String) = connectionsCollection
-        .whereEqualTo("user1Id", userId) // Only need to query where user is primary user
-        .snapshots()
-        .map { snapshot ->
-            snapshot.documents.mapNotNull { it.toObject(ChatConnection::class.java) }
-        }
 }

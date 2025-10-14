@@ -259,59 +259,6 @@ fun MainApp(navController: NavHostController = rememberNavController(), notifica
     }
 }
 
-//Fix
-
-/*1. FATAL EXCEPTION: DefaultDispatcher-worker-1 (Ask Gemini)
-Process: com.ryen.bondhub, PID: 5412
-kotlin.UninitializedPropertyAccessException: lateinit property markMessagesAsReadUseCase has not been initialized
-at com.ryen.bondhub.notifications.NotificationActionReceiver.getMarkMessagesAsReadUseCase(NotificationActionReciever.kt:13)
-at com.ryen.bondhub.notifications.NotificationActionReceiver$onReceive$1.invokeSuspend(NotificationActionReciever.kt:21)
-at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
-at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:101)
-at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:113)
-at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:89)
-at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:589)
-at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:823)
-at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:720)
-at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:707)
-Suppressed: kotlinx.coroutines.internal.DiagnosticCoroutineContextException: [StandaloneCoroutine{Cancelling}@b8929ed, Dispatchers.IO]*/
-
-/*2.Mark messages as read use case and unreadMessageCount issue*/
-
-//3.Find Friend status not updating on FindFriendScreen due to running on main thread
-
-//6. Friend Request showing with currentUser profile in FriendRequest Screen of current user after sending friend request to other user
-
-/*4.Error mapping document to chat (Ask Gemini)
-java.lang.RuntimeException: Field 'lastMessageTime' is not a java.lang.Number
-at com.google.firebase.firestore.DocumentSnapshot.castTypedValue(DocumentSnapshot.java:512)
-at com.google.firebase.firestore.DocumentSnapshot.getTypedValue(DocumentSnapshot.java:504)
-at com.google.firebase.firestore.DocumentSnapshot.getLong(DocumentSnapshot.java:373)
-at com.ryen.bondhub.data.mappers.ChatMapper.mapDocumentToDomain(ChatMapper.kt:60)
-at com.ryen.bondhub.data.repository.ChatRepositoryImpl$getUserChats$2$2.emit(ChatRepositoryImpl.kt:203)
-at com.ryen.bondhub.data.repository.ChatRepositoryImpl$getUserChats$2$2.emit(ChatRepositoryImpl.kt:198)
-at kotlinx.coroutines.flow.FlowKt__ErrorsKt$catchImpl$2.emit(Errors.kt:154)
-at kotlinx.coroutines.flow.FlowKt__ChannelsKt.emitAllImpl$FlowKt__ChannelsKt(Channels.kt:33)
-at kotlinx.coroutines.flow.FlowKt__ChannelsKt.access$emitAllImpl$FlowKt__ChannelsKt(Channels.kt:1)
-at kotlinx.coroutines.flow.FlowKt__ChannelsKt$emitAllImpl$1.invokeSuspend(Unknown Source:14)
-at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
-at kotlinx.coroutines.DispatchedTaskKt.resume(DispatchedTask.kt:221)
-at kotlinx.coroutines.DispatchedTaskKt.resumeUnconfined(DispatchedTask.kt:177)
-at kotlinx.coroutines.DispatchedTaskKt.dispatch(DispatchedTask.kt:149)
-at kotlinx.coroutines.CancellableContinuationImpl.dispatchResume(CancellableContinuationImpl.kt:470)
-at kotlinx.coroutines.CancellableContinuationImpl.completeResume(CancellableContinuationImpl.kt:591)
-at kotlinx.coroutines.channels.BufferedChannelKt.tryResume0(BufferedChannel.kt:2957)
-at kotlinx.coroutines.channels.BufferedChannelKt.access$tryResume0(BufferedChannel.kt:1)
-at kotlinx.coroutines.channels.BufferedChannel$BufferedChannelIterator.tryResumeHasNext(BufferedChannel.kt:1719)
-at kotlinx.coroutines.channels.BufferedChannel.tryResumeReceiver(BufferedChannel.kt:662)
-at kotlinx.coroutines.channels.BufferedChannel.updateCellSend(BufferedChannel.kt:478)
-at kotlinx.coroutines.channels.BufferedChannel.access$updateCellSend(BufferedChannel.kt:33)
-at kotlinx.coroutines.channels.BufferedChannel.trySend-JP2dKIU(BufferedChannel.kt:3360)
-at kotlinx.coroutines.channels.ChannelCoroutine.trySend-JP2dKIU(Unknown Source:2)
-at com.ryen.bondhub.data.remote.dataSource.ChatRemoteDataSource$getUserChats$1.invokeSuspend$lambda$1(ChatRemoteDataSource.kt:49)*/
-
-//5.Sender picture not showing in message notification
-
 
 
 

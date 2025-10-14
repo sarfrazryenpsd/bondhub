@@ -1,7 +1,6 @@
 package com.ryen.bondhub.data.remote.dataSource
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.ryen.bondhub.domain.model.ChatMessage
 import com.ryen.bondhub.domain.model.MessageStatus
 import com.ryen.bondhub.domain.model.MessageType
@@ -47,41 +46,6 @@ class ChatMessageRemoteDataSource @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
-
-    fun getMessages(baseChatId: String): Flow<List<ChatMessage>> = callbackFlow {
-        val subscription = messagesCollection
-            .document(baseChatId)
-            .collection("messages")
-            .orderBy("timestamp", Query.Direction.ASCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-
-                val messages = snapshot?.documents?.mapNotNull { document ->
-                    try {
-                        ChatMessage(
-                            messageId = document.id,
-                            chatId = document.getString("chatId") ?: "",
-                            baseChatId = document.getString("baseChatId") ?: "",
-                            senderId = document.getString("senderId") ?: "",
-                            receiverId = document.getString("receiverId") ?: "",
-                            content = document.getString("content") ?: "",
-                            timestamp = document.getLong("timestamp") ?: 0L,
-                            messageType = MessageType.valueOf(document.getString("messageType") ?: MessageType.TEXT.name),
-                            status = MessageStatus.valueOf(document.getString("status") ?: MessageStatus.SENT.name)
-                        )
-                    } catch (e: Exception) {
-                        null
-                    }
-                } ?: emptyList()
-
-                trySend(messages)
-            }
-
-        awaitClose { subscription.remove() }
     }
 
     suspend fun updateMessageStatus(baseChatId: String, messageId: String, status: MessageStatus): Result<Unit> = withContext(Dispatchers.IO) {
