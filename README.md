@@ -271,7 +271,7 @@ A: Yes! The clean modular structure supports easy addition of features like reac
 media.
 
 **Q: Are pull requests welcome?**  
-A: Absolutely. See the [Contributing](#contributing) section for guidelines.
+A: Absolutely.
 
 **Q: Is there support for internationalization (i18n)?**  
 A: Multi-language support is planned for future updates.
@@ -284,8 +284,6 @@ A: Multi-language support is planned for future updates.
 
 ### Community & Contact
 
-- Twitter: [@bondhubapp](https://twitter.com/bondhubapp)
-- LinkedIn: [Sarfraz](https://www.linkedin.com/in/yourusername/)
 - Discussions: Use GitHub Issues for questions, feature requests, or bug reports.
 
 ---
@@ -293,6 +291,6 @@ A: Multi-language support is planned for future updates.
 ## 🙋‍♂️ Creator
 
 Developed with 💙 by Sarfraz  
-🔗 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/yourusername/)  
+🔗 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/sarfrazryenpsd/)  
 Feel free to connect for collaborations, feedback, or just to chat!
 
